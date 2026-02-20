@@ -1,0 +1,239 @@
+import { create } from 'zustand';
+import { v4 as uuidv4 } from 'uuid';
+import { useTodoStore } from './useTodoStore';
+import { useChatStore } from './useChatStore';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, format, eachDayOfInterval, isSameDay } from 'date-fns';
+import { callReportAPI } from '../api/client';
+
+export interface ReportStats {
+  completedTodos: number;
+  totalTodos: number;
+  completionRate: number;
+  recurringStats?: {
+    name: string;
+    completed: boolean; // For daily
+    count?: number; // For weekly/monthly
+    total?: number; // For weekly/monthly
+    rate?: number;
+  }[];
+  priorityStats?: {
+    priority: string;
+    count: number;
+    completed: number;
+  }[];
+  dailyCompletion?: {
+    date: string;
+    completed: number;
+    total: number;
+    rate: number;
+  }[];
+}
+
+export interface Report {
+  id: string;
+  title: string;
+  date: number;
+  startDate?: number;
+  endDate?: number;
+  type: 'daily' | 'weekly' | 'monthly' | 'custom';
+  content: string; // JSON string or markdown
+  aiAnalysis?: string;
+  stats?: ReportStats;
+}
+
+interface ReportState {
+  reports: Report[];
+  generateReport: (type: 'daily' | 'weekly' | 'monthly' | 'custom', date: number, endDate?: number) => void;
+  updateReport: (id: string, updates: Partial<Report>) => void;
+}
+
+export const useReportStore = create<ReportState>((set, get) => ({
+  reports: [],
+  updateReport: (id, updates) => set(state => ({
+    reports: state.reports.map(r => r.id === id ? { ...r, ...updates } : r)
+  })),
+  generateReport: (type, date, customEndDate) => {
+    const todoStore = useTodoStore.getState();
+    const chatStore = useChatStore.getState();
+    const targetDate = new Date(date);
+    
+    let start: Date, end: Date;
+    let title = '';
+
+    if (type === 'daily') {
+      start = startOfDay(targetDate);
+      end = endOfDay(targetDate);
+      title = `${format(targetDate, 'yyyy-MM-dd')} 日报`;
+    } else if (type === 'weekly') {
+      start = startOfWeek(targetDate, { weekStartsOn: 1 });
+      end = endOfWeek(targetDate, { weekStartsOn: 1 });
+      title = `${format(start, 'MM-dd')} 至 ${format(end, 'MM-dd')} 周报`;
+    } else if (type === 'monthly') {
+      start = startOfMonth(targetDate);
+      end = endOfMonth(targetDate);
+      title = `${format(targetDate, 'yyyy-MM')} 月报`;
+    } else if (type === 'custom' && customEndDate) {
+      start = startOfDay(targetDate);
+      end = endOfDay(new Date(customEndDate));
+      title = `${format(start, 'yyyy-MM-dd')} 至 ${format(end, 'yyyy-MM-dd')} 定制报告`;
+    } else {
+      start = startOfDay(targetDate);
+      end = endOfDay(targetDate);
+      title = '定制报告';
+    }
+
+    // Filter Todos in range
+    const allTodos = todoStore.todos;
+    const relevantTodos = allTodos.filter(t => {
+      const inDateRange = t.dueDate >= start.getTime() && t.dueDate <= end.getTime();
+      if (!inDateRange) return false;
+
+      // Scope filtering: Exclude monthly scope from weekly report
+      if (type === 'weekly' && t.scope === 'monthly') {
+        return false;
+      }
+      
+      return true;
+    });
+
+    // Calculate Stats
+    const total = relevantTodos.length;
+    const completed = relevantTodos.filter(t => t.completed).length;
+    
+    let stats: ReportStats = {
+      completedTodos: completed,
+      totalTodos: total,
+      completionRate: total > 0 ? completed / total : 0,
+      priorityStats: [],
+      recurringStats: [],
+      dailyCompletion: []
+    };
+
+    // Priority Stats
+    const priorities = ['urgent-important', 'urgent-not-important', 'important-not-urgent', 'not-important-not-urgent'];
+    stats.priorityStats = priorities.map(p => {
+      const pTodos = relevantTodos.filter(t => t.priority === p);
+      return {
+        priority: p,
+        count: pTodos.length,
+        completed: pTodos.filter(t => t.completed).length
+      };
+    });
+
+    if (type === 'daily') {
+      // Daily Recurring Stats
+      stats.recurringStats = relevantTodos
+        .filter(t => t.recurrence && t.recurrence !== 'none')
+        .map(t => ({
+          name: t.content,
+          completed: t.completed
+        }));
+    } else {
+      // Weekly/Monthly Recurring Stats
+      // Group by recurrenceId or content
+      const recurringGroups: Record<string, typeof relevantTodos> = {};
+      relevantTodos.filter(t => t.recurrence && t.recurrence !== 'none').forEach(t => {
+        const key = t.recurrenceId || t.content;
+        if (!recurringGroups[key]) recurringGroups[key] = [];
+        recurringGroups[key].push(t);
+      });
+
+      stats.recurringStats = Object.values(recurringGroups).map(group => {
+        const completedCount = group.filter(t => t.completed).length;
+        return {
+          name: group[0].content,
+          completed: false, // Not used for weekly
+          count: completedCount,
+          total: group.length,
+          rate: group.length > 0 ? completedCount / group.length : 0
+        };
+      });
+
+      // Daily Completion Trend
+      const days = eachDayOfInterval({ start, end });
+      stats.dailyCompletion = days.map(day => {
+        const dayTodos = relevantTodos.filter(t => isSameDay(t.dueDate, day));
+        const dayCompleted = dayTodos.filter(t => t.completed).length;
+        return {
+          date: format(day, 'MM-dd'),
+          completed: dayCompleted,
+          total: dayTodos.length,
+          rate: dayTodos.length > 0 ? dayCompleted / dayTodos.length : 0
+        };
+      });
+    }
+
+    const newReport: Report = {
+      id: uuidv4(),
+      title,
+      date,
+      startDate: start.getTime(),
+      endDate: end.getTime(),
+      type,
+      content: 'Generated report',
+      stats,
+      aiAnalysis: undefined, // No auto-generation
+    };
+    
+    // Remove existing report of same type and date (simple dedup)
+    set((state) => ({ 
+      reports: [
+        ...state.reports.filter(r => !(r.type === type && isSameDay(r.date, date))),
+        newReport
+      ]
+    }));
+  },
+
+  triggerAIAnalysis: async (reportId) => {
+    const state = get();
+    const report = state.reports.find(r => r.id === reportId);
+    if (!report) return;
+
+    // Set loading state
+    get().updateReport(reportId, { aiAnalysis: '正在生成 AI 分析...' });
+
+    const todoStore = useTodoStore.getState();
+    const chatStore = useChatStore.getState();
+    
+    let start = report.startDate ? new Date(report.startDate) : startOfDay(new Date(report.date));
+    let end = report.endDate ? new Date(report.endDate) : endOfDay(new Date(report.date));
+    
+    // Legacy support for reports without start/end
+    if (!report.startDate) {
+       if (report.type === 'weekly') {
+         start = startOfWeek(new Date(report.date), { weekStartsOn: 1 });
+         end = endOfWeek(new Date(report.date), { weekStartsOn: 1 });
+       } else if (report.type === 'monthly') {
+         start = startOfMonth(new Date(report.date));
+         end = endOfMonth(new Date(report.date));
+       }
+    }
+    
+    // Filter Todos
+    const allTodos = todoStore.todos;
+    const relevantTodos = allTodos.filter(t => {
+      return t.dueDate >= start.getTime() && t.dueDate <= end.getTime();
+    });
+
+    const activities = chatStore.messages.filter(m => 
+      m.timestamp >= start.getTime() && m.timestamp <= end.getTime() && m.type !== 'system' && m.mode === 'record'
+    ).map(m => ({
+      time: format(m.timestamp, 'MM-dd HH:mm'),
+      content: m.content,
+      duration: m.duration || 0
+    }));
+
+    const analysisData = {
+      date: format(start, 'yyyy-MM-dd') + (report.type !== 'daily' ? ` 至 ${format(end, 'yyyy-MM-dd')}` : ''),
+      todos: relevantTodos,
+      activities,
+      stats: report.stats
+    };
+
+    const analysisContent = await callReportAPI({
+      data: analysisData,
+      type: report.type,
+    });
+    get().updateReport(reportId, { aiAnalysis: analysisContent });
+  }
+}));

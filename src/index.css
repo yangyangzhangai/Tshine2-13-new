@@ -1,0 +1,10 @@
+/* 霞鹜文楷字体 - 用于心情记录 */
+@import '@chinese-fonts/lxgwwenkai/dist/LXGWWenKai-Regular/result.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.font-mood {
+  font-family: 'LXGW WenKai', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
