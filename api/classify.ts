@@ -156,9 +156,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  // 使用 Chutes API - Qwen3 30B 轻量级分类模型
+  // 使用 Chutes API - 已验证可用的模型
   const apiUrl = 'https://llm.chutes.ai/v1/chat/completions';
-  const model = 'Qwen/Qwen3-30B-A3B-Instruct-2507';
+  const model = 'NousResearch/Hermes-4-405B-FP8-TEE';
 
   try {
     const response = await fetch(apiUrl, {
