@@ -155,7 +155,7 @@ const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, typ
 
 export const ReportPage = () => {
   const [date, setDate] = useState<Value>(new Date());
-  const { reports, generateReport, triggerAIAnalysis } = useReportStore();
+  const { reports, generateReport, triggerAIAnalysis, generateTimeshineDiary } = useReportStore();
   const { todos } = useTodoStore();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [showReportList, setShowReportList] = useState<'weekly' | 'monthly' | 'custom' | null>(null);
@@ -278,68 +278,25 @@ export const ReportPage = () => {
           <div className="bg-white w-full max-w-md rounded-2xl p-6 h-[60vh] flex flex-col animate-in slide-in-from-bottom-10 fade-in">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">
-                {showReportList === 'weekly' ? '周报列表' : showReportList === 'monthly' ? '月报列表' : '定制报告'}
+                {showReportList === 'weekly' ? '周报' : showReportList === 'monthly' ? '月报' : '定制报告'}
               </h2>
               <button onClick={() => setShowReportList(null)} className="text-gray-400 hover:text-gray-600">
                 <X size={24} />
               </button>
             </div>
-            
-            <div className="flex-1 overflow-y-auto">
-              {showReportList === 'custom' && (
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
-                  <h3 className="text-sm font-bold">生成新报告</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input 
-                      type="date" 
-                      className="p-2 border rounded text-sm"
-                      value={customStartDate}
-                      onChange={(e) => setCustomStartDate(e.target.value)}
-                    />
-                    <input 
-                      type="date" 
-                      className="p-2 border rounded text-sm"
-                      value={customEndDate}
-                      onChange={(e) => setCustomEndDate(e.target.value)}
-                    />
-                  </div>
-                  <button
-                    onClick={() => generateAndOpenReport('custom')}
-                    disabled={!customStartDate || !customEndDate}
-                    className="w-full p-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    生成定制报告
-                  </button>
-                </div>
-              )}
 
-              {showReportList !== 'custom' && (
-                <button
-                  onClick={() => generateAndOpenReport(showReportList)}
-                  className="w-full p-3 rounded-lg border-2 border-dashed border-blue-200 text-blue-500 flex justify-center items-center gap-2 hover:bg-blue-50 mb-2"
-                >
-                  <Sparkles size={16} />
-                  <span>生成本{showReportList === 'weekly' ? '周' : '月'}报告</span>
-                </button>
-              )}
-
-              {filteredReports.length === 0 ? (
-                <p className="text-center text-gray-400 py-10">暂无历史报告</p>
-              ) : (
-                filteredReports.map(report => (
-                  <button
-                    key={report.id}
-                    onClick={() => {
-                      setSelectedReportId(report.id);
-                      setShowReportList(null);
-                    }}
-                    className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-gray-100 flex justify-between items-center"
-                  >
-                    <span className="font-medium">{report.title}</span>
-                    <span className="text-xs text-gray-400">{format(report.date, 'yyyy-MM-dd')}</span>
-                  </button>
-                ))
-              )}
+            <div className="flex-1 flex flex-col items-center justify-center text-center">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <FileText size={32} className="text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">功能开发中</h3>
+              <p className="text-sm text-gray-500 max-w-xs">
+                {showReportList === 'weekly'
+                  ? '周报功能正在星际旅行中，预计很快抵达...'
+                  : showReportList === 'monthly'
+                  ? '月报功能正在时间维度中校准，敬请期待...'
+                  : '定制报告功能正在组装零件，即将上线...'}
+              </p>
             </div>
           </div>
         </div>
@@ -366,33 +323,41 @@ export const ReportPage = () => {
                   <Sparkles size={16} /> AI 分析
                 </h3>
                 
+                {/* 未生成状态 */}
                 {(!selectedReport.aiAnalysis || selectedReport.aiAnalysis === 'AI 分析功能即将上线...') ? (
                   <div className="text-center py-2">
-                    <p className="text-sm opacity-80 mb-3">点击下方按钮生成今日行为分析报告</p>
-                    <button 
-                      onClick={() => triggerAIAnalysis(selectedReport.id)}
+                    <p className="text-sm opacity-80 mb-3">来自时间星球的观察员正在等待记录...</p>
+                    <button
+                      onClick={() => generateTimeshineDiary(selectedReport.id)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
                     >
-                      生成分析报告
+                      查看今日观察笔记
                     </button>
                   </div>
-                ) : selectedReport.aiAnalysis === '正在生成 AI 分析...' ? (
+                ) : selectedReport.aiAnalysis === '正在生成观察手记...' ? (
+                  /* 生成中状态 */
                   <div className="flex flex-col items-center justify-center py-4 space-y-2">
                     <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm opacity-80">正在生成分析报告，请稍候...</p>
+                    <p className="text-sm opacity-80">观察员正在撰写手记...</p>
                   </div>
-                ) : (selectedReport.aiAnalysis.includes('出错') || selectedReport.aiAnalysis.includes('无法生成') || selectedReport.aiAnalysis.includes('超限')) ? (
+                ) : (selectedReport.aiAnalysis.includes('出错') || selectedReport.aiAnalysis.includes('无法生成') || selectedReport.aiAnalysis.includes('失败')) ? (
+                  /* 错误状态 - 可以重试 */
                   <div className="bg-red-50 p-3 rounded border border-red-100">
                     <p className="text-sm text-red-600 mb-2">{selectedReport.aiAnalysis}</p>
-                    <button 
-                      onClick={() => triggerAIAnalysis(selectedReport.id)}
+                    <button
+                      onClick={() => generateTimeshineDiary(selectedReport.id)}
                       className="text-xs bg-white border border-red-200 text-red-600 px-3 py-1 rounded hover:bg-red-50"
                     >
                       重试
                     </button>
                   </div>
                 ) : (
+                  /* 已生成状态 - 仅展示，不可再次生成 */
                   <div>
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200/50">
+                      <Sparkles size={14} className="text-blue-600" />
+                      <span className="text-xs font-medium text-blue-700">来自时间星球的观察手记</span>
+                    </div>
                     <p className="text-sm opacity-80 whitespace-pre-wrap">{selectedReport.aiAnalysis}</p>
                   </div>
                 )}

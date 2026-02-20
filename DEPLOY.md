@@ -7,10 +7,23 @@
        ↓
 /api/* (Vercel Serverless Functions)
        ↓
-AI 服务 (Chutes / Qwen / Gemini)
+AI 服务 (Chutes)
 ```
 
 所有 API Keys 都存储在服务端环境变量中，前端代码无法直接访问，保证安全性。
+
+**Timeshine 三步走架构**:
+```
+用户原始输入
+    ↓
+/api/classify (Qwen2.5-7B)    ← 轻量分类器
+    ↓
+计算层 (纯代码)               ← 本地计算光谱/进度条/异常
+    ↓
+/api/diary (Hermes-4-405B)    ← 顶配日记生成
+    ↓
+诗意观察手记
+```
 
 ## 快速部署
 
@@ -33,9 +46,8 @@ cp .env.example .env
 填写必要的环境变量:
 
 ```bash
-# 至少配置一个 AI API Key
-CHUTES_API_KEY=your_chutes_api_key_here      # 用于聊天和AI批注
-QWEN_API_KEY=your_qwen_api_key_here          # 用于生成报告
+# Chutes AI API Key (必需)
+CHUTES_API_KEY=your_chutes_api_key_here
 
 # Supabase 配置
 VITE_SUPABASE_URL=your_supabase_url
@@ -79,9 +91,7 @@ npx vercel --prod
 
 | 变量名 | 说明 | 必需 |
 |--------|------|------|
-| `CHUTES_API_KEY` | Chutes AI API Key | 是 (聊天功能) |
-| `QWEN_API_KEY` | 通义千问 API Key | 是 (报告功能) |
-| `GEMINI_API_KEY` | Gemini API Key (备选) | 否 |
+| `CHUTES_API_KEY` | Chutes AI API Key | 是 |
 | `VITE_SUPABASE_URL` | Supabase 项目 URL | 是 |
 | `VITE_SUPABASE_ANON_KEY` | Supabase Anon Key | 是 |
 
@@ -90,7 +100,8 @@ npx vercel --prod
 部署后可以通过以下端点访问:
 
 - `POST /api/chat` - AI 聊天
-- `POST /api/report` - 生成日报/周报/月报
+- `POST /api/classify` - **步骤1: 活动分类** (Qwen2.5-7B)
+- `POST /api/diary` - **步骤3: 生成观察手记** (Hermes-4-405B)
 - `POST /api/annotation` - AI 智能批注
 
 ## 获取 API Keys
@@ -99,18 +110,14 @@ npx vercel --prod
 1. 访问 https://chutes.ai/
 2. 注册并登录
 3. 在 Dashboard 获取 API Key
-4. 模型使用: `NousResearch/Hermes-4-405B-FP8-TEE`
+4. 使用的模型:
+   - 分类: `Qwen/Qwen2.5-7B-Instruct` (轻量、快速)
+   - 日记: `NousResearch/Hermes-4-405B-FP8-TEE` (顶配、创意)
 
-### 通义千问 API Key
-1. 访问 https://dashscope.aliyun.com/
-2. 开通 DashScope 服务
-3. 创建 API Key
-4. 模型使用: `qwen-flash`
-
-### Gemini API Key (备选)
-1. 访问 https://ai.google.dev/
-2. 创建项目并获取 API Key
-3. 模型使用: `gemini-2.0-flash`
+### Supabase 配置
+1. 访问 https://supabase.com/
+2. 创建项目
+3. 在 Project Settings → API 中获取 URL 和 Anon Key
 
 ## 验证部署
 
@@ -122,10 +129,15 @@ curl -X POST https://your-project.vercel.app/api/chat \
   -H "Content-Type: application/json" \
   -d '{"messages":[{"role":"user","content":"Hello"}]}'
 
-# 测试 Report API
-curl -X POST https://your-project.vercel.app/api/report \
+# 测试分类器 API
+curl -X POST https://your-project.vercel.app/api/classify \
   -H "Content-Type: application/json" \
-  -d '{"data":{"date":"2024-01-01","todos":[],"activities":[],"stats":{}},"type":"daily"}'
+  -d '{"rawInput":"早上写代码2小时，下午开会1小时"}'
+
+# 测试日记 API
+curl -X POST https://your-project.vercel.app/api/diary \
+  -H "Content-Type: application/json" \
+  -d '{"structuredData":"【今日结构化数据】\\n▸ 今日光谱分布\\n  🔵 深度专注  2h  [████░░░░░░]","date":"2024-01-01"}'
 ```
 
 ## 常见问题
@@ -139,8 +151,8 @@ A: 检查 Vercel Dashboard 的 Function Logs，确认环境变量是否正确配
 ### Q: 如何更新 API Key?
 A: 在 Vercel Dashboard → Environment Variables 中更新，然后重新部署。
 
-### Q: 可以只用一个 AI 服务吗?
-A: 可以。聊天功能需要 `CHUTES_API_KEY`，报告功能需要 `QWEN_API_KEY` 或 `GEMINI_API_KEY`。
+### Q: 观察手记生成失败?
+A: 检查 Chutes API Key 是否有足够配额，以及模型 `NousResearch/Hermes-4-405B-FP8-TEE` 是否可用。
 
 ## 安全注意事项
 
