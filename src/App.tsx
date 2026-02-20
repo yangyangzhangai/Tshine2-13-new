@@ -95,7 +95,7 @@ function App() {
   }, [initializeAuth]);
 
   return (
-    <BrowserRouter basename="/Tshine2-13">
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Navigate to="/chat" replace />} />
