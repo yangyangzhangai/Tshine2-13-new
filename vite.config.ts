@@ -12,5 +12,5 @@ export default defineConfig({
   build: {
     sourcemap: true,
   },
-  base: "/Tshine2-13/",
+  base: "/",
 });
