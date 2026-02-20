@@ -122,3 +122,84 @@ export async function callAnnotationAPI(request: AnnotationRequest): Promise<Ann
 
   return await response.json();
 }
+
+// ── Timeshine 三步走新 API ────────────────────────────────────────────────────
+
+interface ClassifyRequest {
+  rawInput: string;
+}
+
+interface ClassifyResponse {
+  success: boolean;
+  data: {
+    total_duration_min: number;
+    items: Array<{
+      name: string;
+      duration_min: number;
+      time_slot: 'morning' | 'afternoon' | 'evening' | null;
+      category: string;
+      flag: 'ambiguous' | null;
+    }>;
+    todos: {
+      completed: number;
+      total: number;
+    };
+    energy_log: Array<{
+      time_slot: 'morning' | 'afternoon' | 'evening';
+      energy_level: 'high' | 'medium' | 'low' | null;
+      mood: string | null;
+    }>;
+  };
+}
+
+interface DiaryRequest {
+  structuredData: string;
+  rawInput?: string;
+  date?: string;
+  historyContext?: string;
+}
+
+interface DiaryResponse {
+  success: boolean;
+  content: string;
+}
+
+/**
+ * 步骤1: 调用分类器 API - 将用户原始输入分类为结构化数据
+ */
+export async function callClassifierAPI(request: ClassifyRequest): Promise<ClassifyResponse> {
+  const response = await fetch(`${API_BASE}/classify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * 步骤3: 调用日记 API - 生成诗意的观察手记
+ */
+export async function callDiaryAPI(request: DiaryRequest): Promise<DiaryResponse> {
+  const response = await fetch(`${API_BASE}/diary`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
+  }
+
+  return await response.json();
+}
