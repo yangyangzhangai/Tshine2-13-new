@@ -213,56 +213,31 @@ ${data.activities?.map((a: any) => `- ${a.time}: ${a.content} (耗时: ${a.durat
 总任务: ${data.stats?.totalTodos || 0}
 `;
 
-  const apiKey = process.env.QWEN_API_KEY || process.env.GEMINI_API_KEY;
+  const apiKey = process.env.CHUTES_API_KEY;
   if (!apiKey) {
     res.status(500).json({ error: 'Server configuration error: Missing API key' });
     return;
   }
 
-  // 优先使用 Qwen
-  const useQwen = !!process.env.QWEN_API_KEY;
-  const apiUrl = useQwen
-    ? 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions'
-    : 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-
   try {
-    let response;
-
-    if (useQwen) {
-      response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'qwen-flash',
-          messages: [{ role: 'user', content: context }],
-        }),
-      });
-    } else {
-      response = await fetch(`${apiUrl}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: context }]
-          }]
-        }),
-      });
-    }
+    const response = await fetch('https://llm.chutes.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'NousResearch/Hermes-4-405B-FP8-TEE',
+        messages: [{ role: 'user', content: context }],
+        temperature: 0.7,
+        max_tokens: 4096,
+        stream: false,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Report API error:', response.status, errorText);
-      
-      if (response.status === 429) {
-        res.status(429).json({ error: 'API 调用次数超限，请稍后再试或检查配额。' });
-        return;
-      }
-      
       res.status(response.status).json({ 
         error: `AI service error: ${response.statusText}`,
         details: errorText
@@ -271,13 +246,7 @@ ${data.activities?.map((a: any) => `- ${a.time}: ${a.content} (耗时: ${a.durat
     }
 
     const result = await response.json();
-    
-    let content: string;
-    if (useQwen) {
-      content = result.choices?.[0]?.message?.content || '无法生成分析报告';
-    } else {
-      content = result.candidates?.[0]?.content?.parts?.[0]?.text || '无法生成分析报告';
-    }
+    let content = result.choices?.[0]?.message?.content || '无法生成分析报告';
 
     // 移除 thinking 标签
     content = content.replace(/<think>[\s\S]*?<\/think>/g, '');
