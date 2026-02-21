@@ -320,13 +320,13 @@ export const ReportPage = () => {
               {/* AI Analysis */}
               <div className="bg-blue-50 p-4 rounded-lg text-blue-800">
                 <h3 className="font-bold flex items-center gap-2 mb-2 text-sm">
-                  <Sparkles size={16} /> AI 分析
+                  <Sparkles size={16} /> 观察员分析
                 </h3>
 
                 {/* 未生成状态 */}
-                {(!selectedReport.aiAnalysis || selectedReport.aiAnalysis === 'AI 分析功能即将上线...') ? (
+                {(!selectedReport.aiAnalysis || selectedReport.aiAnalysis === '观察员分析功能即将上线...') ? (
                   <div className="text-center py-2">
-                    <p className="text-sm opacity-80 mb-3">来自时间星球的观察员正在等待记录...</p>
+                    <p className="text-sm opacity-80 mb-3">来自时光棱镜的观察员正在等待记录...</p>
                     <button
                       onClick={() => {
                         if (window.confirm("每天只能生成一次观察手记，确认现在生成吗？")) {
@@ -360,7 +360,7 @@ export const ReportPage = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200/50">
                       <Sparkles size={14} className="text-blue-600" />
-                      <span className="text-xs font-medium text-blue-700">来自时间星球的观察手记</span>
+                      <span className="text-xs font-medium text-blue-700">来自时光棱镜的观察手记</span>
                     </div>
                     <p className="text-sm opacity-80 whitespace-pre-wrap">{selectedReport.aiAnalysis}</p>
                   </div>

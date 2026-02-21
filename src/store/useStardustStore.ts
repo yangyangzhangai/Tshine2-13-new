@@ -3,10 +3,10 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../api/supabase';
 import { useChatStore } from './useChatStore';
-import type { 
-  StardustMemory, 
+import type {
+  StardustMemory,
   CreateStardustRequest,
-  SyncStatus 
+  SyncStatus
 } from '../types/stardust';
 
 interface StardustStore {
@@ -14,18 +14,18 @@ interface StardustStore {
   memories: StardustMemory[];
   isGenerating: boolean;
   generationError: string | null;
-  
+
   // Actions
   createStardust: (request: CreateStardustRequest) => Promise<StardustMemory | null>;
   updateEmoji: (id: string, emojiChar: string) => Promise<void>;
   deleteStardust: (id: string) => Promise<void>;
   getStardustByMessageId: (messageId: string) => StardustMemory | undefined;
   hasStardust: (messageId: string) => boolean;
-  
+
   // Sync
   syncPendingStardusts: () => Promise<void>;
   getPendingSyncCount: () => number;
-  
+
   // Generation state
   setGenerating: (isGenerating: boolean) => void;
   setGenerationError: (error: string | null) => void;
@@ -63,29 +63,29 @@ function extractEmojiFromResponse(content: string | null | undefined): string | 
     console.warn('[Stardust] extractEmojiFromResponse: 内容为空或非字符串');
     return null;
   }
-  
+
   // 去除空白字符
   const trimmed = content.trim();
-  
+
   if (!trimmed) {
     console.warn('[Stardust] extractEmojiFromResponse: trim后内容为空');
     return null;
   }
-  
+
   // Emoji Unicode 范围正则 (常用Emoji范围)
   // 匹配单个Emoji或Emoji组合
   const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{231A}-\u{231B}]|[\u{23E9}-\u{23F3}]|[\u{23F8}-\u{23FA}]|[\u{25AA}-\u{25AB}]|[\u{25B6}]|[\u{25C0}]|[\u{25FB}-\u{25FE}]|[\u{2614}-\u{2615}]|[\u{2648}-\u{2653}]|[\u{267F}]|[\u{2693}]|[\u{26A1}]|[\u{26AA}-\u{26AB}]|[\u{26BD}-\u{26BE}]|[\u{26C4}-\u{26C5}]|[\u{26D4}]|[\u{26EA}]|[\u{26F2}-\u{26F3}]|[\u{26F5}]|[\u{26FA}]|[\u{26FD}]|[\u{2702}]|[\u{2705}]|[\u{2708}-\u{270D}]|[\u{270F}]|[\u{2712}]|[\u{2714}]|[\u{2716}]|[\u{271D}]|[\u{2721}]|[\u{2728}]|[\u{2733}-\u{2734}]|[\u{2744}]|[\u{2747}]|[\u{274C}]|[\u{274E}]|[\u{2753}-\u{2755}]|[\u{2757}]|[\u{2763}-\u{2764}]|[\u{2795}-\u{2797}]|[\u{27A1}]|[\u{27B0}]|[\u{27BF}]|[\u{2934}-\u{2935}]|[\u{2B05}-\u{2B07}]|[\u{2B1B}-\u{2B1C}]|[\u{2B50}]|[\u{2B55}]|[\u{3030}]|[\u{303D}]|[\u{3297}]|[\u{3299}]/gu;
-  
+
   // 尝试提取第一个Emoji
   const matches = trimmed.match(emojiRegex);
   if (matches && matches.length > 0) {
     return matches[0];
   }
-  
+
   // 如果没有匹配到标准Emoji范围，检查是否整个内容就是一个字符
   // 去除引号、括号等常见包装字符
   const cleaned = trimmed.replace(/^["'`（(「【『]+|["'`）)」】』]+$/g, '');
-  
+
   // 如果清理后是一个或两个字符（考虑组合Emoji），尝试返回
   if (cleaned.length > 0 && cleaned.length <= 8) {
     // 进一步检查是否包含可见字符（非控制字符）
@@ -93,12 +93,12 @@ function extractEmojiFromResponse(content: string | null | undefined): string | 
       const code = char.codePointAt(0);
       return code && code > 0x1F && code !== 0x20 && code !== 0xA0;
     });
-    
+
     if (hasVisibleChar) {
       return cleaned;
     }
   }
-  
+
   console.warn('[Stardust] extractEmojiFromResponse: 无法从内容中提取Emoji:', trimmed.substring(0, 50));
   return null;
 }
@@ -115,7 +115,7 @@ async function generateEmojiWithAI(userRawContent: string, message: string): Pro
     }
 
     console.log('[Stardust] 开始调用AI生成Emoji...');
-    
+
     // 调用AI服务生成Emoji（使用与 aiService 相同的模型）
     const response = await fetch('https://llm.chutes.ai/v1/chat/completions', {
       method: 'POST',
@@ -142,24 +142,24 @@ async function generateEmojiWithAI(userRawContent: string, message: string): Pro
 
     const data = await response.json();
     const rawContent = data.choices?.[0]?.message?.content;
-    
+
     console.log('[Stardust] AI完整响应:', JSON.stringify(data, null, 2));
     console.log('[Stardust] AI原始内容:', rawContent);
-    
+
     // 检查响应是否有效
     if (!rawContent) {
       console.warn('[Stardust] API返回空响应，使用默认Emoji');
       return DEFAULT_EMOJI;
     }
-    
+
     // 使用改进的提取函数
     const emoji = extractEmojiFromResponse(rawContent);
-    
+
     if (emoji) {
       console.log('[Stardust] 提取到Emoji:', emoji);
       return emoji;
     }
-    
+
     console.warn('[Stardust] 无法从响应中提取Emoji，使用默认值');
     return DEFAULT_EMOJI;
   } catch (error) {
@@ -181,7 +181,7 @@ export const useStardustStore = create<StardustStore>()(
        */
       createStardust: async (request: CreateStardustRequest) => {
         const { messageId, message, userRawContent, emojiChar } = request;
-        
+
         // 检查是否已存在
         if (get().hasStardust(messageId)) {
           console.log('[Stardust] 该消息已有珍藏，跳过');
@@ -209,7 +209,7 @@ export const useStardustStore = create<StardustStore>()(
             emojiChar: finalEmoji,
             userRawContent,
             createdAt: Date.now(),
-            alienName: '小星',
+            alienName: 'T.S',
             syncStatus: 'pending_sync',
           };
 
@@ -265,9 +265,9 @@ export const useStardustStore = create<StardustStore>()(
           return stardust;
         } catch (error) {
           console.error('[Stardust] 创建珍藏失败:', error);
-          set({ 
-            isGenerating: false, 
-            generationError: error instanceof Error ? error.message : '创建失败' 
+          set({
+            isGenerating: false,
+            generationError: error instanceof Error ? error.message : '创建失败'
           });
           return null;
         }

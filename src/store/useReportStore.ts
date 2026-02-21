@@ -271,7 +271,7 @@ export const useReportStore = create<ReportState>()(
         if (!report) return;
 
         // Set loading state
-        get().updateReport(reportId, { aiAnalysis: '正在生成 AI 分析...' });
+        get().updateReport(reportId, { aiAnalysis: '正在生成观察员手记...' });
 
         const todoStore = useTodoStore.getState();
         const chatStore = useChatStore.getState();

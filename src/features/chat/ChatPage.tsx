@@ -62,14 +62,14 @@ export const ChatPage = () => {
     setEditingId(null);
     setEditContent('');
     setEditStartTime(format(prevMsg.timestamp, "yyyy-MM-dd'T'HH:mm"));
-    
+
     const index = messages.findIndex(m => m.id === prevMsg.id);
     const nextMsg = messages[index + 1];
     if (nextMsg) {
-       const nextEnd = nextMsg.timestamp + (nextMsg.duration || 0) * 60 * 1000;
-       setEditEndTime(format(nextEnd, "yyyy-MM-dd'T'HH:mm"));
+      const nextEnd = nextMsg.timestamp + (nextMsg.duration || 0) * 60 * 1000;
+      setEditEndTime(format(nextEnd, "yyyy-MM-dd'T'HH:mm"));
     } else {
-       setEditEndTime(format(Date.now(), "yyyy-MM-dd'T'HH:mm"));
+      setEditEndTime(format(Date.now(), "yyyy-MM-dd'T'HH:mm"));
     }
   };
 
@@ -92,10 +92,10 @@ export const ChatPage = () => {
       if (prevMsg) {
         const start = parseTime(editStartTime);
         const end = parseTime(editEndTime);
-        
+
         const index = messages.findIndex(m => m.id === insertingAfterId);
         const nextMsg = messages[index + 1];
-        
+
         await insertActivity(insertingAfterId, nextMsg?.id || null, editContent, start, end);
       }
     }
@@ -113,17 +113,17 @@ export const ChatPage = () => {
   const handleSend = async () => {
     console.log('[DEBUG] handleSend 开始 - input:', input.trim());
     if (!input.trim()) return;
-    
+
     // 记录待办信息用于后续更新 message duration
     const todoToComplete = activeTodoId ? todos.find(t => t.id === activeTodoId) : null;
-    
+
     // 只要存在 activeTodoId 且不是心情模式，就自动完成待办
     console.log('[DEBUG] handleSend 检查条件 - isMoodMode:', isMoodMode, 'activeTodoId:', activeTodoId);
     if (!isMoodMode && activeTodoId) {
       console.log('[DEBUG] 条件满足（非心情+有待办），调用 completeActiveTodo');
       await completeActiveTodo();
       console.log('[DEBUG] completeActiveTodo 完成');
-      
+
       // 关键修复：同步更新对应 message 的 duration（解决耗时显示为 null 的问题）
       if (todoToComplete && todoToComplete.startedAt) {
         const duration = Math.round((Date.now() - todoToComplete.startedAt) / (1000 * 60));
@@ -133,7 +133,7 @@ export const ChatPage = () => {
     } else {
       console.log('[DEBUG] 条件不满足，跳过 completeActiveTodo');
     }
-    
+
     if (isMoodMode) {
       await sendMood(input);
     } else {
@@ -200,7 +200,7 @@ export const ChatPage = () => {
                                   data: {
                                     emojiChar: stardust.emojiChar,
                                     message: stardust.message,
-                                    alienName: stardust.alienName || '小星',
+                                    alienName: stardust.alienName || 'T.S',
                                     createdAt: stardust.createdAt,
                                   },
                                   position: {
@@ -221,7 +221,7 @@ export const ChatPage = () => {
                     </div>
                   </div>
                   <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14}/></button>
+                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
                   </div>
                 </div>
               ) : (
@@ -245,7 +245,7 @@ export const ChatPage = () => {
                                   data: {
                                     emojiChar: stardust.emojiChar,
                                     message: stardust.message,
-                                    alienName: stardust.alienName || '小星',
+                                    alienName: stardust.alienName || 'T.S',
                                     createdAt: stardust.createdAt,
                                   },
                                   position: {
@@ -272,9 +272,9 @@ export const ChatPage = () => {
                     )}
                   </div>
                   <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                    <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={14}/></button>
-                    <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={14}/></button>
-                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14}/></button>
+                    <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={14} /></button>
+                    <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={14} /></button>
+                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
                   </div>
                 </div>
               )}
@@ -290,7 +290,7 @@ export const ChatPage = () => {
             <Activity size={16} className="animate-pulse" />
             <span className="text-sm font-medium">
               正在进行: <span className="font-bold">
-                {activeTodoId 
+                {activeTodoId
                   ? todos.find(t => t.id === activeTodoId)?.content || lastActivity?.content
                   : lastActivity?.content}
               </span>
@@ -310,7 +310,7 @@ export const ChatPage = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">内容</label>
@@ -322,7 +322,7 @@ export const ChatPage = () => {
                   placeholder="做了什么..."
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">开始时间</label>
@@ -360,16 +360,16 @@ export const ChatPage = () => {
       <div className="bg-white border-t border-gray-200 p-4 pb-safe">
         <div className={cn(
           "flex items-center space-x-2 rounded-full px-4 py-2 transition-all duration-300",
-          isMoodMode 
-            ? "bg-pink-50 border border-pink-400" 
+          isMoodMode
+            ? "bg-pink-50 border border-pink-400"
             : "bg-gray-100"
         )}>
           <button
             onClick={() => setIsMoodMode(!isMoodMode)}
             className={cn(
               "transition-all duration-300",
-              isMoodMode 
-                ? "text-pink-500 animate-pulse scale-110" 
+              isMoodMode
+                ? "text-pink-500 animate-pulse scale-110"
                 : "text-gray-400 hover:text-gray-600"
             )}
             title={isMoodMode ? "切换到活动模式" : "切换到心情模式"}
@@ -385,7 +385,7 @@ export const ChatPage = () => {
             className="flex-1 bg-transparent border-none focus:outline-none text-sm"
             disabled={isLoading}
           />
-          <button 
+          <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
             className={cn(
