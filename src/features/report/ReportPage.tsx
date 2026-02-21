@@ -342,7 +342,8 @@ export const ReportPage = () => {
                   /* 生成中状态 */
                   <div className="flex flex-col items-center justify-center py-4 space-y-2">
                     <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm opacity-80">观察员正在撰写手记...</p>
+                    <p className="text-sm font-medium text-blue-800 tracking-wide mt-2">观察员正在整理今天的时光碎片...</p>
+                    <p className="text-xs text-blue-500 opacity-80 mt-1">跨越光年投递手记需要时间，请耐心等待 1-2 分钟</p>
                   </div>
                 ) : (selectedReport.aiAnalysis.includes('请稍后重试') || selectedReport.aiAnalysis.startsWith('生成手记失败') || selectedReport.aiAnalysis.startsWith('生成观察手记时出错')) ? (
                   /* 错误状态 - 可以重试 */
