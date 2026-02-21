@@ -344,7 +344,7 @@ export const ReportPage = () => {
                     <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-sm opacity-80">观察员正在撰写手记...</p>
                   </div>
-                ) : (selectedReport.aiAnalysis.includes('出错') || selectedReport.aiAnalysis.includes('无法生成') || selectedReport.aiAnalysis.includes('失败')) ? (
+                ) : (selectedReport.aiAnalysis.includes('请稍后重试') || selectedReport.aiAnalysis.startsWith('生成手记失败') || selectedReport.aiAnalysis.startsWith('生成观察手记时出错')) ? (
                   /* 错误状态 - 可以重试 */
                   <div className="bg-red-50 p-3 rounded border border-red-100">
                     <p className="text-sm text-red-600 mb-2">{selectedReport.aiAnalysis}</p>
