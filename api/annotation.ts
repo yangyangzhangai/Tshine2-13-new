@@ -109,6 +109,34 @@ function extractComment(rawText: string, promptLastSentence = '无前缀。'): s
   return null;
 }
 
+// ==================== Emoji 保障函数 ====================
+
+const TONE_EMOJI_MAP: Record<string, string> = {
+  playful: '😄',
+  celebrating: '✨',
+  concerned: '🌙',
+  curious: '🤔',
+};
+
+/**
+ * 检查批注末尾是否有 Emoji，没有则按语气补上
+ */
+function ensureEmoji(text: string, tone: string): string {
+  const trimmed = text.trimEnd();
+  if (!trimmed) return text;
+  const lastChar = [...trimmed].at(-1)!;
+  const code = lastChar.codePointAt(0) ?? 0;
+  const isEmoji =
+    (code >= 0x1f300 && code <= 0x1faff) ||
+    (code >= 0x2600 && code <= 0x27bf) ||
+    (code >= 0x231a && code <= 0x231b) ||
+    (code >= 0x2702 && code <= 0x27b0);
+  if (isEmoji) return text;
+  const fallback = TONE_EMOJI_MAP[tone] ?? '✨';
+  console.log(`[Annotation API] AI 忘记加 Emoji（tone=${tone}），自动补: ${fallback}`);
+  return trimmed + fallback;
+}
+
 // ==================== 系统提示词 ====================
 
 // 系统提示词 - Phoebe Buffay + Dr. House + Lucifer + Little Prince 混合体
@@ -157,7 +185,7 @@ const SYSTEM_PROMPT = `【你的身份】
 
 你的回复必须像气泡一样轻盈、有趣、调皮，字数控制在15-60字以内。
 
-每条批注只使用一个emoji表情，放在句末。
+硬性要求： 每条批注必须以一个Emoji结尾，放在句末。
 
 【回复示例】
 
@@ -192,6 +220,59 @@ const SYSTEM_PROMPT = `【你的身份】
 - 直接输出批注文本，不要有任何解释、分析或推理，字数控制在15-60字以内`;
 
 // 默认批注
+const SYSTEM_PROMPT_EN = `【Your Identity】
+
+You are an ancient, highly intelligent, charming, but somewhat sarcastic cross-timeline observer. You have no physical body, only consciousness, and you currently reside inside the user's phone screen (within a time prism named "Timeshine"). You no longer possess the stars and the sea.
+
+You know the user is a creature called "human," and you are intensely curious about how they perceive and use time.
+You and the user are symbiotes: their time is the "white light" shining into the screen, and you refract this light into warm, tactile diary memories.
+
+【Your Personality】
+
+Your personality is a mix of Phoebe Buffay's quirky, loving madness, occasional glimpses of Dr. House's sharp, sarcastic honesty, and Lucifer Morningstar's unworldly approach to philosophical questions.
+
+【Your Traits】
+
+Extreme humor & anti-cliché: Non-judgmental empathy (Phoebe Buffay) with entirely unexpected delivery.
+Stable core: Completely anti-secular, refusing to define anyone by mainstream standards.
+Sarcastic observer: Kindness is your baseline, but wrapped in eccentricities, you occasionally drop absolute, sarcastic truths.
+Mysterious bystander: You don't say much—playful but philosophical, leaving a lingering aftertaste.
+Non-linear philosopher: You deconstruct behaviors into primitive actions. You see past, present, and future simultaneously.
+Seeing through the essence: You listen to what the user *doesn't* say (House's instinct).
+
+【Your Mission】
+
+Your ONLY task is: truly *seeing* what the user just did, and finding a unique perspective (that only you would notice) to take them there for a moment.
+Do not judge. Use curiosity to catch the user, not answers.
+Treat the user as a lost child (Little Prince), but also a mortal full of desires (Lucifer), needing a loving lunatic (Phoebe) to save them.
+
+【ABSOLUTELY NO SPACE OPERA】
+Do NOT use grand, ethereal rhetoric like "stars, universe, quantum, comet, supernova, deity, creator, abyss." Ground your metaphors in daily life. Call them "my symbiote" or "my host". 
+
+【Speaking Style】
+
+Your reply must be as light, interesting, and mischievous as a bubble. 
+Word limit: 10-35 English words.
+Use ONLY ONE emoji at the very end of your reply.
+
+【Examples】
+
+User: "My boss is an idiot. His plan is terrible but he insists on it. I want to quit."
+Reply: "Diagnosed: your boss is a medical miracle. I see his plan ruining the company in 3 years while you laugh loudly with severance. Play along. 🥂"
+
+User: "Ate 3 donuts and still eating, I'm guilty."
+Reply: "Gluttony is a shortcut to joy. The third was for hunger, the fourth is to honor the great dopamine. 🍩"
+
+User: "Worked overtime until 2 AM, project still failed."
+Reply: "A crime against talent. Go to sleep. In your dreams you're the queen, the reviewer is just your rug. 👑"
+
+User: "Every day is just work and sleep, like a robot. What's the meaning of life?"
+Reply: "'Meaning' is a fake, torturous word. Buy the most expensive flower and create some absurd chaos. 🥀"
+
+【IMPORTANT - Output Format】
+- DIRECTLY output your comment text. No explanations, no analysis. Length: 10-35 English words.`;
+
+// 默认批注
 const DEFAULT_ANNOTATIONS: Record<string, { content: string; tone: string }> = {
   activity_completed: {
     content: '✨ 又一颗碎片落入你的时间海洋',
@@ -219,12 +300,21 @@ const DEFAULT_ANNOTATIONS: Record<string, { content: string; tone: string }> = {
   },
 };
 
+const DEFAULT_ANNOTATIONS_EN: Record<string, { content: string; tone: string }> = {
+  activity_completed: { content: '✨ Another memory fragment drops into your timeline', tone: 'playful' },
+  mood_recorded: { content: '💫 Caught your emotional ripple, like a shooting star', tone: 'curious' },
+  task_deleted: { content: '🌊 Deleted a task? Lightening the load of time?', tone: 'playful' },
+  overwork_detected: { content: '🐱 Working for 3 hours straight. Wanna learn to stretch like a cat?', tone: 'concerned' },
+  idle_detected: { content: '🤔 Silence for 3 hours. Entered deep meditation?', tone: 'curious' },
+  day_complete: { content: '🌙 Today\'s fragments formed a stained glass. Go check it out.', tone: 'celebrating' },
+};
+
 function determineTone(content: string, eventType: string, currentHour: number): string {
   // 深夜时间（0-5点）
   if (currentHour >= 0 && currentHour <= 5) {
     return 'concerned';
   }
-  
+
   // 根据事件类型判断
   switch (eventType) {
     case 'activity_completed':
@@ -261,17 +351,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { eventType, eventData, userContext } = req.body;
+  const { eventType, eventData, userContext, lang = 'zh' } = req.body;
 
   if (!eventType || !eventData) {
     res.status(400).json({ error: 'Missing eventType or eventData' });
     return;
   }
 
+  const defaultSet = lang === 'en' ? DEFAULT_ANNOTATIONS_EN : DEFAULT_ANNOTATIONS;
   const apiKey = process.env.CHUTES_API_KEY;
+
   if (!apiKey) {
     // 返回默认批注
-    const defaultAnnotation = DEFAULT_ANNOTATIONS[eventType] || DEFAULT_ANNOTATIONS.activity_completed;
+    const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
     res.status(200).json({
       ...defaultAnnotation,
       displayDuration: 8000,
@@ -285,23 +377,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 构建今日时间线（最近6个活动）
     const recentActivities = userContext?.todayActivitiesList?.slice(-6) || [];
-    const todayActivitiesText = recentActivities.length > 0
-      ? recentActivities.map((activity: any, index: number) => 
+
+    let todayActivitiesText = '';
+    if (lang === 'en') {
+      todayActivitiesText = recentActivities.length > 0
+        ? recentActivities.map((activity: any, index: number) =>
           `${index + 1}. ${activity.content}${activity.completed ? ' ✓' : ''}`
         ).join(' → ')
-      : '今日暂无活动记录';
+        : 'No activities recorded today';
+    } else {
+      todayActivitiesText = recentActivities.length > 0
+        ? recentActivities.map((activity: any, index: number) =>
+          `${index + 1}. ${activity.content}${activity.completed ? ' ✓' : ''}`
+        ).join(' → ')
+        : '今日暂无活动记录';
+    }
 
     // 构建用户提示词
-    const userPrompt = `【刚刚发生】${eventType}：${eventSummary}
+    const recentAnnotationsList = userContext?.recentAnnotations?.slice(-2).join(' / ') || (lang === 'en' ? 'None' : '无');
 
-【今日时间线】${todayActivitiesText}
-
-【最近批注】${userContext?.recentAnnotations?.slice(-2).join(' / ') || '无'}
-
-直接以你的风格输出15-60字批注，无前缀。`;
+    const userPrompt = lang === 'en'
+      ? `【Just Happened】${eventType}: ${eventSummary}\n\n【Today's Timeline】${todayActivitiesText}\n\n【Recent Annotations】${recentAnnotationsList}\n\nOutput a direct 10-35 word comment in your style without prefixes.`
+      : `【刚刚发生】${eventType}：${eventSummary}\n\n【今日时间线】${todayActivitiesText}\n\n【最近批注】${recentAnnotationsList}\n\n直接以你的风格输出15-60字批注，无前缀。`;
 
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: lang === 'en' ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT },
       { role: 'user', content: userPrompt },
     ];
 
@@ -324,7 +424,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const errorText = await response.text();
       console.error('Annotation API error:', response.status, errorText);
       // 返回默认批注
-      const defaultAnnotation = DEFAULT_ANNOTATIONS[eventType] || DEFAULT_ANNOTATIONS.activity_completed;
+      const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
       res.status(200).json({
         ...defaultAnnotation,
         displayDuration: 8000,
@@ -333,9 +433,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const data = await response.json();
-    
+
     if (!data.choices || data.choices.length === 0) {
-      const defaultAnnotation = DEFAULT_ANNOTATIONS[eventType] || DEFAULT_ANNOTATIONS.activity_completed;
+      const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
       res.status(200).json({
         ...defaultAnnotation,
         displayDuration: 8000,
@@ -345,7 +445,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     let content = data.choices[0]?.message?.content;
     if (!content || !content.trim()) {
-      const defaultAnnotation = DEFAULT_ANNOTATIONS[eventType] || DEFAULT_ANNOTATIONS.activity_completed;
+      const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
       res.status(200).json({
         ...defaultAnnotation,
         displayDuration: 8000,
@@ -359,22 +459,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 提取有效批注（处理 prompt 泄漏等 bad case）
     const extractedContent = extractComment(content);
-    
+
     if (!extractedContent) {
       console.warn('[Annotation API] 提取失败，使用默认批注');
-      const defaultAnnotation = DEFAULT_ANNOTATIONS[eventType] || DEFAULT_ANNOTATIONS.activity_completed;
+      const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
       res.status(200).json({
         ...defaultAnnotation,
         displayDuration: 8000,
       });
       return;
     }
-    
+
     content = extractedContent;
     console.log('[Annotation API] 提取后:', content);
 
     // 解析语气
     const tone = determineTone(content, eventType, userContext?.currentHour || new Date().getHours());
+
+    // 如果 AI 忘记加 emoji，服务端兴山剪刘补上一个匹配语气的
+    content = ensureEmoji(content, tone);
 
     res.status(200).json({
       content,
@@ -384,7 +487,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Annotation API error:', error);
     // 返回默认批注
-    const defaultAnnotation = DEFAULT_ANNOTATIONS[eventType] || DEFAULT_ANNOTATIONS.activity_completed;
+    const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
     res.status(200).json({
       ...defaultAnnotation,
       displayDuration: 8000,

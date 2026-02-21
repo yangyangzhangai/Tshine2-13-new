@@ -93,10 +93,95 @@ dissolved（光的涣散）
     }
   ]
 }`;
+const CLASSIFIER_PROMPT_EN = `You are a time log classifier.
+Classify the user's input time logs into categories and output strictly in JSON format.
+Do NOT output any explanations, prefixes, suffixes, or Markdown code blocks. Output the JSON only.
+
+【Category Definitions】
+
+deep_focus
+Tasks requiring sustained active attention:
+Writing, programming, exam prep, designing, instrument practice, drawing,
+learning courses, highly concentrated work tasks.
+
+necessary
+Passive or obligatory tasks to maintain daily life:
+Commuting, chores, cooking, grocery shopping, cleaning,
+administrative tasks, processing documents, obligatory meetings.
+
+body
+Replenishment and care at the physical level:
+Sleep, naps, meals, sports, fitness,
+running, stretching, medical visits, bathing.
+
+recharge
+Actively chosen, nourishing relaxation and interpersonal interaction:
+Deep talks with friends, active dinner dates, spending time with a partner,
+reading favorite books or watching movies, pleasant walks, listening to music.
+
+social_duty
+Passive or obligatory interpersonal interactions:
+Being invited to a dinner party, phone calls with relatives, company team-building,
+mandatory gatherings, socializing for work.
+
+self_talk
+Metacognitive activities, geared towards thinking output:
+Journaling, planning, organizing notes, reviewing,
+sorting out thoughts, meditation (thinking-oriented).
+
+dopamine
+Low cognition, instant gratification, passive scrolling:
+Short videos, scrolling social media, playing games, variety shows,
+aimless news browsing, aimless post scrolling.
+
+dissolved
+Time where the user cannot clearly state what they were doing,
+or time explicitly marked as procrastination, spacing out, or internal friction.
+
+【time_slot Rules】
+Determine the time slot based on the time information provided by the user:
+· morning: Events between waking up and 12:00.
+· afternoon: Events between 12:00 and 18:00.
+· evening: Events after 18:00.
+· If the user provides no time info, fill in null.
+
+【Boundary Handling Rules】
+· Eating while scrolling phone -> Split into two, 50% duration each, same time_slot.
+· Vague description (e.g., "rested for a bit") -> dissolved, flag: "ambiguous".
+· Actively chosen documentary/book -> recharge.
+· Scrolling short videos uncontrollably -> dopamine.
+· Meditation (relaxation) -> recharge; Meditation (review) -> self_talk.
+· Listening to podcast/audiobook while exercising -> body (primary activity takes precedence).
+· Completely unable to judge -> category: "unknown", do not force classify.
+
+【Output Format】
+{
+  "total_duration_min": number (sum of all item durations),
+  "items": [
+    {
+      "name": "Event Name (Keep the Original Language)",
+      "duration_min": number,
+      "time_slot": "morning" | "afternoon" | "evening" | null,
+      "category": "category english key",
+      "flag": "ambiguous" | null
+    }
+  ],
+  "todos": {
+    "completed": number,
+    "total": number
+  },
+  "energy_log": [
+    {
+      "time_slot": "morning" | "afternoon" | "evening",
+      "energy_level": "high" | "medium" | "low" | null,
+      "mood": "original text explicitly marked as mood or energy" | null
+    }
+  ]
+}`;
 
 /**
- * 剥离模型输出中可能存在的Markdown代码块包裹
- */
+  * 剥离模型输出中可能存在的Markdown代码块包裹
+  */
 function parseClassifierResponse(raw: string): any {
   // 优先尝试直接解析
   try {
@@ -143,7 +228,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { rawInput } = req.body;
+  const { rawInput, lang = 'zh' } = req.body;
 
   if (!rawInput || typeof rawInput !== 'string') {
     res.status(400).json({ error: 'Missing or invalid rawInput' });
@@ -170,7 +255,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         model,
         messages: [
-          { role: 'system', content: CLASSIFIER_PROMPT },
+          { role: 'system', content: lang === 'en' ? CLASSIFIER_PROMPT_EN : CLASSIFIER_PROMPT },
           { role: 'user', content: rawInput }
         ],
         temperature: 0.3, // 低温度，更稳定

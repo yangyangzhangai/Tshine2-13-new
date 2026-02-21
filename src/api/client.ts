@@ -9,7 +9,7 @@ const isDevelopment = import.meta.env.DEV;
 const isVercel = import.meta.env.VERCEL || window.location.hostname.includes('vercel.app');
 
 // API 基础 URL
-const API_BASE = isDevelopment && !isVercel 
+const API_BASE = isDevelopment && !isVercel
   ? '/api'  // 本地开发时通过 Vite proxy
   : '/api'; // 生产环境直接调用
 
@@ -53,6 +53,7 @@ interface AnnotationRequest {
     recentAnnotations?: string[];
     todayActivitiesList?: any[];
   };
+  lang?: 'zh' | 'en';
 }
 
 interface AnnotationResponse {
@@ -127,6 +128,7 @@ export async function callAnnotationAPI(request: AnnotationRequest): Promise<Ann
 
 interface ClassifyRequest {
   rawInput: string;
+  lang?: 'zh' | 'en';
 }
 
 interface ClassifyResponse {
@@ -157,6 +159,7 @@ interface DiaryRequest {
   rawInput?: string;
   date?: string;
   historyContext?: string;
+  lang?: 'zh' | 'en';
 }
 
 interface DiaryResponse {
