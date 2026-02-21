@@ -32,7 +32,7 @@ export const AuthPage = () => {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) throw error;
-        navigate(-1); // Go back to previous page
+        navigate('/'); // Go back to home page
       } else {
         const { error } = await signUp(email, password);
         if (error) throw error;
@@ -49,8 +49,8 @@ export const AuthPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="p-4">
-        <button 
-          onClick={() => navigate(-1)}
+        <button
+          onClick={() => navigate('/')}
           className="p-2 hover:bg-gray-200 rounded-full transition-colors"
         >
           <ArrowLeft size={24} className="text-gray-600" />

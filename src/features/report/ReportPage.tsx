@@ -13,12 +13,12 @@ type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 const ActivityRecordsView = ({ report }: { report: Report }) => {
   const messages = useChatStore(state => state.messages);
-  
+
   const start = report.startDate || startOfDay(new Date(report.date)).getTime();
   const end = report.endDate || endOfDay(new Date(report.date)).getTime();
 
-  const activityMessages = messages.filter(m => 
-    m.timestamp >= start && m.timestamp <= end && 
+  const activityMessages = messages.filter(m =>
+    m.timestamp >= start && m.timestamp <= end &&
     m.type !== 'system' && m.mode === 'record'
   ).sort((a, b) => a.timestamp - b.timestamp);
 
@@ -60,14 +60,14 @@ const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, typ
     <div className="space-y-6">
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 text-center">
-        <div 
+        <div
           className="bg-blue-50 p-3 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
           onClick={() => onShowTasks('completed')}
         >
           <div className="text-2xl font-bold text-blue-600">{stats.completedTodos}</div>
           <div className="text-xs text-blue-400">已完成</div>
         </div>
-        <div 
+        <div
           className="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
           onClick={() => onShowTasks('total')}
         >
@@ -113,16 +113,16 @@ const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, typ
           {stats.priorityStats?.map((p) => (
             <div key={p.priority} className="flex items-center text-xs">
               <span className="w-24 text-gray-500">
-                {p.priority === 'urgent-important' ? '紧急重要' : 
-                 p.priority === 'urgent-not-important' ? '紧急不重要' :
-                 p.priority === 'important-not-urgent' ? '重要不紧急' : '不重要不紧急'}
+                {p.priority === 'urgent-important' ? '紧急重要' :
+                  p.priority === 'urgent-not-important' ? '紧急不重要' :
+                    p.priority === 'important-not-urgent' ? '重要不紧急' : '不重要不紧急'}
               </span>
               <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden mx-2">
-                <div 
-                  className={cn("h-full", 
+                <div
+                  className={cn("h-full",
                     p.priority.includes('urgent') ? "bg-red-400" : "bg-blue-400"
-                  )} 
-                  style={{ width: `${p.count > 0 ? (p.completed / p.count) * 100 : 0}%` }} 
+                  )}
+                  style={{ width: `${p.count > 0 ? (p.completed / p.count) * 100 : 0}%` }}
                 />
               </div>
               <span className="text-gray-400 w-10 text-right">{p.completed}/{p.count}</span>
@@ -139,9 +139,9 @@ const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, typ
             {stats.dailyCompletion.map((day) => (
               <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
                 <div className="w-full bg-blue-100 rounded-t-sm relative group" style={{ height: `${Math.max(day.rate * 100, 5)}%` }}>
-                   <div className="absolute bottom-full mb-1 hidden group-hover:block bg-black text-white text-[10px] p-1 rounded whitespace-nowrap z-10">
-                     {day.completed}/{day.total}
-                   </div>
+                  <div className="absolute bottom-full mb-1 hidden group-hover:block bg-black text-white text-[10px] p-1 rounded whitespace-nowrap z-10">
+                    {day.completed}/{day.total}
+                  </div>
                 </div>
                 <span className="text-[10px] text-gray-400 transform -rotate-45 origin-top-left translate-y-4">{day.date}</span>
               </div>
@@ -159,7 +159,7 @@ export const ReportPage = () => {
   const { todos } = useTodoStore();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [showReportList, setShowReportList] = useState<'weekly' | 'monthly' | 'custom' | null>(null);
-  
+
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [showTaskList, setShowTaskList] = useState<'completed' | 'total' | null>(null);
@@ -169,22 +169,22 @@ export const ReportPage = () => {
 
   const handleDateClick = (value: Date) => {
     // Check if report exists for this date
-    const existingReport = reports.find(r => 
-      r.type === 'daily' && 
+    const existingReport = reports.find(r =>
+      r.type === 'daily' &&
       new Date(r.date).toDateString() === value.toDateString()
     );
-    
+
     if (existingReport) {
       setSelectedReportId(existingReport.id);
     } else {
       // Auto generate basic report
       generateReport('daily', value.getTime());
       setTimeout(() => {
-         const newReport = useReportStore.getState().reports.find(r => 
-           r.type === 'daily' && 
-           new Date(r.date).toDateString() === value.toDateString()
-         );
-         if (newReport) setSelectedReportId(newReport.id);
+        const newReport = useReportStore.getState().reports.find(r =>
+          r.type === 'daily' &&
+          new Date(r.date).toDateString() === value.toDateString()
+        );
+        if (newReport) setSelectedReportId(newReport.id);
       }, 50);
     }
   };
@@ -197,7 +197,7 @@ export const ReportPage = () => {
       const targetDate = date instanceof Date ? date.getTime() : Date.now();
       generateReport(type, targetDate);
     }
-    
+
     // Find and open
     setTimeout(() => {
       // This is a bit loose, finding the latest report of type
@@ -214,7 +214,7 @@ export const ReportPage = () => {
     setShowReportList(type);
   };
 
-  const filteredReports = showReportList 
+  const filteredReports = showReportList
     ? reports.filter(r => r.type === showReportList)
     : [];
 
@@ -229,9 +229,9 @@ export const ReportPage = () => {
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <h2 className="text-sm font-medium text-gray-500 mb-3">日历视图</h2>
           <div className="calendar-wrapper flex justify-center">
-            <Calendar 
-              onChange={setDate} 
-              value={date} 
+            <Calendar
+              onChange={setDate}
+              value={date}
               onClickDay={handleDateClick}
               className="w-full border-none text-sm"
             />
@@ -240,7 +240,7 @@ export const ReportPage = () => {
 
         {/* Report Actions */}
         <div className="grid grid-cols-3 gap-3">
-          <button 
+          <button
             onClick={() => openReportList('weekly')}
             className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:bg-blue-50 transition-colors"
           >
@@ -249,8 +249,8 @@ export const ReportPage = () => {
             </div>
             <span className="text-xs font-medium">周报</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => openReportList('monthly')}
             className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:bg-purple-50 transition-colors"
           >
@@ -259,8 +259,8 @@ export const ReportPage = () => {
             </div>
             <span className="text-xs font-medium">月报</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => openReportList('custom')}
             className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:bg-orange-50 transition-colors"
           >
@@ -294,8 +294,8 @@ export const ReportPage = () => {
                 {showReportList === 'weekly'
                   ? '周报功能正在星际旅行中，预计很快抵达...'
                   : showReportList === 'monthly'
-                  ? '月报功能正在时间维度中校准，敬请期待...'
-                  : '定制报告功能正在组装零件，即将上线...'}
+                    ? '月报功能正在时间维度中校准，敬请期待...'
+                    : '定制报告功能正在组装零件，即将上线...'}
               </p>
             </div>
           </div>
@@ -315,20 +315,24 @@ export const ReportPage = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="space-y-6">
               {/* AI Analysis */}
               <div className="bg-blue-50 p-4 rounded-lg text-blue-800">
                 <h3 className="font-bold flex items-center gap-2 mb-2 text-sm">
                   <Sparkles size={16} /> AI 分析
                 </h3>
-                
+
                 {/* 未生成状态 */}
                 {(!selectedReport.aiAnalysis || selectedReport.aiAnalysis === 'AI 分析功能即将上线...') ? (
                   <div className="text-center py-2">
                     <p className="text-sm opacity-80 mb-3">来自时间星球的观察员正在等待记录...</p>
                     <button
-                      onClick={() => generateTimeshineDiary(selectedReport.id)}
+                      onClick={() => {
+                        if (window.confirm("每天只能生成一次观察手记，确认现在生成吗？")) {
+                          generateTimeshineDiary(selectedReport.id);
+                        }
+                      }}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
                     >
                       查看今日观察笔记
@@ -362,15 +366,15 @@ export const ReportPage = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Activity Records */}
               <ActivityRecordsView report={selectedReport} />
-              
+
               {/* Stats View */}
               {selectedReport.stats ? (
-                <ReportStatsView 
-                  stats={selectedReport.stats} 
-                  type={selectedReport.type} 
+                <ReportStatsView
+                  stats={selectedReport.stats}
+                  type={selectedReport.type}
                   onShowTasks={setShowTaskList}
                 />
               ) : (
@@ -397,12 +401,12 @@ export const ReportPage = () => {
               {(() => {
                 const start = selectedReport.startDate || startOfDay(new Date(selectedReport.date)).getTime();
                 const end = selectedReport.endDate || endOfDay(new Date(selectedReport.date)).getTime();
-                
-                const reportTodos = todos.filter(t => 
+
+                const reportTodos = todos.filter(t =>
                   t.dueDate >= start && t.dueDate <= end
                 );
-                
-                const displayTodos = showTaskList === 'completed' 
+
+                const displayTodos = showTaskList === 'completed'
                   ? reportTodos.filter(t => t.completed)
                   : reportTodos;
 

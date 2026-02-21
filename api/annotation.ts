@@ -126,21 +126,28 @@ const TONE_EMOJI_MAP: Record<string, string> = {
 };
 
 /**
- * 检查批注末尾是否有 Emoji，没有则按语气补上
+ * 检查批注中是否有任何 Emoji，一个都没有则按语气补上
  */
 function ensureEmoji(text: string, tone: string): string {
   const trimmed = text.trimEnd();
   if (!trimmed) return text;
-  const lastChar = [...trimmed].at(-1)!;
-  const code = lastChar.codePointAt(0) ?? 0;
-  const isEmoji =
-    (code >= 0x1f300 && code <= 0x1faff) ||
-    (code >= 0x2600 && code <= 0x27bf) ||
-    (code >= 0x231a && code <= 0x231b) ||
-    (code >= 0x2702 && code <= 0x27b0);
-  if (isEmoji) return text;
+
+  // 扫描整段文本，只要有一个 emoji 就不补
+  const chars = [...trimmed];
+  const hasEmoji = chars.some(ch => {
+    const code = ch.codePointAt(0) ?? 0;
+    return (
+      (code >= 0x1f300 && code <= 0x1faff) ||
+      (code >= 0x2600 && code <= 0x27bf) ||
+      (code >= 0x231a && code <= 0x231b) ||
+      (code >= 0x2702 && code <= 0x27b0)
+    );
+  });
+
+  if (hasEmoji) return text;
+
   const fallback = TONE_EMOJI_MAP[tone] ?? '✨';
-  console.log(`[Annotation API] AI 忘记加 Emoji（tone=${tone}），自动补: ${fallback}`);
+  console.log(`[Annotation API] AI 批注无任何 Emoji（tone=${tone}），自动补: ${fallback}`);
   return trimmed + fallback;
 }
 

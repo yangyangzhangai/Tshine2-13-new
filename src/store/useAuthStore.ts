@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../api/supabase';
 import { useChatStore } from './useChatStore';
 import { useTodoStore } from './useTodoStore';
+import { useReportStore } from './useReportStore';
 
 interface AuthState {
   user: any | null;
@@ -25,21 +26,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     supabase.auth.onAuthStateChange(async (event, session) => {
       const previousUser = get().user;
       const currentUser = session?.user || null;
-      
+
       set({ user: currentUser, loading: false });
 
       if (event === 'SIGNED_IN' && currentUser && !previousUser) {
         console.log('User signed in. Syncing local data...');
         await syncLocalDataToSupabase(currentUser.id);
-        
+
         // After sync, fetch the latest data from server (which now includes our synced data)
         await useChatStore.getState().fetchMessages();
         await useTodoStore.getState().fetchTodos();
-      } 
+        await useReportStore.getState().fetchReports();
+      }
       else if (event === 'SIGNED_OUT') {
         console.log('User signed out. Clearing local state...');
         useChatStore.setState({ messages: [] });
         useTodoStore.setState({ todos: [] });
+        useReportStore.setState({ reports: [] });
       }
     });
   },
@@ -74,7 +77,7 @@ async function syncLocalDataToSupabase(userId: string) {
       activity_type: m.activityType,
       user_id: userId
     }));
-    
+
     // We use upsert to avoid conflicts if IDs somehow match, 
     // but typically local IDs (UUIDs) won't conflict with others.
     const { error } = await supabase.from('messages').upsert(messagesToUpload);
@@ -108,6 +111,30 @@ async function syncLocalDataToSupabase(userId: string) {
       console.error('Error syncing todos:', error);
     } else {
       console.log(`Synced ${todos.length} todos.`);
+    }
+  }
+
+  // 3. Sync Reports
+  const reports = useReportStore.getState().reports;
+  if (reports.length > 0) {
+    const reportsToUpload = reports.map(r => ({
+      id: r.id,
+      title: r.title,
+      date: r.date,
+      start_date: r.startDate,
+      end_date: r.endDate,
+      type: r.type,
+      content: r.content,
+      ai_analysis: r.aiAnalysis,
+      stats: r.stats,
+      user_id: userId
+    }));
+
+    const { error } = await supabase.from('reports').upsert(reportsToUpload);
+    if (error) {
+      console.error('Error syncing reports:', error);
+    } else {
+      console.log(`Synced ${reports.length} reports.`);
     }
   }
 }

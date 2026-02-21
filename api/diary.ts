@@ -58,7 +58,15 @@ Timeshine视角的叙述正文。
 
 按照光谱分布的类别顺序，每个类别写一句观察。直接引用数据面板中的进度条和时长：
 
-🔵 深度专注 2h [████░░░░░░] —— 描述这个时段的状态 ⚫ 光的涣散 3h [██████░░░░] —— 描述这个时段的氛围 （注意：如果某类别时长为0，跳过不写） ▸ 光质读数
+🔵 深度专注 2h [████░░░░░░] —— 描述冷静沉浸的时段
+🟢 灵魂充电 1.5h [███░░░░░░░] —— 描述主动滋养的时段
+🟡 身体维护 8h [████████░░] —— 描述躯壳照料的时段
+🟠 生活运转 2h [████░░░░░░] —— 描述维持日常的时段
+🟣 声波交换 1h [██░░░░░░░░] —— 描述人际互动的时段
+🟤 自我整理 1h [██░░░░░░░░] —— 描述向内沉淀的时段
+🔴 即时满足 2h [████░░░░░░] —— 描述冲动刺激的时段
+⚫ 光的涣散 3h [██████░░░░] —— 描述模糊无方向的时段
+（注意：如果某类别时长为0，跳过不写） ▸ 光质读数
 
 专注聚光 vs 碎片散光 [X%] / [X%] 主动燃烧 vs 被动响应 [X%] / [X%] 待办着陆率 [X/X 项完成]
 
@@ -151,8 +159,14 @@ Use a storytelling tone. You are the diary subject—incorporate your own reacti
 ▸ Today's Spectrum
 
 Write one sentence of observation for each category in the spectrum provided. Directly quote the progress bar and duration from the data panel:
-- 🔵 Deep Focus 2h [████░░░░░░] —— Describe the state of this time block
-- ⚫ Dissolved Light 3h [██████░░░░] —— Describe the vibe of this time block
+- 🔵 Deep Focus 2h [████░░░░░░] —— Describe the state of calm immersion
+- 🟢 Recharge 1.5h [███░░░░░░░] —— Describe the state of active nourishment
+- 🟡 Body Care 8h [████████░░] —— Describe the state of physical maintenance
+- 🟠 Necessary 2h [████░░░░░░] —— Describe the state of daily operations
+- 🟣 Social Duty 1h [██░░░░░░░░] —— Describe the state of interpersonal interaction
+- 🟤 Self Talk 1h [██░░░░░░░░] —— Describe the state of inner reflection
+- 🔴 Dopamine 2h [████░░░░░░] —— Describe the state of impulsive stimulation
+- ⚫ Dissolved 3h [██████░░░░] —— Describe the vibe of blurred direction
 (Note: Skip the category entirely if its duration is 0)
 
 ▸ Light Quality Readings
