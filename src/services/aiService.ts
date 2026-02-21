@@ -14,7 +14,7 @@ import type {
   AnnotationResponse,
   AnnotationTone 
 } from '../types/annotation';
-import { removeThinkingTags } from '../lib/utils';
+import { removeThinkingTags, extractComment } from '../lib/utils';
 
 // Chutes API 配置
 const CHUTES_CONFIG = {
@@ -202,17 +202,22 @@ export async function generateAnnotation(
     // 记录原始内容（调试用）
     console.log('[AI Service] API 原始返回:', content.substring(0, 200));
 
-    // 过滤掉 <think>...</think> 标签及其内容（Qwen3 推理模型的思考过程）
+    // 过滤掉 uesekeh...  标签及其内容（Qwen3 推理模型的思考过程）
     content = removeThinkingTags(content);
     
     console.log('[AI Service] API 过滤后:', content);
 
-    // 验证输出是否为空
-    if (!content.trim()) {
-      console.warn('[AI Service] 输出为空，使用默认批注');
+    // 提取有效批注（处理 prompt 泄漏等 bad case）
+    const extractedContent = extractComment(content);
+    
+    if (!extractedContent) {
+      console.warn('[AI Service] 提取失败，使用默认批注');
       const defaultAnnotation = getDefaultAnnotation(eventType);
       return defaultAnnotation;
     }
+    
+    content = extractedContent;
+    console.log('[AI Service] 提取后:', content);
 
     // 解析语气
     const tone = determineTone(content, eventType, userContext.currentHour);

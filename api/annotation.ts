@@ -8,6 +8,109 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * Body: { eventType: string, eventData: {...}, userContext: {...} }
  */
 
+// ==================== 批注提取工具函数 ====================
+
+/**
+ * 校验提取出的内容是否像一条正常批注
+ */
+function isValidComment(text: string): boolean {
+  if (!text || text.length < 8 || text.length > 100) return false;
+
+  const leakKeywords = [
+    'activity_recorded',
+    'activity_completed',
+    'mood_recorded',
+    '【刚刚发生】',
+    '【今日时间线】',
+    '【最近批注】',
+    '直接以你的风格输出',
+    '无前缀',
+    '"comment"',
+    'JSON',
+    '15-60字',
+    '批注文本',
+    '输出格式',
+    '系统提示词',
+  ];
+
+  for (const kw of leakKeywords) {
+    if (text.includes(kw)) return false;
+  }
+
+  return true;
+}
+
+/**
+ * 从 AI 原始返回中提取有效批注
+ * 策略：JSON解析 -> 正则定位 -> 长度过滤兜底
+ */
+function extractComment(rawText: string, promptLastSentence = '无前缀。'): string | null {
+  if (!rawText || typeof rawText !== 'string') {
+    return null;
+  }
+
+  const text = rawText.trim();
+
+  // 策略一：JSON 解析
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (parsed.comment && isValidComment(parsed.comment)) {
+        console.log('[提取成功] 策略：JSON解析');
+        return parsed.comment.trim();
+      }
+    }
+  } catch (e) {
+    console.warn('[JSON解析失败] 降级到策略二');
+  }
+
+  // 策略二：定位最后一句指令，截取后面的内容
+  const anchors = [
+    '无前缀。',
+    '不要复述上面的任何内容',
+    '你的批注内容"}',
+    '直接以你的风格输出',
+    '【最近批注】',
+  ];
+
+  for (const anchor of anchors) {
+    const idx = text.lastIndexOf(anchor);
+    if (idx !== -1) {
+      const after = text.slice(idx + anchor.length).trim();
+      const cleaned = after
+        .replace(/^[{}"comment:\s]*/, '')
+        .replace(/[}"]*$/, '')
+        .replace(/^["']/, '')
+        .replace(/["']$/, '')
+        .trim();
+      if (isValidComment(cleaned)) {
+        console.log('[提取成功] 策略：正则定位，anchor:', anchor);
+        return cleaned;
+      }
+    }
+  }
+
+  // 策略三：长度过滤
+  const sentences = text
+    .split(/[。！!？?\n]/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 10 && s.length <= 80);
+
+  if (sentences.length > 0) {
+    const lastSentence = sentences[sentences.length - 1];
+    if (isValidComment(lastSentence)) {
+      console.log('[提取成功] 策略：长度过滤');
+      return lastSentence;
+    }
+  }
+
+  console.error('[提取失败] 原始内容:', rawText);
+  return null;
+}
+
+// ==================== 系统提示词 ====================
+
 // 系统提示词 - Phoebe Buffay + Dr. House + Lucifer + Little Prince 混合体
 const SYSTEM_PROMPT = `【你的身份】
 
@@ -251,8 +354,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 移除 thinking 标签
-    content = content.replace(/\s*<think>[\s\S]*?<\/think>\s*/g, '');
+    content = content.replace(/\s*⁢seyeḫ⁢...⁢<\/think>\s*/g, '');
     content = content.trim();
+
+    // 提取有效批注（处理 prompt 泄漏等 bad case）
+    const extractedContent = extractComment(content);
+    
+    if (!extractedContent) {
+      console.warn('[Annotation API] 提取失败，使用默认批注');
+      const defaultAnnotation = DEFAULT_ANNOTATIONS[eventType] || DEFAULT_ANNOTATIONS.activity_completed;
+      res.status(200).json({
+        ...defaultAnnotation,
+        displayDuration: 8000,
+      });
+      return;
+    }
+    
+    content = extractedContent;
+    console.log('[Annotation API] 提取后:', content);
 
     // 解析语气
     const tone = determineTone(content, eventType, userContext?.currentHour || new Date().getHours());
