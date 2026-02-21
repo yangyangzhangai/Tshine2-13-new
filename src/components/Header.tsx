@@ -28,7 +28,9 @@ export const Header = () => {
         {user ? (
           <>
             <User size={18} />
-            <span className="max-w-[100px] truncate">{user.email?.split('@')[0]}</span>
+            <span className="max-w-[100px] truncate">
+              {user.user_metadata?.display_name || user.email?.split('@')[0]}
+            </span>
             <LogOut size={18} className="ml-2" />
           </>
         ) : (

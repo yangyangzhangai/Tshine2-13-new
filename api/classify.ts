@@ -88,11 +88,12 @@ dissolved（光的涣散）
   "energy_log": [
     {
       "time_slot": "morning" 或 "afternoon" 或 "evening",
-      "energy_level": "high" 或 "medium" 或 "low" 或 null,
+      "energy_level": "high" 或 "medium" 或 "low" 或 null, // 必须根据情绪词汇判断。如果用户描述开心/自律/专注/干劲/鸡血，记为 high；如果描述平稳/正常/完成，记为 medium；如果描述疲惫/被推着走/内耗/电量虚标/靠意志续命/烦躁/不想动，必须记作 low。没有明确情绪线索填 null。
       "mood": "用户原始标注文字" 或 null
     }
   ]
-}`;
+}
+`;
 const CLASSIFIER_PROMPT_EN = `You are a time log classifier.
 Classify the user's input time logs into categories and output strictly in JSON format.
 Do NOT output any explanations, prefixes, suffixes, or Markdown code blocks. Output the JSON only.
@@ -173,7 +174,7 @@ Determine the time slot based on the time information provided by the user:
   "energy_log": [
     {
       "time_slot": "morning" | "afternoon" | "evening",
-      "energy_level": "high" | "medium" | "low" | null,
+      "energy_level": "high" | "medium" | "low" | null, // Strict mapping: 'high' for motivated/focused/happy; 'medium' for normal/finished; 'low' for pushed/drained/exhausted/forcing myself/friction. null if no emotional cue.
       "mood": "original text explicitly marked as mood or energy" | null
     }
   ]

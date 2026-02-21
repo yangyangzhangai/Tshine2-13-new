@@ -160,6 +160,7 @@ interface DiaryRequest {
   date?: string;
   historyContext?: string;
   lang?: 'zh' | 'en';
+  userName?: string;
 }
 
 interface DiaryResponse {

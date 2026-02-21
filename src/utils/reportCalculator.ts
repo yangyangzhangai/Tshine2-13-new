@@ -284,6 +284,7 @@ export function computeSpectrum(items: ClassifiedItem[], totalMin: number): Spec
 
 /**
  * 计算光质读数（聚光率 / 散光率 / 主被动 / 待办着陆率）
+ * 改版逻辑：剔除维生基建（body, necessary）作为中性底色，只在有效时长内计算比例
  */
 export function computeLightQuality(
   spectrum: SpectrumItem[],
@@ -291,27 +292,51 @@ export function computeLightQuality(
   todosCompleted: number,
   todosTotal: number
 ): LightQuality {
+  // 定义中性基建类别（不参与散光和被动计算）
+  const NEUTRAL_CATEGORIES = new Set(['body', 'necessary']);
+
+  const neutralMin = spectrum
+    .filter((s) => NEUTRAL_CATEGORIES.has(s.category))
+    .reduce((sum, s) => sum + s.duration_min, 0);
+
+  // 有效时长 = 总时长 - 维持生命的基础时长
+  const effectiveMin = Math.max(0, totalMin - neutralMin);
+
+  // ── 聚光 vs 散光 ────────────────────────────────────────────────
+  // 聚光：仅深度专注
   const focusMin = spectrum
     .filter((s) => s.category === 'deep_focus')
     .reduce((sum, s) => sum + s.duration_min, 0);
 
+  // 散光：除了聚光和中性底色的剩余时间（dissolved, dopamine, recharge, social_duty, self_talk）
+  // 按照之前的讨论，如果不属于聚光，且不属于中性，就在这块有效饼图中算作散光（或者你希望更纯粹的话，散光只算 dissolved+dopamine，这里采用剩余比例法保证加起来 100%）
+  // 为了保证UI上专注和散光加起来是100%（针对有效时间），我们用有效时间做分母
+
+  const focusRatio = effectiveMin > 0 ? focusMin / effectiveMin : 0;
+  // 保证极值情况下（比如有效时间全是聚光）散光为0
+  const scatterRatio = effectiveMin > 0 ? 1 - focusRatio : 0;
+
+  // ── 主动 vs 被动 ────────────────────────────────────────────────
+  // 主动：深度专注、灵魂充电、自我整理
   const activeMin = spectrum
     .filter((s) => ACTIVE_CATEGORIES.has(s.category))
     .reduce((sum, s) => sum + s.duration_min, 0);
 
-  const focusRatio = totalMin > 0 ? focusMin / totalMin : 0;
-  const activeRatio = totalMin > 0 ? activeMin / totalMin : 0;
+  const activeRatio = effectiveMin > 0 ? activeMin / effectiveMin : 0;
+  // 被动：非主动作且非中性底色的剩余有效时间
+  const passiveRatio = effectiveMin > 0 ? 1 - activeRatio : 0;
+
   const todoRatio = todosTotal > 0 ? todosCompleted / todosTotal : null;
 
   return {
     focus_ratio: focusRatio,
-    scatter_ratio: 1 - focusRatio,
+    scatter_ratio: scatterRatio,
     active_ratio: activeRatio,
-    passive_ratio: 1 - activeRatio,
+    passive_ratio: passiveRatio,
     focus_pct: pct(focusRatio),
-    scatter_pct: pct(1 - focusRatio),
+    scatter_pct: pct(scatterRatio),
     active_pct: pct(activeRatio),
-    passive_pct: pct(1 - activeRatio),
+    passive_pct: pct(passiveRatio),
     todo_completed: todosCompleted,
     todo_total: todosTotal,
     todo_ratio: todoRatio,

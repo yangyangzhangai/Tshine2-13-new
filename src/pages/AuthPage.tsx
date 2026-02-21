@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
-import { ArrowLeft, Mail, Lock, Loader2 } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, Loader2, User } from 'lucide-react';
 
 export const AuthPage = () => {
   const navigate = useNavigate();
@@ -9,6 +9,7 @@ export const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -34,7 +35,7 @@ export const AuthPage = () => {
         if (error) throw error;
         navigate('/'); // Go back to home page
       } else {
-        const { error } = await signUp(email, password);
+        const { error } = await signUp(email, password, nickname);
         if (error) throw error;
         setMessage('注册成功！请检查您的邮箱以确认账号。确认后请登录。');
         setIsLogin(true); // Switch to login view
@@ -88,6 +89,26 @@ export const AuthPage = () => {
                   />
                 </div>
               </div>
+
+              {!isLogin && (
+                <div>
+                  <label htmlFor="nickname" className="sr-only">昵称</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="nickname"
+                      name="nickname"
+                      type="text"
+                      className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                      placeholder="你的昵称 (选填)"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label htmlFor="password" className="sr-only">密码</label>
                 <div className="relative">

@@ -9,7 +9,7 @@ interface AuthState {
   loading: boolean;
   initialize: () => Promise<void>;
   signIn: (email: string, pass: string) => Promise<{ error: any }>;
-  signUp: (email: string, pass: string) => Promise<{ error: any }>;
+  signUp: (email: string, pass: string, nickname?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -52,8 +52,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return { error };
   },
 
-  signUp: async (email, password) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+  signUp: async (email, password, nickname) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: nickname || email.split('@')[0]
+        }
+      }
+    });
     return { error };
   },
 

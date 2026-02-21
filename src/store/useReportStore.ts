@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../api/supabase';
 import { useTodoStore } from './useTodoStore';
 import { useChatStore } from './useChatStore';
+import { useAuthStore } from './useAuthStore';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, format, eachDayOfInterval, isSameDay } from 'date-fns';
 import { zhCN } from 'date-fns/locale/zh-CN';
 import { callReportAPI, callClassifierAPI, callDiaryAPI } from '../api/client';
@@ -447,11 +448,15 @@ export const useReportStore = create<ReportState>()(
           // Step 3: 调用日记 API
           // ═══════════════════════════════════════════════════════════════
           console.log('[Timeshine] Step 3: 生成观察手记...');
+          const currentUser = useAuthStore.getState().user;
+          const userNickname = currentUser?.user_metadata?.display_name || undefined;
+
           const diaryResult = await callDiaryAPI({
             structuredData: structuredDataWithMeta,
             rawInput: rawInput.slice(0, 500),
             date: format(start, 'yyyy年MM月dd日 EEEE', { locale: zhCN }),
             historyContext,
+            userName: userNickname,
           });
 
           if (!diaryResult.success || !diaryResult.content) {
