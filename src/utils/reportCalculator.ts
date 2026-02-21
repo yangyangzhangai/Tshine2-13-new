@@ -272,9 +272,9 @@ export function computeSpectrum(items: ClassifiedItem[], totalMin: number): Spec
       is_anomaly: ratio > ANOMALY_THRESHOLD,
       top_item: showTop
         ? {
-            name: top.name,
-            duration_str: minutesToDisplay(top.duration_min),
-          }
+          name: top.name,
+          duration_str: minutesToDisplay(top.duration_min),
+        }
         : null,
     });
   }
@@ -555,8 +555,8 @@ export function formatForDiaryAI(result: ComputedResult): string {
   // ── 光质读数 ────────────────────────────────────────────────
   const lq = result.light_quality;
   lines.push('▸ 光质读数');
-  lines.push(`  聚光率 vs 散光率      ${lq.focus_pct}  /  ${lq.scatter_pct}`);
-  lines.push(`  主动燃烧 vs 被动牵引  ${lq.active_pct}  /  ${lq.passive_pct}`);
+  lines.push(`  专注聚光 vs 碎片散光  ${lq.focus_pct}  /  ${lq.scatter_pct}`);
+  lines.push(`  主动燃烧 vs 被动响应  ${lq.active_pct}  /  ${lq.passive_pct}`);
   lines.push(`  待办着陆率            ${lq.todo_str}`);
   lines.push('');
 

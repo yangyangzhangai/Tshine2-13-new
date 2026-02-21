@@ -240,7 +240,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
 
     const analysisContent = await callReportAPI({
       data: analysisData,
-      type: report.type,
+      type: report.type === 'custom' ? 'daily' : report.type,
     });
     get().updateReport(reportId, { aiAnalysis: analysisContent });
   },
@@ -315,6 +315,16 @@ export const useReportStore = create<ReportState>((set, get) => ({
         const durationStr = m.duration ? ` (${m.duration}分钟)` : '';
         rawInputLines.push(`- ${timeStr} ${m.content}${durationStr}`);
       });
+
+      if (moodMessages.length > 0) {
+        rawInputLines.push('');
+        rawInputLines.push('心情与能量状态记录：');
+        moodMessages.forEach(m => {
+          const timeStr = format(m.timestamp, 'HH:mm');
+          rawInputLines.push(`- ${timeStr} [状态/心情] ${m.content}`);
+        });
+      }
+
       rawInputLines.push('');
       rawInputLines.push(`待办：完成${completedTodos}件，共${totalTodos}件`);
 

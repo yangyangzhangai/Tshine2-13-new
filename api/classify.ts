@@ -241,16 +241,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  // 使用 Chutes API - 已验证可用的模型
-  const apiUrl = 'https://llm.chutes.ai/v1/chat/completions';
-  const model = 'NousResearch/Hermes-4-405B-FP8-TEE';
+  // 使用 ZhiPu API
+  const apiUrl = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+  const model = 'glm-4.7-flash';
+  const zhipuApiKey = process.env.ZHIPU_API_KEY;
+
+  if (!zhipuApiKey) {
+    res.status(500).json({ error: 'Server configuration error: Missing ZHIPU_API_KEY' });
+    return;
+  }
 
   try {
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${zhipuApiKey}`,
       },
       body: JSON.stringify({
         model,
@@ -258,7 +264,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           { role: 'system', content: lang === 'en' ? CLASSIFIER_PROMPT_EN : CLASSIFIER_PROMPT },
           { role: 'user', content: rawInput }
         ],
-        temperature: 0.3, // 低温度，更稳定
+        temperature: 0.6, // 设置为0.6
         max_tokens: 2048,
         stream: false,
       }),
