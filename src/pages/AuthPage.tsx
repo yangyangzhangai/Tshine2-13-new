@@ -48,7 +48,7 @@ export const AuthPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="p-4">
+      <div className="p-4 relative z-10">
         <button
           onClick={() => navigate('/')}
           className="p-2 hover:bg-gray-200 rounded-full transition-colors"
