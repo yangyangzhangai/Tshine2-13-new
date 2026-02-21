@@ -85,6 +85,12 @@ export interface TrendSignal {
   consecutive_days?: number;
 }
 
+export interface MoodRecord {
+  time: string;        // "HH:mm"
+  time_slot: 'morning' | 'afternoon' | 'evening';
+  content: string;     // 用户原始心情文字
+}
+
 export interface ComputedResult {
   total_duration_str: string;
   spectrum: SpectrumItem[];
@@ -93,6 +99,7 @@ export interface ComputedResult {
   energy_log: EnergyLog[];
   raw_items: ClassifiedItem[];
   history_trends: TrendSignal[];
+  mood_records?: MoodRecord[];
 }
 
 // ── 类别配置 ──────────────────────────────────────────────────────────────────
@@ -483,19 +490,69 @@ export function computeAll(
 export function formatForDiaryAI(result: ComputedResult): string {
   const lines: string[] = ['【今日结构化数据】', ''];
 
-  // 光谱分布
+  const slotLabel: Record<string, string> = {
+    morning: '上午',
+    afternoon: '下午',
+    evening: '晚间',
+  };
+
+  // ── 事件清单（按时段分组，智能过滤）──────────────────────────
+  if (result.raw_items && result.raw_items.length > 0) {
+    lines.push('▸ 今日事件清单');
+    const slotOrder: Array<'morning' | 'afternoon' | 'evening'> = ['morning', 'afternoon', 'evening'];
+    for (const slot of slotOrder) {
+      let slotItems = result.raw_items.filter(i => i.time_slot === slot);
+      if (slotItems.length === 0) continue;
+
+      // 智能过滤：按时长降序，保留 ≥10min 或 Top5（取较大集合）
+      slotItems = slotItems.sort((a, b) => b.duration_min - a.duration_min);
+      const significantItems = slotItems.filter(i => i.duration_min >= 10);
+      const top5 = slotItems.slice(0, 5);
+      const filtered = significantItems.length >= top5.length ? significantItems : top5;
+      const omitted = slotItems.length - filtered.length;
+
+      lines.push(`  ${slotLabel[slot]}：`);
+      for (const i of filtered) {
+        const catLabel = CATEGORY_CONFIG[i.category]?.label || i.category;
+        lines.push(`    · ${i.name} (${minutesToDisplay(i.duration_min)}) [${catLabel}]`);
+      }
+      if (omitted > 0) {
+        lines.push(`    · …另有 ${omitted} 项琐碎事务`);
+      }
+    }
+    // 无时段的事项
+    const noSlotItems = result.raw_items.filter(i => !i.time_slot);
+    if (noSlotItems.length > 0) {
+      lines.push('  未标注时段：');
+      for (const i of noSlotItems.slice(0, 5)) {
+        lines.push(`    · ${i.name} (${minutesToDisplay(i.duration_min)})`);
+      }
+    }
+    lines.push('');
+  }
+
+  // ── 心情记录 ────────────────────────────────────────────────
+  if (result.mood_records && result.mood_records.length > 0) {
+    lines.push('▸ 今日心情记录');
+    for (const mood of result.mood_records) {
+      lines.push(`  ${mood.time}  「${mood.content}」`);
+    }
+    lines.push('');
+  }
+
+  // ── 光谱分布（含百分比 + 方括号进度条）──────────────────────
   lines.push('▸ 今日光谱分布');
   lines.push('');
   for (const s of result.spectrum) {
     const anomaly = s.is_anomaly ? '  ⚠ 偏多' : '';
-    lines.push(`  ${s.emoji} ${s.label.padEnd(6)}  ${s.duration_str.padEnd(10)}  ${s.bar}${anomaly}`);
+    lines.push(`  ${s.emoji} ${s.label.padEnd(6)}  ${s.duration_str.padEnd(10)}  [${s.bar}]  ${s.percent_str}${anomaly}`);
     if (s.top_item) {
       lines.push(`     └ 今日之最 → ${s.top_item.name}  ${s.top_item.duration_str}`);
     }
   }
   lines.push('');
 
-  // 光质读数
+  // ── 光质读数 ────────────────────────────────────────────────
   const lq = result.light_quality;
   lines.push('▸ 光质读数');
   lines.push(`  聚光率 vs 散光率      ${lq.focus_pct}  /  ${lq.scatter_pct}`);
@@ -503,36 +560,37 @@ export function formatForDiaryAI(result: ComputedResult): string {
   lines.push(`  待办着陆率            ${lq.todo_str}`);
   lines.push('');
 
-  // 能量曲线（有数据时展示）
+  // ── 能量曲线（含进度条）────────────────────────────────────
   if (result.energy_log && result.energy_log.length > 0) {
-    const slotLabel: Record<string, string> = {
-      morning: '上午',
-      afternoon: '下午',
-      evening: '晚间',
-    };
     const levelLabel: Record<string, string> = {
       high: '⚡ 充沛',
       medium: '〰 平稳',
       low: '🔋 低谷',
     };
+    const levelBar: Record<string, string> = {
+      high: buildBar(1.0, 8),
+      medium: buildBar(0.625, 8),
+      low: buildBar(0.25, 8),
+    };
     lines.push('▸ 今日能量曲线');
     for (const e of result.energy_log) {
       const slot = slotLabel[e.time_slot] || e.time_slot;
       const level = levelLabel[e.energy_level || ''] || '—';
+      const bar = levelBar[e.energy_level || ''] || '░░░░░░░░';
       const mood = e.mood ? `  「${e.mood}」` : '';
-      lines.push(`  ${slot}  ${level}${mood}`);
+      lines.push(`  ${slot}  [${bar}]  ${level}${mood}`);
     }
     lines.push('');
   }
 
-  // 引力错位（有异常时展示）
+  // ── 引力错位（有异常时展示）────────────────────────────────
   if (result.gravity_mismatch) {
     lines.push('▸ 引力错位检测');
     lines.push(`  ⚠ ${result.gravity_mismatch}`);
     lines.push('');
   }
 
-  // 历史趋势（有多日数据时展示）
+  // ── 历史趋势（有多日数据时展示）────────────────────────────
   if (result.history_trends && result.history_trends.length > 0) {
     lines.push('▸ 历史观测趋势');
     for (const t of result.history_trends) {

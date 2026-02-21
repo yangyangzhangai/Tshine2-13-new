@@ -3,8 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { useTodoStore } from './useTodoStore';
 import { useChatStore } from './useChatStore';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, format, eachDayOfInterval, isSameDay } from 'date-fns';
+import { zhCN } from 'date-fns/locale/zh-CN';
 import { callReportAPI, callClassifierAPI, callDiaryAPI } from '../api/client';
-import { computeAll, formatForDiaryAI, type ComputedResult, type ClassifiedData } from '../utils/reportCalculator';
+import { computeAll, formatForDiaryAI, type ComputedResult, type ClassifiedData, type MoodRecord } from '../utils/reportCalculator';
 
 export interface ReportStats {
   completedTodos: number;
@@ -63,7 +64,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
     const todoStore = useTodoStore.getState();
     const chatStore = useChatStore.getState();
     const targetDate = new Date(date);
-    
+
     let start: Date, end: Date;
     let title = '';
 
@@ -99,14 +100,14 @@ export const useReportStore = create<ReportState>((set, get) => ({
       if (type === 'weekly' && t.scope === 'monthly') {
         return false;
       }
-      
+
       return true;
     });
 
     // Calculate Stats
     const total = relevantTodos.length;
     const completed = relevantTodos.filter(t => t.completed).length;
-    
+
     let stats: ReportStats = {
       completedTodos: completed,
       totalTodos: total,
@@ -181,9 +182,9 @@ export const useReportStore = create<ReportState>((set, get) => ({
       stats,
       aiAnalysis: undefined, // No auto-generation
     };
-    
+
     // Remove existing report of same type and date (simple dedup)
-    set((state) => ({ 
+    set((state) => ({
       reports: [
         ...state.reports.filter(r => !(r.type === type && isSameDay(r.date, date))),
         newReport
@@ -201,28 +202,28 @@ export const useReportStore = create<ReportState>((set, get) => ({
 
     const todoStore = useTodoStore.getState();
     const chatStore = useChatStore.getState();
-    
+
     let start = report.startDate ? new Date(report.startDate) : startOfDay(new Date(report.date));
     let end = report.endDate ? new Date(report.endDate) : endOfDay(new Date(report.date));
-    
+
     // Legacy support for reports without start/end
     if (!report.startDate) {
-       if (report.type === 'weekly') {
-         start = startOfWeek(new Date(report.date), { weekStartsOn: 1 });
-         end = endOfWeek(new Date(report.date), { weekStartsOn: 1 });
-       } else if (report.type === 'monthly') {
-         start = startOfMonth(new Date(report.date));
-         end = endOfMonth(new Date(report.date));
-       }
+      if (report.type === 'weekly') {
+        start = startOfWeek(new Date(report.date), { weekStartsOn: 1 });
+        end = endOfWeek(new Date(report.date), { weekStartsOn: 1 });
+      } else if (report.type === 'monthly') {
+        start = startOfMonth(new Date(report.date));
+        end = endOfMonth(new Date(report.date));
+      }
     }
-    
+
     // Filter Todos
     const allTodos = todoStore.todos;
     const relevantTodos = allTodos.filter(t => {
       return t.dueDate >= start.getTime() && t.dueDate <= end.getTime();
     });
 
-    const activities = chatStore.messages.filter(m => 
+    const activities = chatStore.messages.filter(m =>
       m.timestamp >= start.getTime() && m.timestamp <= end.getTime() && m.type !== 'system' && m.mode === 'record'
     ).map(m => ({
       time: format(m.timestamp, 'MM-dd HH:mm'),
@@ -291,6 +292,21 @@ export const useReportStore = create<ReportState>((set, get) => ({
       const completedTodos = relevantTodos.filter(t => t.completed).length;
       const totalTodos = relevantTodos.length;
 
+      // 提取心情记录（isMood 消息是独立数据源，不经过分类器）
+      const moodMessages = chatStore.messages.filter(m =>
+        m.timestamp >= start.getTime() &&
+        m.timestamp <= end.getTime() &&
+        m.isMood === true
+      );
+      const moodRecords: MoodRecord[] = moodMessages.map(m => {
+        const hour = new Date(m.timestamp).getHours();
+        return {
+          time: format(m.timestamp, 'HH:mm'),
+          time_slot: hour < 12 ? 'morning' as const : hour < 18 ? 'afternoon' as const : 'evening' as const,
+          content: m.content,
+        };
+      });
+
       // 构建原始输入文本
       const rawInputLines: string[] = [];
       rawInputLines.push('今天的时间记录：');
@@ -321,21 +337,39 @@ export const useReportStore = create<ReportState>((set, get) => ({
       // ═══════════════════════════════════════════════════════════════
       console.log('[Timeshine] Step 2: 计算层处理...');
       const computed = computeAll(classifiedData, state.computedHistory);
+      computed.mood_records = moodRecords; // 注入心情数据
       const structuredData = formatForDiaryAI(computed);
+
+      // 手记编号（注意：基于本地 computedHistory 长度，清除缓存或换设备会重置）
+      const reportNumber = state.computedHistory.length + 1;
+      const structuredDataWithMeta = `手记编号：第 ${reportNumber} 号\n\n` + structuredData;
 
       // 保存计算结果到历史（用于未来趋势分析）
       set(state => ({
         computedHistory: [...state.computedHistory.slice(-6), computed]
       }));
 
+      // 构建历史上下文（给 AI 提供近几日的叙述性背景）
+      let historyContext: string | undefined;
+      if (state.computedHistory.length > 0) {
+        const recent = state.computedHistory.slice(-3);
+        const ctxLines: string[] = [`过去${recent.length}天观察摘要：`];
+        recent.forEach((h, i) => {
+          const focusItem = h.spectrum.find(s => s.category === 'deep_focus');
+          ctxLines.push(`  第${state.computedHistory.length - recent.length + i + 1}日：专注${focusItem?.duration_str || '0min'}，待办${h.light_quality.todo_str}`);
+        });
+        historyContext = ctxLines.join('\n');
+      }
+
       // ═══════════════════════════════════════════════════════════════
       // Step 3: 调用日记 API
       // ═══════════════════════════════════════════════════════════════
       console.log('[Timeshine] Step 3: 生成观察手记...');
       const diaryResult = await callDiaryAPI({
-        structuredData,
+        structuredData: structuredDataWithMeta,
         rawInput: rawInput.slice(0, 500),
-        date: format(start, 'yyyy-MM-dd'),
+        date: format(start, 'yyyy年MM月dd日 EEEE', { locale: zhCN }),
+        historyContext,
       });
 
       if (!diaryResult.success || !diaryResult.content) {
