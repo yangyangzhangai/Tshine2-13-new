@@ -426,7 +426,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'NousResearch/Hermes-4-405B-FP8-TEE',
+        model: 'Qwen/Qwen3-235B-A22B-Instruct-2507-TEE',
         messages,
         temperature: 0.9,
         max_tokens: 2048,
