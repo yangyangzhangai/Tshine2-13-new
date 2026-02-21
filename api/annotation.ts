@@ -31,6 +31,7 @@ function isValidComment(text: string): boolean {
     '批注文本',
     '输出格式',
     '系统提示词',
+    '【批注】',
   ];
 
   for (const kw of leakKeywords) {
@@ -403,8 +404,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const recentAnnotationsList = userContext?.recentAnnotations?.slice(-2).join(' / ') || (lang === 'en' ? 'None' : '无');
 
     const userPrompt = lang === 'en'
-      ? `【Just Happened】${eventType}: ${eventSummary} \n\n【Today's Timeline】${todayActivitiesText}\n\n【Recent Annotations】${recentAnnotationsList}\n\nOutput a direct 10-35 word comment in your style without prefixes.`
-      : `【刚刚发生】${eventType}：${eventSummary}\n\n【今日时间线】${todayActivitiesText}\n\n【最近批注】${recentAnnotationsList}\n\n直接以你的风格输出15-60字批注，无前缀。`;
+      ? `【Just Happened】${eventType}: ${eventSummary} \n\n【Today's Timeline】${todayActivitiesText}\n\n【Recent Annotations】${recentAnnotationsList}\n\nOutput a direct 10-35 word comment in your style without prefixes. IMPORTANT: The recent annotations above show what you just said. If the current input is similar in emotion or theme to your recent annotations, you MUST approach it from a completely different angle, metaphor, or tone — never repeat the same perspective twice.`
+      : `【刚刚发生】${eventType}：${eventSummary}\n\n【今日时间线】${todayActivitiesText}\n\n【最近批注】${recentAnnotationsList}\n\n直接以你的风格输出15-60字批注，无前缀。重要：上面的【最近批注】是你刚刚说过的话。如果本次用户的情绪或内容与最近批注相似，你必须换一个完全不同的切入角度、比喻或语气来回答，绝对不能重复相同的视角。`;
 
     const messages = [
       { role: 'system', content: lang === 'en' ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT },
