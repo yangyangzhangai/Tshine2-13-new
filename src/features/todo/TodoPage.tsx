@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useTodoStore, Priority, Todo, Recurrence } from '../../store/useTodoStore';
 import { useChatStore } from '../../store/useChatStore';
 import { Plus, Trash2, CheckCircle, Circle, Edit2, ChevronDown, ChevronUp, Repeat, ArrowUp, Play, X } from 'lucide-react';
@@ -28,6 +29,7 @@ const TodoItem = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkOverflow = () => {
@@ -86,7 +88,7 @@ const TodoItem = ({
           {todo.recurrence && todo.recurrence !== 'none' && (
             <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100 flex items-center gap-1">
               <Repeat size={10} />
-              {todo.recurrence === 'daily' ? '每天' : todo.recurrence === 'weekly' ? '每周' : '每月'}
+              {todo.recurrence === 'daily' ? t('recurrence_daily') : todo.recurrence === 'weekly' ? t('recurrence_weekly') : t('recurrence_monthly')}
             </span>
           )}
           <span className="text-xs text-gray-400 ml-auto">
@@ -103,7 +105,7 @@ const TodoItem = ({
               "p-1 rounded transition-colors",
               todo.isPinned ? "text-blue-600 bg-blue-100 hover:bg-blue-200" : "text-gray-300 hover:text-blue-500 hover:bg-gray-50"
             )}
-            title={todo.isPinned ? "取消置顶" : "置顶"}
+            title={todo.isPinned ? t('todo_unpin') : t('todo_pin')}
           >
             <ArrowUp size={18} />
           </button>
@@ -116,7 +118,7 @@ const TodoItem = ({
                   ? "text-green-600 bg-green-100 hover:bg-green-200 animate-pulse"
                   : "text-green-500 hover:text-green-600 hover:bg-green-50"
               )}
-              title={activeTodoId === todo.id ? "进行中" : "开始计时"}
+              title={activeTodoId === todo.id ? t('todo_in_progress') : t('todo_start')}
             >
               <Play size={18} fill={activeTodoId === todo.id ? "currentColor" : "none"} />
             </button>
@@ -127,7 +129,7 @@ const TodoItem = ({
         </div>
         {todo.completed && todo.duration !== undefined && (
           <span className="text-xs font-bold text-green-600">
-            耗时 {todo.duration}分钟
+            {t('todo_duration', { minutes: todo.duration })}
           </span>
         )}
       </div>
@@ -139,6 +141,7 @@ export const TodoPage = () => {
   const { todos, categories, addTodo, updateTodo, toggleTodo, togglePin, deleteTodo, addCategory, checkDueDates, fetchTodos, activeTodoId, startTodo, setActiveTodoId } = useTodoStore();
   const { sendMessage, setMode } = useChatStore();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -151,7 +154,7 @@ export const TodoPage = () => {
   // Form State
   const [content, setContent] = useState('');
   const [priority, setPriority] = useState<Priority>('urgent-important');
-  const [category, setCategory] = useState(categories[0] || '工作');
+  const [category, setCategory] = useState(categories[0] || 'Work');
   const [customCategory, setCustomCategory] = useState('');
   const [recurrence, setRecurrence] = useState<Recurrence>('none');
 
@@ -215,7 +218,7 @@ export const TodoPage = () => {
       setEditingId(null);
       setContent('');
       setPriority('urgent-important');
-      setCategory(categories[0] || '工作');
+      setCategory(categories[0] || 'Work');
       setCustomCategory('');
       setRecurrence('none');
     }
@@ -260,10 +263,10 @@ export const TodoPage = () => {
 
   const getPriorityLabel = (p: Priority) => {
     switch (p) {
-      case 'urgent-important': return '紧急重要';
-      case 'urgent-not-important': return '紧急不重要';
-      case 'important-not-urgent': return '重要不紧急';
-      case 'not-important-not-urgent': return '不重要不紧急';
+      case 'urgent-important': return t('priority_urgent_important');
+      case 'urgent-not-important': return t('priority_urgent_not_important');
+      case 'important-not-urgent': return t('priority_important_not_urgent');
+      case 'not-important-not-urgent': return t('priority_not_important_not_urgent');
     }
   };
 
@@ -295,7 +298,7 @@ export const TodoPage = () => {
     <div className="flex flex-col h-full bg-gray-50 relative">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 p-4 sticky top-0 z-10">
-        <h1 className="text-lg font-bold text-center mb-4">待办管理</h1>
+        <h1 className="text-lg font-bold text-center mb-4">{t('todo_title')}</h1>
         <div className="flex p-1 bg-gray-100 rounded-lg">
           {(['daily', 'weekly', 'monthly'] as const).map((f) => (
             <button
@@ -306,7 +309,7 @@ export const TodoPage = () => {
                 filter === f ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"
               )}
             >
-              {f === 'daily' ? '今日' : f === 'weekly' ? '本周' : '本月'}
+              {f === 'daily' ? t('todo_filter_daily') : f === 'weekly' ? t('todo_filter_weekly') : t('todo_filter_monthly')}
             </button>
           ))}
         </div>
@@ -316,7 +319,7 @@ export const TodoPage = () => {
       <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-3">
         {sortedTodos.length === 0 && (
           <div className="text-center text-gray-400 py-10">
-            <p>暂无待办任务</p>
+            <p>{t('todo_empty')}</p>
           </div>
         )}
 
@@ -349,7 +352,7 @@ export const TodoPage = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl p-6 space-y-4 animate-in slide-in-from-bottom-10 fade-in">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-bold">{editingId ? '编辑待办' : '添加待办'}</h2>
+              <h2 className="text-lg font-bold">{editingId ? t('todo_edit') : t('todo_add')}</h2>
               <button
                 type="button"
                 onClick={() => {
@@ -364,47 +367,47 @@ export const TodoPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">内容</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('todo_label_content')}</label>
                 <input
                   type="text"
                   required
                   value={content}
                   onChange={e => setContent(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="做什么..."
+                  placeholder={t('todo_placeholder_content')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">优先级</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('todo_label_priority')}</label>
                 <select
                   value={priority}
                   onChange={e => setPriority(e.target.value as Priority)}
                   className="w-full p-2 border border-gray-300 rounded-lg outline-none bg-white"
                 >
-                  <option value="urgent-important">紧急重要</option>
-                  <option value="important-not-urgent">重要不紧急</option>
-                  <option value="urgent-not-important">紧急不重要</option>
-                  <option value="not-important-not-urgent">不重要不紧急</option>
+                  <option value="urgent-important">{t('priority_urgent_important')}</option>
+                  <option value="important-not-urgent">{t('priority_important_not_urgent')}</option>
+                  <option value="urgent-not-important">{t('priority_urgent_not_important')}</option>
+                  <option value="not-important-not-urgent">{t('priority_not_important_not_urgent')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">重复</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('todo_label_recurrence')}</label>
                 <select
                   value={recurrence}
                   onChange={e => setRecurrence(e.target.value as Recurrence)}
                   className="w-full p-2 border border-gray-300 rounded-lg outline-none bg-white"
                 >
-                  <option value="none">不重复</option>
-                  <option value="daily">每天</option>
-                  <option value="weekly">每周</option>
-                  <option value="monthly">每月</option>
+                  <option value="none">{t('recurrence_none')}</option>
+                  <option value="daily">{t('recurrence_daily')}</option>
+                  <option value="weekly">{t('recurrence_weekly')}</option>
+                  <option value="monthly">{t('recurrence_monthly')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('todo_label_category')}</label>
                 <div className="flex space-x-2">
                   <select
                     value={category}
@@ -417,7 +420,7 @@ export const TodoPage = () => {
                     type="text"
                     value={customCategory}
                     onChange={e => setCustomCategory(e.target.value)}
-                    placeholder="自定义..."
+                    placeholder={t('todo_placeholder_custom_category')}
                     className="flex-1 p-2 border border-gray-300 rounded-lg outline-none"
                   />
                 </div>
@@ -430,7 +433,7 @@ export const TodoPage = () => {
                     onClick={handleDeleteFromModal}
                     className="flex-1 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 border border-red-200"
                   >
-                    删除此待办
+                    {t('todo_delete_confirm')}
                   </button>
                 ) : (
                   <div className="flex-1" />
@@ -439,7 +442,7 @@ export const TodoPage = () => {
                   type="submit"
                   className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
-                  确认
+                  {t('confirm')}
                 </button>
               </div>
             </form>

@@ -5,13 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDuration(minutes: number) {
+export function formatDuration(minutes: number, t?: (key: string, opts?: Record<string, unknown>) => string) {
+  if (t) {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return t('duration_hours_minutes', { hours, mins });
+    }
+    return t('duration_minutes', { mins: minutes });
+  }
+  // Fallback when t is not provided (e.g. server-side or legacy callers)
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hours}小时${mins}分钟`;
+    return `${hours}h ${mins}m`;
   }
-  return `${minutes}分钟`;
+  return `${minutes}m`;
 }
 
 /**
@@ -23,7 +32,7 @@ export function formatDuration(minutes: number) {
  */
 export function removeThinkingTags(text: string): string {
   if (!text || typeof text !== 'string') return '';
-  
+
   // 匹配 AI 推理模型的思考标签及其内容（支持多行）
   let cleaned = text
     .replace(/<think>[\s\S]*?<\/think>/gi, '') // 标准 <arg_key> 标签
@@ -33,12 +42,12 @@ export function removeThinkingTags(text: string): string {
     .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '') // <thinking> 标签
     .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '') // <reasoning> 标签
     .replace(/<output>[\s\S]*?<\/output>/gi, ''); // <output> 标签（Qwen3 格式）
-  
+
   // 清理可能残留的思考内容（匹配 <arg_key> 开头到文本结束的情况）
   if (cleaned.includes('<think>')) {
     cleaned = cleaned.replace(/<think>.*/gi, '');
   }
-  
+
   return cleaned.trim();
 }
 

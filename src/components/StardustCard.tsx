@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import type { StardustCardData } from '../types/stardust';
 
 interface StardustCardProps {
@@ -30,6 +31,7 @@ export const StardustCard: React.FC<StardustCardProps> = ({
   onRetry,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   // 点击外部关闭
   useEffect(() => {
@@ -68,26 +70,26 @@ export const StardustCard: React.FC<StardustCardProps> = ({
   // 计算卡片位置（优先显示在Emoji上方，空间不足则显示在下方）
   const getCardPosition = () => {
     if (!position) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-    
+
     const cardWidth = 280;
     const cardHeight = 150; // 预估高度
     const margin = 8;
-    
+
     let top: number | string = position.y - cardHeight - margin;
     let left = position.x - cardWidth / 2;
-    
+
     // 如果上方空间不足，显示在下方
     if (typeof top === 'number' && top < margin) {
       top = position.y + margin + 24; // 24是Emoji大致高度
     }
-    
+
     // 边界检查（确保不超出视口）
     const viewportWidth = window.innerWidth;
     if (left < margin) left = margin;
     if (left + cardWidth > viewportWidth - margin) {
       left = viewportWidth - cardWidth - margin;
     }
-    
+
     return { top, left };
   };
 
@@ -112,7 +114,7 @@ export const StardustCard: React.FC<StardustCardProps> = ({
           className="w-[280px] max-w-[90vw]"
         >
           {/* 毛玻璃卡片 */}
-          <div 
+          <div
             className="relative bg-white/80 backdrop-blur-lg rounded-2xl p-4 
                        shadow-2xl border border-white/50 overflow-hidden"
             style={{
@@ -133,7 +135,7 @@ export const StardustCard: React.FC<StardustCardProps> = ({
             {!data && (
               <div className="flex flex-col items-center justify-center py-8 space-y-3">
                 <Loader2 size={24} className="text-purple-500 animate-spin" />
-                <span className="text-sm text-gray-500">正在读取记忆...</span>
+                <span className="text-sm text-gray-500">{t('stardust_loading')}</span>
               </div>
             )}
 
@@ -142,7 +144,7 @@ export const StardustCard: React.FC<StardustCardProps> = ({
               <div className="flex flex-col items-center justify-center py-6 space-y-3">
                 <AlertCircle size={32} className="text-red-400" />
                 <p className="text-sm text-gray-600 text-center px-2">
-                  {data.message || '记忆加载失败，请稍后重试'}
+                  {data.message || t('stardust_error_default')}
                 </p>
                 {onRetry && (
                   <button
@@ -151,7 +153,7 @@ export const StardustCard: React.FC<StardustCardProps> = ({
                                hover:text-purple-700 transition-colors"
                   >
                     <RefreshCw size={14} />
-                    <span>重试</span>
+                    <span>{t('retry')}</span>
                   </button>
                 )}
               </div>
@@ -165,7 +167,7 @@ export const StardustCard: React.FC<StardustCardProps> = ({
                   <span className="text-3xl filter drop-shadow-sm">{data.emojiChar}</span>
                   <div className="flex-1 min-w-0 pt-1">
                     <p className="text-xs text-gray-500">
-                      来自 {data.alienName} · {format(data.createdAt, 'M月d日 HH:mm')}
+                      {t('stardust_from', { name: data.alienName, date: format(data.createdAt, 'MM-dd HH:mm') })}
                     </p>
                   </div>
                 </div>
@@ -176,11 +178,11 @@ export const StardustCard: React.FC<StardustCardProps> = ({
                     {data.message}
                   </p>
                   {data.message.length > 200 && (
-                    <button 
+                    <button
                       className="text-xs text-purple-600 hover:text-purple-700 mt-1"
-                      onClick={() => {/* TODO: 展开完整内容 */}}
+                      onClick={() => {/* TODO: 展开完整内容 */ }}
                     >
-                      展开
+                      {t('expand')}
                     </button>
                   )}
                 </div>
@@ -188,14 +190,14 @@ export const StardustCard: React.FC<StardustCardProps> = ({
             )}
 
             {/* 装饰性光晕 */}
-            <div 
+            <div
               className="absolute -inset-1 bg-gradient-to-r from-purple-400/10 to-blue-400/10 
                          rounded-2xl blur-xl -z-10 pointer-events-none"
             />
           </div>
 
           {/* 指向Emoji的小三角 */}
-          <div 
+          <div
             className="absolute w-3 h-3 bg-white/80 border-l border-t border-white/50
                        transform rotate-45 -z-10"
             style={{

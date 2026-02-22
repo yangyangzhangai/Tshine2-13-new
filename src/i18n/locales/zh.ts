@@ -1,0 +1,153 @@
+import type { TranslationKeys } from './en';
+
+const zh: TranslationKeys = {
+    // ── 通用 ──
+    app_name: 'Time Shine',
+    confirm: '确认',
+    cancel: '取消',
+    save: '保存',
+    delete: '删除',
+    retry: '重试',
+    expand: '展开',
+    close: '关闭',
+    loading: '加载中…',
+    no_data: '暂无数据',
+
+    // ── 时间格式 ──
+    duration_hours_minutes: '{{hours}}小时{{mins}}分钟',
+    duration_minutes: '{{mins}}分钟',
+    duration_label: '耗时 {{duration}}',
+    elapsed_label: '已持续 {{duration}}',
+
+    // ── Header ──
+    header_login: '登录/注册',
+    header_confirm_logout: '确定要退出登录吗？',
+
+    // ── 底部导航 ──
+    nav_record: '记录',
+    nav_todo: '待办管理',
+    nav_report: '时间报告',
+
+    // ── 聊天 / 记录页面 ──
+    chat_title: '记录',
+    chat_ongoing: '进行中',
+    chat_current_activity: '正在进行: ',
+    chat_placeholder_mood: '记录当前心情（如激动）... 点击爱心切换成活动记录',
+    chat_placeholder_activity: '记录当前活动 (如: 吃饭)... 点击爱心切换成心情记录',
+    chat_switch_to_activity: '切换到活动模式',
+    chat_switch_to_mood: '切换到心情模式',
+    chat_confirm_delete: '确定要删除这条记录吗？',
+    chat_edit_record: '编辑记录',
+    chat_insert_record: '插入记录',
+    chat_label_content: '内容',
+    chat_placeholder_content: '做了什么...',
+    chat_label_start_time: '开始时间',
+    chat_label_end_time: '结束时间',
+    chat_title_edit: '编辑',
+    chat_title_insert: '在此后插入',
+    chat_title_delete: '删除',
+
+    // ── 待办页面 ──
+    todo_title: '待办管理',
+    todo_filter_daily: '今日',
+    todo_filter_weekly: '本周',
+    todo_filter_monthly: '本月',
+    todo_empty: '暂无待办任务',
+    todo_add: '添加待办',
+    todo_edit: '编辑待办',
+    todo_label_content: '内容',
+    todo_placeholder_content: '做什么...',
+    todo_label_priority: '优先级',
+    todo_label_recurrence: '重复',
+    todo_label_category: '分类',
+    todo_placeholder_custom_category: '自定义...',
+    todo_delete_confirm: '删除此待办',
+    todo_duration: '耗时 {{minutes}}分钟',
+    todo_pin: '置顶',
+    todo_unpin: '取消置顶',
+    todo_start: '开始计时',
+    todo_in_progress: '进行中',
+
+    // 优先级标签
+    priority_urgent_important: '紧急重要',
+    priority_important_not_urgent: '重要不紧急',
+    priority_urgent_not_important: '紧急不重要',
+    priority_not_important_not_urgent: '不重要不紧急',
+
+    // 重复标签
+    recurrence_none: '不重复',
+    recurrence_daily: '每天',
+    recurrence_weekly: '每周',
+    recurrence_monthly: '每月',
+
+    // ── 报告页面 ──
+    report_title: '时间报告',
+    report_calendar_view: '日历视图',
+    report_weekly: '周报',
+    report_monthly: '月报',
+    report_custom: '定制报告',
+    report_completed: '已完成',
+    report_total_tasks: '总任务',
+    report_completion_rate: '完成率',
+    report_habit_tracking: '打卡习惯',
+    report_checked: '已打卡',
+    report_unchecked: '未打卡',
+    report_quadrant_distribution: '四象限分布',
+    report_completion_trend: '完成趋势',
+    report_activity_records: '活动记录',
+    report_observer_analysis: '观察员分析',
+    report_observer_waiting: '来自时光棱镜的观察员正在等待记录...',
+    report_generate_diary: '查看今日观察笔记',
+    report_generate_confirm: '每天只能生成一次观察手记，确认现在生成吗？',
+    report_generating: '观察员正在整理今天的时光碎片...',
+    report_generating_patience: '跨越光年投递手记需要时间，请耐心等待 1-2 分钟',
+    report_from_prism: '来自时光棱镜的观察手记',
+    report_coming_soon: '功能开发中',
+    report_weekly_coming_soon: '周报功能正在星际旅行中，预计很快抵达...',
+    report_monthly_coming_soon: '月报功能正在时间维度中校准，敬请期待...',
+    report_custom_coming_soon: '定制报告功能正在组装零件，即将上线...',
+    report_completed_tasks: '已完成任务',
+    report_all_tasks: '总任务',
+    report_no_tasks: '暂无任务',
+
+    // ── 认证页面 ──
+    auth_welcome_back: '欢迎回来',
+    auth_create_account: '创建账号',
+    auth_login_subtitle: '登录以同步您的数据',
+    auth_register_subtitle: '注册以开始云端同步',
+    auth_email_label: '邮箱地址',
+    auth_email_placeholder: '邮箱地址',
+    auth_nickname_label: '昵称',
+    auth_nickname_placeholder: '你的昵称 (选填)',
+    auth_password_label: '密码',
+    auth_password_placeholder: '密码',
+    auth_login_button: '登录',
+    auth_register_button: '注册',
+    auth_switch_to_register: '没有账号？点击注册',
+    auth_switch_to_login: '已有账号？点击登录',
+    auth_register_success: '注册成功！请检查您的邮箱以确认账号。确认后请登录。',
+    auth_error_rate_limit: '操作过于频繁，请稍后再试（邮件发送受限）',
+    auth_error_invalid_credentials: '邮箱或密码错误',
+    auth_error_user_exists: '该邮箱已被注册',
+    auth_error_password_short: '密码长度至少为6位',
+    auth_error_invalid_grant: '登录信息无效或已过期',
+    auth_error_generic: '发生错误：',
+
+    // ── AI 批注气泡 ──
+    annotation_condensing: '凝结中...',
+    annotation_condense: '凝结',
+    annotation_condensed: '已凝结',
+    annotation_hover_pause: '悬停中，暂停消失',
+
+    // ── 星尘珍藏卡片 ──
+    stardust_loading: '正在读取记忆...',
+    stardust_error_default: '记忆加载失败，请稍后重试',
+    stardust_from: '来自 {{name}} · {{date}}',
+
+    // ── 语言切换 ──
+    language_switch: '语言',
+    language_en: 'EN',
+    language_zh: '中',
+};
+
+export default zh;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useReportStore, Report, ReportStats } from '../../store/useReportStore';
@@ -13,6 +14,7 @@ type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 const ActivityRecordsView = ({ report }: { report: Report }) => {
   const messages = useChatStore(state => state.messages);
+  const { t } = useTranslation();
 
   const start = report.startDate || startOfDay(new Date(report.date)).getTime();
   const end = report.endDate || endOfDay(new Date(report.date)).getTime();
@@ -27,7 +29,7 @@ const ActivityRecordsView = ({ report }: { report: Report }) => {
   return (
     <div>
       <h3 className="font-bold mb-2 text-sm text-gray-700 flex items-center gap-2">
-        <Clock size={16} /> 活动记录
+        <Clock size={16} /> {t('report_activity_records')}
       </h3>
       <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
         {activityMessages.map((msg, index) => (
@@ -43,7 +45,7 @@ const ActivityRecordsView = ({ report }: { report: Report }) => {
             </span>
             {msg.duration ? (
               <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full flex-shrink-0 text-center whitespace-nowrap">
-                {formatDuration(msg.duration)}
+                {formatDuration(msg.duration, t)}
               </span>
             ) : (
               <span className="w-[36px]"></span>
@@ -56,6 +58,8 @@ const ActivityRecordsView = ({ report }: { report: Report }) => {
 };
 
 const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, type: string, onShowTasks: (type: 'completed' | 'total') => void }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       {/* Summary */}
@@ -65,32 +69,32 @@ const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, typ
           onClick={() => onShowTasks('completed')}
         >
           <div className="text-2xl font-bold text-blue-600">{stats.completedTodos}</div>
-          <div className="text-xs text-blue-400">已完成</div>
+          <div className="text-xs text-blue-400">{t('report_completed')}</div>
         </div>
         <div
           className="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
           onClick={() => onShowTasks('total')}
         >
           <div className="text-2xl font-bold text-gray-600">{stats.totalTodos}</div>
-          <div className="text-xs text-gray-400">总任务</div>
+          <div className="text-xs text-gray-400">{t('report_total_tasks')}</div>
         </div>
         <div className="bg-green-50 p-3 rounded-lg">
           <div className="text-2xl font-bold text-green-600">{(stats.completionRate * 100).toFixed(0)}%</div>
-          <div className="text-xs text-green-400">完成率</div>
+          <div className="text-xs text-green-400">{t('report_completion_rate')}</div>
         </div>
       </div>
 
       {/* Recurring Tasks */}
       {stats.recurringStats && stats.recurringStats.length > 0 && (
         <div>
-          <h3 className="font-bold mb-3 text-sm text-gray-700">打卡习惯</h3>
+          <h3 className="font-bold mb-3 text-sm text-gray-700">{t('report_habit_tracking')}</h3>
           <div className="space-y-2">
             {stats.recurringStats.map((item, i) => (
               <div key={i} className="flex items-center justify-between bg-white border border-gray-100 p-3 rounded-lg">
                 <span className="text-sm font-medium">{item.name}</span>
                 {type === 'daily' ? (
                   <span className={cn("px-2 py-1 rounded text-xs", item.completed ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500")}>
-                    {item.completed ? "已打卡" : "未打卡"}
+                    {item.completed ? t('report_checked') : t('report_unchecked')}
                   </span>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -108,14 +112,14 @@ const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, typ
 
       {/* Priority Analysis */}
       <div>
-        <h3 className="font-bold mb-3 text-sm text-gray-700">四象限分布</h3>
+        <h3 className="font-bold mb-3 text-sm text-gray-700">{t('report_quadrant_distribution')}</h3>
         <div className="space-y-2">
           {stats.priorityStats?.map((p) => (
             <div key={p.priority} className="flex items-center text-xs">
               <span className="w-24 text-gray-500">
-                {p.priority === 'urgent-important' ? '紧急重要' :
-                  p.priority === 'urgent-not-important' ? '紧急不重要' :
-                    p.priority === 'important-not-urgent' ? '重要不紧急' : '不重要不紧急'}
+                {p.priority === 'urgent-important' ? t('priority_urgent_important') :
+                  p.priority === 'urgent-not-important' ? t('priority_urgent_not_important') :
+                    p.priority === 'important-not-urgent' ? t('priority_important_not_urgent') : t('priority_not_important_not_urgent')}
               </span>
               <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden mx-2">
                 <div
@@ -134,7 +138,7 @@ const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, typ
       {/* Weekly Trend */}
       {type !== 'daily' && stats.dailyCompletion && (
         <div>
-          <h3 className="font-bold mb-3 text-sm text-gray-700">完成趋势</h3>
+          <h3 className="font-bold mb-3 text-sm text-gray-700">{t('report_completion_trend')}</h3>
           <div className="flex items-end justify-between h-24 gap-1 pt-4 border-t border-gray-100">
             {stats.dailyCompletion.map((day) => (
               <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
@@ -157,6 +161,7 @@ export const ReportPage = () => {
   const [date, setDate] = useState<Value>(new Date());
   const { reports, generateReport, triggerAIAnalysis, generateTimeshineDiary } = useReportStore();
   const { todos } = useTodoStore();
+  const { t } = useTranslation();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [showReportList, setShowReportList] = useState<'weekly' | 'monthly' | 'custom' | null>(null);
 
@@ -221,13 +226,13 @@ export const ReportPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-gray-50 overflow-y-auto">
       <header className="bg-white border-b border-gray-200 p-4 sticky top-0 z-10">
-        <h1 className="text-lg font-bold text-center">时间报告</h1>
+        <h1 className="text-lg font-bold text-center">{t('report_title')}</h1>
       </header>
 
       <div className="p-4 pb-24 space-y-6">
         {/* Calendar Section */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-sm font-medium text-gray-500 mb-3">日历视图</h2>
+          <h2 className="text-sm font-medium text-gray-500 mb-3">{t('report_calendar_view')}</h2>
           <div className="calendar-wrapper flex justify-center">
             <Calendar
               onChange={setDate}
@@ -247,7 +252,7 @@ export const ReportPage = () => {
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-2">
               <FileText size={20} />
             </div>
-            <span className="text-xs font-medium">周报</span>
+            <span className="text-xs font-medium">{t('report_weekly')}</span>
           </button>
 
           <button
@@ -257,7 +262,7 @@ export const ReportPage = () => {
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-2">
               <FileText size={20} />
             </div>
-            <span className="text-xs font-medium">月报</span>
+            <span className="text-xs font-medium">{t('report_monthly')}</span>
           </button>
 
           <button
@@ -267,7 +272,7 @@ export const ReportPage = () => {
             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-2">
               <Sparkles size={20} />
             </div>
-            <span className="text-xs font-medium">定制报告</span>
+            <span className="text-xs font-medium">{t('report_custom')}</span>
           </button>
         </div>
       </div>
@@ -278,7 +283,7 @@ export const ReportPage = () => {
           <div className="bg-white w-full max-w-md rounded-2xl p-6 h-[60vh] flex flex-col animate-in slide-in-from-bottom-10 fade-in">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">
-                {showReportList === 'weekly' ? '周报' : showReportList === 'monthly' ? '月报' : '定制报告'}
+                {showReportList === 'weekly' ? t('report_weekly') : showReportList === 'monthly' ? t('report_monthly') : t('report_custom')}
               </h2>
               <button onClick={() => setShowReportList(null)} className="text-gray-400 hover:text-gray-600">
                 <X size={24} />
@@ -289,13 +294,13 @@ export const ReportPage = () => {
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <FileText size={32} className="text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-700 mb-2">功能开发中</h3>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">{t('report_coming_soon')}</h3>
               <p className="text-sm text-gray-500 max-w-xs">
                 {showReportList === 'weekly'
-                  ? '周报功能正在星际旅行中，预计很快抵达...'
+                  ? t('report_weekly_coming_soon')
                   : showReportList === 'monthly'
-                    ? '月报功能正在时间维度中校准，敬请期待...'
-                    : '定制报告功能正在组装零件，即将上线...'}
+                    ? t('report_monthly_coming_soon')
+                    : t('report_custom_coming_soon')}
               </p>
             </div>
           </div>
@@ -320,30 +325,30 @@ export const ReportPage = () => {
               {/* AI Analysis */}
               <div className="bg-blue-50 p-4 rounded-lg text-blue-800">
                 <h3 className="font-bold flex items-center gap-2 mb-2 text-sm">
-                  <Sparkles size={16} /> 观察员分析
+                  <Sparkles size={16} /> {t('report_observer_analysis')}
                 </h3>
 
                 {/* 未生成状态 */}
                 {(!selectedReport.aiAnalysis || selectedReport.aiAnalysis === '观察员分析功能即将上线...') ? (
                   <div className="text-center py-2">
-                    <p className="text-sm opacity-80 mb-3">来自时光棱镜的观察员正在等待记录...</p>
+                    <p className="text-sm opacity-80 mb-3">{t('report_observer_waiting')}</p>
                     <button
                       onClick={() => {
-                        if (window.confirm("每天只能生成一次观察手记，确认现在生成吗？")) {
+                        if (window.confirm(t('report_generate_confirm'))) {
                           generateTimeshineDiary(selectedReport.id);
                         }
                       }}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
                     >
-                      查看今日观察笔记
+                      {t('report_generate_diary')}
                     </button>
                   </div>
                 ) : selectedReport.aiAnalysis === '正在生成观察手记...' ? (
                   /* 生成中状态 */
                   <div className="flex flex-col items-center justify-center py-4 space-y-2">
                     <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm font-medium text-blue-800 tracking-wide mt-2">观察员正在整理今天的时光碎片...</p>
-                    <p className="text-xs text-blue-500 opacity-80 mt-1">跨越光年投递手记需要时间，请耐心等待 1-2 分钟</p>
+                    <p className="text-sm font-medium text-blue-800 tracking-wide mt-2">{t('report_generating')}</p>
+                    <p className="text-xs text-blue-500 opacity-80 mt-1">{t('report_generating_patience')}</p>
                   </div>
                 ) : (selectedReport.aiAnalysis.includes('请稍后重试') || selectedReport.aiAnalysis.startsWith('生成手记失败') || selectedReport.aiAnalysis.startsWith('生成观察手记时出错')) ? (
                   /* 错误状态 - 可以重试 */
@@ -353,7 +358,7 @@ export const ReportPage = () => {
                       onClick={() => generateTimeshineDiary(selectedReport.id)}
                       className="text-xs bg-white border border-red-200 text-red-600 px-3 py-1 rounded hover:bg-red-50"
                     >
-                      重试
+                      {t('retry')}
                     </button>
                   </div>
                 ) : (
@@ -361,7 +366,7 @@ export const ReportPage = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200/50">
                       <Sparkles size={14} className="text-blue-600" />
-                      <span className="text-xs font-medium text-blue-700">来自时光棱镜的观察手记</span>
+                      <span className="text-xs font-medium text-blue-700">{t('report_from_prism')}</span>
                     </div>
                     <p className="text-sm opacity-80 whitespace-pre-wrap">{selectedReport.aiAnalysis}</p>
                   </div>
@@ -379,7 +384,7 @@ export const ReportPage = () => {
                   onShowTasks={setShowTaskList}
                 />
               ) : (
-                <div className="text-gray-500 text-center py-10">暂无数据</div>
+                <div className="text-gray-500 text-center py-10">{t('no_data')}</div>
               )}
             </div>
           </div>
@@ -392,7 +397,7 @@ export const ReportPage = () => {
           <div className="bg-white w-full max-w-md rounded-2xl p-6 max-h-[70vh] flex flex-col animate-in zoom-in-95 fade-in">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">
-                {showTaskList === 'completed' ? '已完成任务' : '总任务'}
+                {showTaskList === 'completed' ? t('report_completed_tasks') : t('report_all_tasks')}
               </h2>
               <button onClick={() => setShowTaskList(null)} className="text-gray-400 hover:text-gray-600">
                 <X size={24} />
@@ -412,7 +417,7 @@ export const ReportPage = () => {
                   : reportTodos;
 
                 if (displayTodos.length === 0) {
-                  return <div className="text-center text-gray-400 py-8">暂无任务</div>;
+                  return <div className="text-center text-gray-400 py-8">{t('report_no_tasks')}</div>;
                 }
 
                 return displayTodos.map(todo => (

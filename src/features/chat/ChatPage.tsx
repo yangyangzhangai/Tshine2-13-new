@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useChatStore } from '../../store/useChatStore';
 import { useTodoStore } from '../../store/useTodoStore';
 import { useStardustStore } from '../../store/useStardustStore';
@@ -19,6 +20,7 @@ export const ChatPage = () => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentDuration, setCurrentDuration] = useState(0);
+  const { t } = useTranslation();
 
   // Edit/Insert State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -105,7 +107,7 @@ export const ChatPage = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('确定要删除这条记录吗？')) {
+    if (window.confirm(t('chat_confirm_delete'))) {
       await deleteActivity(id);
     }
   };
@@ -172,7 +174,7 @@ export const ChatPage = () => {
     <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-center sticky top-0 z-10">
-        <h1 className="text-lg font-semibold text-gray-800">记录</h1>
+        <h1 className="text-lg font-semibold text-gray-800">{t('chat_title')}</h1>
       </header>
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -221,7 +223,7 @@ export const ChatPage = () => {
                     </div>
                   </div>
                   <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
+                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title={t('chat_title_delete')}><Trash2 size={14} /></button>
                   </div>
                 </div>
               ) : (
@@ -262,19 +264,19 @@ export const ChatPage = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-xs text-gray-500">
-                      {format(msg.timestamp, 'MM-dd HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'MM-dd HH:mm') : '进行中'}
+                      {format(msg.timestamp, 'MM-dd HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'MM-dd HH:mm') : t('chat_ongoing')}
                     </div>
                     {/* 耗时显示 */}
                     {msg.duration !== undefined && (
                       <div className="text-xs font-bold text-green-600 mt-1">
-                        耗时 {formatDuration(msg.duration)}
+                        {t('duration_label', { duration: formatDuration(msg.duration, t) })}
                       </div>
                     )}
                   </div>
                   <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                    <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={14} /></button>
-                    <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={14} /></button>
-                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
+                    <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title={t('chat_title_edit')}><Edit2 size={14} /></button>
+                    <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title={t('chat_title_insert')}><Plus size={14} /></button>
+                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title={t('chat_title_delete')}><Trash2 size={14} /></button>
                   </div>
                 </div>
               )}
@@ -289,14 +291,14 @@ export const ChatPage = () => {
           <div className="flex items-center space-x-2 text-green-700">
             <Activity size={16} className="animate-pulse" />
             <span className="text-sm font-medium">
-              正在进行: <span className="font-bold">
+              {t('chat_current_activity')}<span className="font-bold">
                 {activeTodoId
                   ? todos.find(t => t.id === activeTodoId)?.content || lastActivity?.content
                   : lastActivity?.content}
               </span>
             </span>
           </div>
-          <span className="text-sm font-bold text-green-600">已持续 {formatDuration(currentDuration)}</span>
+          <span className="text-sm font-bold text-green-600">{t('elapsed_label', { duration: formatDuration(currentDuration, t) })}</span>
         </div>
       )}
 
@@ -305,7 +307,7 @@ export const ChatPage = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-xl">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">{editingId ? '编辑记录' : '插入记录'}</h3>
+              <h3 className="text-lg font-bold text-gray-900">{editingId ? t('chat_edit_record') : t('chat_insert_record')}</h3>
               <button onClick={() => { setEditingId(null); setInsertingAfterId(null); }} className="text-gray-400 hover:text-gray-600">
                 <X size={20} />
               </button>
@@ -313,19 +315,19 @@ export const ChatPage = () => {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">内容</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">{t('chat_label_content')}</label>
                 <input
                   type="text"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="做了什么..."
+                  placeholder={t('chat_placeholder_content')}
                 />
               </div>
 
               <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">开始时间</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{t('chat_label_start_time')}</label>
                   <input
                     type="datetime-local"
                     value={editStartTime}
@@ -334,7 +336,7 @@ export const ChatPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">结束时间</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{t('chat_label_end_time')}</label>
                   <input
                     type="datetime-local"
                     value={editEndTime}
@@ -350,7 +352,7 @@ export const ChatPage = () => {
               className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
             >
               <Save size={16} />
-              <span>保存</span>
+              <span>{t('save')}</span>
             </button>
           </div>
         </div>
@@ -372,7 +374,7 @@ export const ChatPage = () => {
                 ? "text-pink-500 animate-pulse scale-110"
                 : "text-gray-400 hover:text-gray-600"
             )}
-            title={isMoodMode ? "切换到活动模式" : "切换到心情模式"}
+            title={isMoodMode ? t('chat_switch_to_activity') : t('chat_switch_to_mood')}
           >
             <Heart size={18} fill={isMoodMode ? "currentColor" : "none"} />
           </button>
@@ -381,7 +383,7 @@ export const ChatPage = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isMoodMode ? "记录当前心情（如激动）... 点击爱心切换成活动记录" : "记录当前活动 (如: 吃饭)... 点击爱心切换成心情记录"}
+            placeholder={isMoodMode ? t('chat_placeholder_mood') : t('chat_placeholder_activity')}
             className="flex-1 bg-transparent border-none focus:outline-none text-sm"
             disabled={isLoading}
           />

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAnnotationStore } from '../store/useAnnotationStore';
 import { useStardustStore } from '../store/useStardustStore';
 import type { Message } from '../store/useChatStore';
@@ -27,6 +28,7 @@ export const AIAnnotationBubble: React.FC<AIAnnotationBubbleProps> = ({
 }) => {
   const { currentAnnotation, dismissAnnotation } = useAnnotationStore();
   const { hasStardust, createStardust, isGenerating } = useStardustStore();
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const [progress, setProgress] = useState(100);
   const [isCondensed, setIsCondensed] = useState(false);
@@ -112,10 +114,10 @@ export const AIAnnotationBubble: React.FC<AIAnnotationBubbleProps> = ({
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: 100, opacity: 0 }}
-        transition={{ 
-          type: 'spring', 
-          stiffness: 300, 
-          damping: 25 
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 25
         }}
         data-stardust-bubble
         className="fixed right-4 top-[20%] z-50 max-w-xs"
@@ -123,7 +125,7 @@ export const AIAnnotationBubble: React.FC<AIAnnotationBubbleProps> = ({
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* 毛玻璃气泡 */}
-        <div 
+        <div
           className="relative bg-white/70 backdrop-blur-lg rounded-2xl p-4 shadow-xl border border-white/50"
           style={{
             boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
@@ -142,7 +144,7 @@ export const AIAnnotationBubble: React.FC<AIAnnotationBubbleProps> = ({
             <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-2xl shadow-lg">
               👽
             </div>
-            
+
             {/* 批注内容 */}
             <div className="flex-1 min-w-0">
               <p className="text-sm text-gray-800 leading-relaxed">
@@ -171,12 +173,12 @@ export const AIAnnotationBubble: React.FC<AIAnnotationBubbleProps> = ({
               {isGenerating ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>凝结中...</span>
+                  <span>{t('annotation_condensing')}</span>
                 </>
               ) : (
                 <>
                   <Sparkles size={16} className="animate-pulse" />
-                  <span>凝结</span>
+                  <span>{t('annotation_condense')}</span>
                 </>
               )}
             </motion.button>
@@ -191,7 +193,7 @@ export const AIAnnotationBubble: React.FC<AIAnnotationBubbleProps> = ({
                          bg-gray-100 text-gray-500 text-sm font-medium rounded-full"
             >
               <Check size={16} className="text-green-500" />
-              <span>已凝结</span>
+              <span>{t('annotation_condensed')}</span>
             </motion.div>
           )}
 
@@ -211,15 +213,15 @@ export const AIAnnotationBubble: React.FC<AIAnnotationBubbleProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 whitespace-nowrap"
             >
-              悬停中，暂停消失
+              {t('annotation_hover_pause')}
             </motion.div>
           )}
         </div>
 
         {/* 装饰性光晕 */}
-        <div 
+        <div
           className="absolute -inset-1 bg-gradient-to-r from-purple-400/20 to-blue-500/20 rounded-2xl blur-xl -z-10"
-          style={{ 
+          style={{
             animation: 'pulse 3s ease-in-out infinite',
           }}
         />

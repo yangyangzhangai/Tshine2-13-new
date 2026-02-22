@@ -1,9 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Clock, CheckSquare, PieChart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 
 export const BottomNav = () => {
+  const { t } = useTranslation();
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe">
       <div className="flex justify-around items-center h-16">
@@ -17,9 +20,9 @@ export const BottomNav = () => {
           }
         >
           <Clock size={24} />
-          <span className="text-xs font-medium">记录</span>
+          <span className="text-xs font-medium">{t('nav_record')}</span>
         </NavLink>
-        
+
         <NavLink
           to="/todo"
           className={({ isActive }) =>
@@ -30,9 +33,9 @@ export const BottomNav = () => {
           }
         >
           <CheckSquare size={24} />
-          <span className="text-xs font-medium">待办管理</span>
+          <span className="text-xs font-medium">{t('nav_todo')}</span>
         </NavLink>
-        
+
         <NavLink
           to="/report"
           className={({ isActive }) =>
@@ -43,7 +46,7 @@ export const BottomNav = () => {
           }
         >
           <PieChart size={24} />
-          <span className="text-xs font-medium">时间报告</span>
+          <span className="text-xs font-medium">{t('nav_report')}</span>
         </NavLink>
       </div>
     </nav>

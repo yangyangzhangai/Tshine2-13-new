@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/useAuthStore';
 import { ArrowLeft, Mail, Lock, Loader2, User } from 'lucide-react';
 
 export const AuthPage = () => {
   const navigate = useNavigate();
   const { signIn, signUp } = useAuthStore();
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,12 +17,12 @@ export const AuthPage = () => {
   const [message, setMessage] = useState<string | null>(null);
 
   const getErrorMessage = (msg: string) => {
-    if (msg.includes('email rate limit exceeded')) return '操作过于频繁，请稍后再试（邮件发送受限）';
-    if (msg.includes('Invalid login credentials')) return '邮箱或密码错误';
-    if (msg.includes('User already registered')) return '该邮箱已被注册';
-    if (msg.includes('Password should be at least')) return '密码长度至少为6位';
-    if (msg.includes('invalid_grant')) return '登录信息无效或已过期';
-    return '发生错误：' + msg;
+    if (msg.includes('email rate limit exceeded')) return t('auth_error_rate_limit');
+    if (msg.includes('Invalid login credentials')) return t('auth_error_invalid_credentials');
+    if (msg.includes('User already registered')) return t('auth_error_user_exists');
+    if (msg.includes('Password should be at least')) return t('auth_error_password_short');
+    if (msg.includes('invalid_grant')) return t('auth_error_invalid_grant');
+    return t('auth_error_generic') + msg;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,11 +39,11 @@ export const AuthPage = () => {
       } else {
         const { error } = await signUp(email, password, nickname);
         if (error) throw error;
-        setMessage('注册成功！请检查您的邮箱以确认账号。确认后请登录。');
+        setMessage(t('auth_register_success'));
         setIsLogin(true); // Switch to login view
       }
     } catch (err: any) {
-      setError(getErrorMessage(err.message || '发生错误，请重试'));
+      setError(getErrorMessage(err.message || t('auth_error_generic')));
     } finally {
       setLoading(false);
     }
@@ -62,17 +64,17 @@ export const AuthPage = () => {
         <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl shadow-sm">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900">
-              {isLogin ? '欢迎回来' : '创建账号'}
+              {isLogin ? t('auth_welcome_back') : t('auth_create_account')}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              {isLogin ? '登录以同步您的数据' : '注册以开始云端同步'}
+              {isLogin ? t('auth_login_subtitle') : t('auth_register_subtitle')}
             </p>
           </div>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="sr-only">邮箱地址</label>
+                <label htmlFor="email" className="sr-only">{t('auth_email_label')}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className="h-5 w-5 text-gray-400" />
@@ -83,7 +85,7 @@ export const AuthPage = () => {
                     type="email"
                     required
                     className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                    placeholder="邮箱地址"
+                    placeholder={t('auth_email_placeholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -92,7 +94,7 @@ export const AuthPage = () => {
 
               {!isLogin && (
                 <div>
-                  <label htmlFor="nickname" className="sr-only">昵称</label>
+                  <label htmlFor="nickname" className="sr-only">{t('auth_nickname_label')}</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <User className="h-5 w-5 text-gray-400" />
@@ -102,7 +104,7 @@ export const AuthPage = () => {
                       name="nickname"
                       type="text"
                       className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                      placeholder="你的昵称 (选填)"
+                      placeholder={t('auth_nickname_placeholder')}
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
                     />
@@ -110,7 +112,7 @@ export const AuthPage = () => {
                 </div>
               )}
               <div>
-                <label htmlFor="password" className="sr-only">密码</label>
+                <label htmlFor="password" className="sr-only">{t('auth_password_label')}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-gray-400" />
@@ -121,7 +123,7 @@ export const AuthPage = () => {
                     type="password"
                     required
                     className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                    placeholder="密码"
+                    placeholder={t('auth_password_placeholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -150,7 +152,7 @@ export const AuthPage = () => {
                 {loading ? (
                   <Loader2 className="animate-spin h-5 w-5" />
                 ) : (
-                  isLogin ? '登录' : '注册'
+                  isLogin ? t('auth_login_button') : t('auth_register_button')
                 )}
               </button>
             </div>
@@ -165,7 +167,7 @@ export const AuthPage = () => {
               }}
               className="text-sm font-medium text-blue-600 hover:text-blue-500"
             >
-              {isLogin ? '没有账号？点击注册' : '已有账号？点击登录'}
+              {isLogin ? t('auth_switch_to_register') : t('auth_switch_to_login')}
             </button>
           </div>
         </div>
