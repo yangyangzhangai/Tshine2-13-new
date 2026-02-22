@@ -331,7 +331,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: (lang === 'en' || lang === 'it') ? 'moonshotai/Kimi-K2.5-TEE' : 'Qwen/Qwen3-235B-A22B-Instruct-2507-TEE', // 英文/意大利文使用Kimi，中文使用Qwen
+        model: 'Qwen/Qwen3-235B-A22B-Instruct-2507-TEE', // 统一使用 Qwen 支持多语言
         messages: [
           { role: 'system', content: finalSystemPrompt },
           { role: 'user', content: userContent }
