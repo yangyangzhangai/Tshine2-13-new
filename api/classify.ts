@@ -1,13 +1,5 @@
 ﻿import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-/**
- * Vercel Serverless Function - Activity Classifier API
- * 调用轻量模型(Qwen-Flash / GLM)将用户时间记录分类为结构化数据
- *
- * POST /api/classify
- * Body: { rawInput: string, lang?: string }
- */
-
 const CLASSIFIER_PROMPT = `你是一个时间记录分类器。
 将用户输入的时间记录按类别分类，输出严格的JSON格式。
 不要输出任何解释、前缀、后缀或Markdown代码块，只输出JSON本身。
@@ -71,7 +63,7 @@ dissolved（光的涣散）
 
 【输出格式】
 {
-  "total_duration_min": 数字（所有事项时长之和）,
+  "total_duration_min": 数字,
   "items": [
     {
       "name": "事项名称",
@@ -239,4 +231,132 @@ Determina la fascia oraria in base alle informazioni temporali fornite dall'uten
 · Scorrere brevi video incontrollabilmente -> dopamine.
 · Meditazione (rilassamento) -> recharge; Meditazione (revisione) -> self_talk.
 · Ascoltare podcast/audiolibro mentre ci si allena -> body (l'attività principale ha la precedenza).
-· Completamente incapace di giudicare -> categoria: "unknown", non
+· Completamente incapace di giudicare -> categoria: "unknown", non forzare la classificazione.
+
+【Formato di Output】
+{
+  "total_duration_min": number,
+  "items": [
+    {
+      "name": "Nome Evento (Mantieni la Lingua Originale)",
+      "duration_min": number,
+      "time_slot": "morning" | "afternoon" | "evening" | null,
+      "category": "chiave inglese della categoria",
+      "flag": "ambiguous" | null
+    }
+  ],
+  "todos": {
+    "completed": number,
+    "total": number
+  },
+  "energy_log": [
+    {
+      "time_slot": "morning" | "afternoon" | "evening",
+      "energy_level": "high" | "medium" | "low" | null,
+      "mood": "testo originale esplicitamente contrassegnato come umore o energia" | null
+    }
+  ]
+}`;
+
+function parseClassifierResponse(raw: string): any {
+  try {
+    return JSON.parse(raw.trim());
+  } catch {
+    // try next
+  }
+
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (match) {
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      // fallback
+    }
+  }
+
+  console.warn('⚠️ 解析失败，返回默认空结构');
+  return {
+    total_duration_min: 0,
+    items: [],
+    todos: { completed: 0, total: 0 },
+    energy_log: []
+  };
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  const { rawInput, lang = 'zh' } = req.body;
+
+  if (!rawInput || typeof rawInput !== 'string') {
+    res.status(400).json({ error: 'Missing or invalid rawInput' });
+    return;
+  }
+
+  const apiUrl = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+  const model = 'glm-4.7-flash';
+  const zhipuApiKey = process.env.ZHIPU_API_KEY;
+
+  if (!zhipuApiKey) {
+    res.status(500).json({ error: 'Server configuration error: Missing API_KEY' });
+    return;
+  }
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${zhipuApiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: lang === 'en' ? CLASSIFIER_PROMPT_EN : lang === 'it' ? CLASSIFIER_PROMPT_IT : CLASSIFIER_PROMPT },
+          { role: 'user', content: rawInput }
+        ],
+        temperature: 0.6,
+        max_tokens: 2048,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Classifier API error:', response.status, errorText);
+      res.status(response.status).json({
+        error: `AI service error: ${response.statusText}`,
+        details: errorText
+      });
+      return;
+    }
+
+    const result = await response.json();
+    const rawContent = result.choices?.[0]?.message?.content || '';
+    const parsed = parseClassifierResponse(rawContent);
+
+    res.status(200).json({
+      success: true,
+      data: parsed,
+      raw: rawContent,
+    });
+  } catch (error) {
+    console.error('Classifier API error:', error);
+    res.status(500).json({
+      error: 'API请求出错，请稍后重试',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}
