@@ -376,6 +376,15 @@ const DEFAULT_ANNOTATIONS_EN: Record<string, { content: string; tone: string }> 
   day_complete: { content: '🌙 Today\'s fragments formed a stained glass. Go check it out.', tone: 'celebrating' },
 };
 
+const DEFAULT_ANNOTATIONS_IT: Record<string, { content: string; tone: string }> = {
+  activity_completed: { content: '✨ Un altro frammento di memoria cade nella tua timeline', tone: 'playful' },
+  mood_recorded: { content: '💫 Ho catturato la tua ondata emotiva, come una stella cadente', tone: 'curious' },
+  task_deleted: { content: '🌊 Eliminato un compito? Alleggerendo il carico del tempo?', tone: 'playful' },
+  overwork_detected: { content: '🐱 Lavorando da 3 ore di fila. Vuoi imparare a stirarti come un gatto?', tone: 'concerned' },
+  idle_detected: { content: '🤔 Silenzio per 3 ore. Entrato in meditazione profonda?', tone: 'curious' },
+  day_complete: { content: '🌙 I frammenti di oggi hanno formato una vetrata. Vai a vederla.', tone: 'celebrating' },
+};
+
 function determineTone(content: string, eventType: string, currentHour: number): string {
   // 深夜时间（0-5点）
   if (currentHour >= 0 && currentHour <= 5) {
