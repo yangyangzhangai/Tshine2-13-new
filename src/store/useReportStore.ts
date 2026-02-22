@@ -504,7 +504,7 @@ export const useReportStore = create<ReportState>()(
     {
       name: 'report-storage',
       partialize: (state) => ({
-        reports: state.reports.map(r => ({ ...r, analysisStatus: undefined, errorMessage: undefined })),
+        reports: state.reports.map(r => ({ ...r, analysisStatus: r.aiAnalysis ? 'success' : 'idle', errorMessage: undefined })),
         computedHistory: state.computedHistory
       }),
     }
