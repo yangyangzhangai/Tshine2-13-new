@@ -28,12 +28,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// API 路由
-import annotationHandler from './api/annotation.ts';
-import classifyHandler from './api/classify.ts';
-import chatHandler from './api/chat.ts';
-import diaryHandler from './api/diary.ts';
-import reportHandler from './api/report.ts';
+// API 路由 - 使用 Express 格式的 handler
+import annotationHandler from './server/api/annotation.js';
+import classifyHandler from './server/api/classify.js';
+import chatHandler from './server/api/chat.js';
+import diaryHandler from './server/api/diary.js';
+import reportHandler from './server/api/report.js';
 
 app.post('/api/annotation', annotationHandler);
 app.post('/api/classify', classifyHandler);
