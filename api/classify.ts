@@ -179,7 +179,7 @@ Determine the time slot based on the time information provided by the user:
     }
   ]
 }`;
-const CLASSIFIER_PROMPT_IT = \`Sei un classificatore di registri di tempo.
+const CLASSIFIER_PROMPT_IT = `Sei un classificatore di registri di tempo.
 Classifica i registri di tempo inseriti dall'utente in categorie e restituisci rigorosamente in formato JSON.
 NON produrre alcuna spiegazione, prefisso, suffisso o blocco di codice Markdown. Restituisci solo il JSON.
 
@@ -263,7 +263,7 @@ Determina la fascia oraria in base alle informazioni temporali fornite dall'uten
       "mood": "testo originale esplicitamente contrassegnato come umore o energia" | null
     }
   ]
-}\`;
+}`;
 
 /**
   * 鍓ョ妯″瀷杈撳嚭涓彲鑳藉瓨鍦ㄧ殑Markdown浠ｇ爜鍧楀寘瑁?
