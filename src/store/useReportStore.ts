@@ -9,6 +9,7 @@ import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth,
 import { zhCN } from 'date-fns/locale/zh-CN';
 import { callReportAPI, callClassifierAPI, callDiaryAPI } from '../api/client';
 import { computeAll, formatForDiaryAI, type ComputedResult, type ClassifiedData, type MoodRecord } from '../utils/reportCalculator';
+import i18n from '../i18n';
 
 export interface ReportStats {
   completedTodos: number;
@@ -42,8 +43,10 @@ export interface Report {
   endDate?: number;
   type: 'daily' | 'weekly' | 'monthly' | 'custom';
   content: string; // JSON string or markdown
-  aiAnalysis?: string;
+  aiAnalysis?: string | null;
   stats?: ReportStats;
+  analysisStatus?: 'idle' | 'generating' | 'success' | 'error';
+  errorMessage?: string | null;
 }
 
 interface ReportState {
@@ -78,7 +81,7 @@ export const useReportStore = create<ReportState>()(
           if (error) throw error;
 
           if (data && data.length > 0) {
-            const mappedReports = data.map((r: any) => ({
+            const mappedReports: Report[] = data.map((r: any) => ({
               id: r.id,
               title: r.title,
               date: Number(r.date),
@@ -87,7 +90,9 @@ export const useReportStore = create<ReportState>()(
               type: r.type,
               content: r.content,
               aiAnalysis: r.ai_analysis,
-              stats: r.stats
+              stats: r.stats,
+              analysisStatus: r.ai_analysis ? 'success' : 'idle',
+              errorMessage: null,
             }));
             set({ reports: mappedReports });
           }
@@ -234,7 +239,9 @@ export const useReportStore = create<ReportState>()(
           type,
           content: 'Generated report',
           stats,
-          aiAnalysis: undefined, // No auto-generation
+          aiAnalysis: null, // No auto-generation
+          analysisStatus: 'idle',
+          errorMessage: null,
         };
 
         // Remove existing report of same type and date (simple dedup)
@@ -271,7 +278,7 @@ export const useReportStore = create<ReportState>()(
         if (!report) return;
 
         // Set loading state
-        get().updateReport(reportId, { aiAnalysis: '正在生成观察员手记...' });
+        get().updateReport(reportId, { analysisStatus: 'generating', errorMessage: null });
 
         const todoStore = useTodoStore.getState();
         const chatStore = useChatStore.getState();
@@ -315,7 +322,7 @@ export const useReportStore = create<ReportState>()(
           data: analysisData,
           type: report.type === 'custom' ? 'daily' : report.type,
         });
-        get().updateReport(reportId, { aiAnalysis: analysisContent });
+        get().updateReport(reportId, { aiAnalysis: analysisContent, analysisStatus: 'success' });
       },
 
       /**
@@ -333,7 +340,7 @@ export const useReportStore = create<ReportState>()(
         const todoStore = useTodoStore.getState();
 
         // 设置加载状态
-        get().updateReport(reportId, { aiAnalysis: '正在生成观察手记...' });
+        get().updateReport(reportId, { analysisStatus: 'generating', errorMessage: null });
 
         try {
           // 准备时间范围
@@ -380,26 +387,30 @@ export const useReportStore = create<ReportState>()(
             };
           });
 
+          // 获取当前语言环境
+          const currentLang = (i18n.language?.split('-')[0] || 'en') as 'zh' | 'en' | 'it';
+          const isZh = currentLang === 'zh';
+
           // 构建原始输入文本
           const rawInputLines: string[] = [];
-          rawInputLines.push('今天的时间记录：');
+          rawInputLines.push(isZh ? '今天的时间记录：' : 'Today\'s Time Log:');
           activities.forEach(m => {
             const timeStr = format(m.timestamp, 'HH:mm');
-            const durationStr = m.duration ? ` (${m.duration}分钟)` : '';
+            const durationStr = m.duration ? (isZh ? ` (${m.duration}分钟)` : ` (${m.duration}min)`) : '';
             rawInputLines.push(`- ${timeStr} ${m.content}${durationStr}`);
           });
 
           if (moodMessages.length > 0) {
             rawInputLines.push('');
-            rawInputLines.push('心情与能量状态记录：');
+            rawInputLines.push(isZh ? '心情与能量状态记录：' : 'Mood and Energy Log:');
             moodMessages.forEach(m => {
               const timeStr = format(m.timestamp, 'HH:mm');
-              rawInputLines.push(`- ${timeStr} [状态/心情] ${m.content}`);
+              rawInputLines.push(`- ${timeStr} [${isZh ? '状态/心情' : 'Mood/Energy'}] ${m.content}`);
             });
           }
 
           rawInputLines.push('');
-          rawInputLines.push(`待办：完成${completedTodos}件，共${totalTodos}件`);
+          rawInputLines.push(isZh ? `待办：完成${completedTodos}件，共${totalTodos}件` : `Todos: Completed ${completedTodos}, Total ${totalTodos}`);
 
           const rawInput = rawInputLines.join('\n');
 
@@ -407,7 +418,7 @@ export const useReportStore = create<ReportState>()(
           // Step 1: 调用分类器 API
           // ═══════════════════════════════════════════════════════════════
           console.log('[Timeshine] Step 1: 调用分类器...');
-          const classifyResult = await callClassifierAPI({ rawInput });
+          const classifyResult = await callClassifierAPI({ rawInput, lang: currentLang });
 
           if (!classifyResult.success || !classifyResult.data) {
             throw new Error('分类器返回数据失败');
@@ -421,11 +432,12 @@ export const useReportStore = create<ReportState>()(
           console.log('[Timeshine] Step 2: 计算层处理...');
           const computed = computeAll(classifiedData, state.computedHistory);
           computed.mood_records = moodRecords; // 注入心情数据
-          const structuredData = formatForDiaryAI(computed);
+          const structuredData = formatForDiaryAI(computed, currentLang);
 
           // 手记编号（注意：基于本地 computedHistory 长度，清除缓存或换设备会重置）
           const reportNumber = state.computedHistory.length + 1;
-          const structuredDataWithMeta = `手记编号：第 ${reportNumber} 号\n\n` + structuredData;
+          const metaTitle = isZh ? `手记编号：第 ${reportNumber} 号\n\n` : `Report No. ${reportNumber}\n\n`;
+          const structuredDataWithMeta = metaTitle + structuredData;
 
           // 保存计算结果到历史（用于未来趋势分析）
           set(state => ({
@@ -436,10 +448,17 @@ export const useReportStore = create<ReportState>()(
           let historyContext: string | undefined;
           if (state.computedHistory.length > 0) {
             const recent = state.computedHistory.slice(-3);
-            const ctxLines: string[] = [`过去${recent.length}天观察摘要：`];
+            const ctxLines: string[] = [isZh ? `过去${recent.length}天观察摘要：` : `Past ${recent.length} days summary:`];
             recent.forEach((h, i) => {
               const focusItem = h.spectrum.find(s => s.category === 'deep_focus');
-              ctxLines.push(`  第${state.computedHistory.length - recent.length + i + 1}日：专注${focusItem?.duration_str || '0min'}，待办${h.light_quality.todo_str}`);
+              const dayIndex = state.computedHistory.length - recent.length + i + 1;
+              const focusStr = focusItem?.duration_str || '0';
+              const todoStr = h.light_quality.todo_str;
+              if (isZh) {
+                ctxLines.push(`  第${dayIndex}日：专注${focusStr}，待办${todoStr}`);
+              } else {
+                ctxLines.push(`  Day ${dayIndex}: Focus ${focusStr}, Todo ${todoStr}`);
+              }
             });
             historyContext = ctxLines.join('\n');
           }
@@ -451,12 +470,18 @@ export const useReportStore = create<ReportState>()(
           const currentUser = useAuthStore.getState().user;
           const userNickname = currentUser?.user_metadata?.display_name || undefined;
 
+          // 只在中文时使用 zhCN Locale，否则使用标准的国际化日期格式
+          const dateStr = isZh
+            ? format(start, 'yyyy年MM月dd日 EEEE', { locale: zhCN })
+            : format(start, 'yyyy-MM-dd EEEE');
+
           const diaryResult = await callDiaryAPI({
             structuredData: structuredDataWithMeta,
             rawInput: rawInput.slice(0, 500),
-            date: format(start, 'yyyy年MM月dd日 EEEE', { locale: zhCN }),
+            date: dateStr,
             historyContext,
             userName: userNickname,
+            lang: currentLang,
           });
 
           if (!diaryResult.success || !diaryResult.content) {
@@ -464,13 +489,14 @@ export const useReportStore = create<ReportState>()(
           }
 
           // 更新报告
-          get().updateReport(reportId, { aiAnalysis: diaryResult.content });
+          get().updateReport(reportId, { aiAnalysis: diaryResult.content, analysisStatus: 'success' });
           console.log('[Timeshine] 观察手记生成完成');
 
         } catch (error) {
           console.error('[Timeshine] 生成观察手记失败:', error);
           get().updateReport(reportId, {
-            aiAnalysis: `生成观察手记时出错：${error instanceof Error ? error.message : '未知错误'}。请稍后重试。`
+            analysisStatus: 'error',
+            errorMessage: error instanceof Error ? error.message : '未知错误'
           });
         }
       }
@@ -478,7 +504,7 @@ export const useReportStore = create<ReportState>()(
     {
       name: 'report-storage',
       partialize: (state) => ({
-        reports: state.reports,
+        reports: state.reports.map(r => ({ ...r, analysisStatus: undefined, errorMessage: undefined })),
         computedHistory: state.computedHistory
       }),
     }

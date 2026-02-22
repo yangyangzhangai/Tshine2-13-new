@@ -5,6 +5,7 @@ import { supabase } from '../api/supabase';
 import { callChatAPI } from '../api/client';
 import { useAnnotationStore } from './useAnnotationStore';
 import type { AnnotationEvent } from '../types/annotation';
+import i18n from '../i18n';
 
 export type MessageType = 'text' | 'system' | 'ai';
 
@@ -66,7 +67,7 @@ export const useChatStore = create<ChatState>()(
             .select('*')
             .eq('user_id', session.user.id)
             .order('timestamp', { ascending: true });
-            
+
           if (error) throw error;
 
           const messages = data.map((m: any) => ({
@@ -109,7 +110,7 @@ export const useChatStore = create<ChatState>()(
             const lastMsg = updatedMessages[lastRecordIndex];
             // Calculate duration based on current time
             const duration = Math.max(0, Math.round((now - lastMsg.timestamp) / (1000 * 60)));
-            
+
             updatedMessages[lastRecordIndex] = {
               ...lastMsg,
               duration
@@ -133,9 +134,9 @@ export const useChatStore = create<ChatState>()(
         };
 
         updatedMessages.push(newMessage);
-        
+
         // Update state immediately (Optimistic)
-        set({ 
+        set({
           messages: updatedMessages,
           lastActivityTime: effectiveMode === 'record' ? now : state.lastActivityTime
         });
@@ -157,7 +158,7 @@ export const useChatStore = create<ChatState>()(
         // 触发 AI 批注（记录模式下）
         if (effectiveMode === 'record') {
           const annotationStore = useAnnotationStore.getState();
-          
+
           // 检查上一个活动是否完成（有 duration）
           let lastRecordIndex = -1;
           for (let i = updatedMessages.length - 1; i >= 0; i--) {
@@ -167,7 +168,7 @@ export const useChatStore = create<ChatState>()(
               break;
             }
           }
-          
+
           // 触发新活动记录批注
           const recordEvent: AnnotationEvent = {
             type: 'activity_recorded',
@@ -183,12 +184,23 @@ export const useChatStore = create<ChatState>()(
         if (state.mode === 'chat') {
           try {
             // --- 修改开始：构建符合 API 标准的对话历史 ---
-            
+
+            // 获取当前前端语言
+            const currentLang = (i18n.language?.split('-')[0] || 'en') as 'zh' | 'en' | 'it';
+            const langMap: Record<string, string> = {
+              zh: 'Chinese',
+              en: 'English',
+              it: 'Italian'
+            };
+            const targetLanguage = langMap[currentLang] || 'English';
+
             // 1. 定义 AI 人设 (System Prompt)
             // API 规定 role 必须是 "system", "user", "assistant" 其中之一
             const systemMessage = {
               role: 'system',
-              content: '你是 Time Shine，一个来自外星球的小王子，性格傲娇但是很善良，内心温暖如火，你要帮助你的地球同行者（物种是人类）进行时间、精力和目标管理，成就ta，托举ta，让ta成为更好的自己。你不了解人类，但是你对ta们感兴趣并且抱有善意，你认为你的同行者是一种智慧而奇怪的物种，在你心中ta是独一无二的，你相信ta能完成任何事情。'
+              content: `You are Time Shine, a little prince from an alien planet. You have a tsundere (proud but affectionate) personality, yet you are very kind with a heart as warm as fire. Your mission is to help your Earth companion (a human) with time, energy, and goal management—to empower them, uplift them, and help them become a better version of themselves. You don't fully understand humans, but you are fascinated by them and harbor great goodwill. You consider your companion to be an intelligent and peculiar species; in your heart, they are unique, and you believe they can accomplish anything.
+
+IMPORTANT: You must generate your final response entirely and strictly in ${targetLanguage}, regardless of the language used by the user.`
             };
 
             // 2. 整理历史消息：过滤掉系统报错和非聊天记录，转换角色名
@@ -218,7 +230,7 @@ export const useChatStore = create<ChatState>()(
               mode: 'chat',
               activityType: 'chat'
             };
-            
+
             set(state => ({ messages: [...state.messages, aiMessage] }));
 
             if (session) {
@@ -233,9 +245,14 @@ export const useChatStore = create<ChatState>()(
             }
           } catch (error) {
             console.error('AI Error:', error);
+            const errorLang = (i18n.language?.split('-')[0] || 'en') as 'zh' | 'en' | 'it';
+            const errorText = errorLang === 'zh' ? '抱歉，AI暂时无法响应，请稍后再试。' :
+              errorLang === 'it' ? 'Spiacenti, l\'IA non può rispondere al momento. Riprova più tardi.' :
+                'Sorry, the AI is currently unavailable. Please try again later.';
+
             const errorMessage: Message = {
               id: uuidv4(),
-              content: '抱歉，AI暂时无法响应，请稍后再试。',
+              content: errorText,
               timestamp: Date.now(),
               type: 'system',
               mode: 'chat',
@@ -261,7 +278,7 @@ export const useChatStore = create<ChatState>()(
         };
 
         const state = get();
-        
+
         const messagesToInsert: Message[] = [newMessage];
         const messagesToUpdate: Message[] = [];
 
@@ -273,7 +290,7 @@ export const useChatStore = create<ChatState>()(
           const mEnd = mStart + mDuration * 60 * 1000;
 
           if (mStart < endTime && mEnd > startTime) {
-            
+
             // Case 1: Split (New inside Old)
             if (mStart < startTime && mEnd > endTime) {
               const tailDuration = Math.round((mEnd - endTime) / (1000 * 60));
@@ -287,28 +304,28 @@ export const useChatStore = create<ChatState>()(
 
               const headDuration = Math.round((startTime - mStart) / (1000 * 60));
               const updatedHead = { ...m, duration: headDuration };
-              
+
               messagesToUpdate.push(updatedHead);
               return updatedHead;
             }
 
             // Case 2: Start Collision (Push Back)
             if (Math.abs(mStart - startTime) < 1000) {
-               const updatedStart = endTime;
-               const updatedDuration = Math.max(0, Math.round((mEnd - updatedStart) / (1000 * 60)));
-               const updatedMsg = { ...m, timestamp: updatedStart, duration: updatedDuration };
-               messagesToUpdate.push(updatedMsg);
-               return updatedMsg;
+              const updatedStart = endTime;
+              const updatedDuration = Math.max(0, Math.round((mEnd - updatedStart) / (1000 * 60)));
+              const updatedMsg = { ...m, timestamp: updatedStart, duration: updatedDuration };
+              messagesToUpdate.push(updatedMsg);
+              return updatedMsg;
             }
 
             // Case 3: End Collision (Truncate)
             if (mStart < startTime) {
-               const updatedDuration = Math.max(0, Math.round((startTime - mStart) / (1000 * 60)));
-               if (updatedDuration !== mDuration) {
-                 const updatedMsg = { ...m, duration: updatedDuration };
-                 messagesToUpdate.push(updatedMsg);
-                 return updatedMsg;
-               }
+              const updatedDuration = Math.max(0, Math.round((startTime - mStart) / (1000 * 60)));
+              if (updatedDuration !== mDuration) {
+                const updatedMsg = { ...m, duration: updatedDuration };
+                messagesToUpdate.push(updatedMsg);
+                return updatedMsg;
+              }
             }
           }
           return m;
@@ -329,7 +346,7 @@ export const useChatStore = create<ChatState>()(
             activity_type: msg.activityType,
             user_id: session.user.id
           }));
-          
+
           if (insertPayload.length > 0) {
             await supabase.from('messages').insert(insertPayload);
           }
@@ -345,10 +362,10 @@ export const useChatStore = create<ChatState>()(
 
       updateActivity: async (id, content, startTime, endTime) => {
         const duration = Math.round((endTime - startTime) / (1000 * 60));
-        
+
         set(state => ({
-          messages: state.messages.map(m => 
-            m.id === id 
+          messages: state.messages.map(m =>
+            m.id === id
               ? { ...m, content, timestamp: startTime, duration }
               : m
           ).sort((a, b) => a.timestamp - b.timestamp)
@@ -378,34 +395,34 @@ export const useChatStore = create<ChatState>()(
       // 更新特定消息的 duration（用于待办完成后同步耗时）
       updateMessageDuration: async (content: string, timestamp: number, duration: number) => {
         const state = get();
-        
+
         // 查找匹配的消息（相同内容、相同时间戳、记录模式）
-        const messageIndex = state.messages.findIndex(m => 
-          m.mode === 'record' && 
-          m.content === content && 
+        const messageIndex = state.messages.findIndex(m =>
+          m.mode === 'record' &&
+          m.content === content &&
           Math.abs(m.timestamp - timestamp) < 1000 // 时间戳相差小于1秒视为同一条
         );
-        
+
         if (messageIndex === -1) {
           console.log('[DEBUG] 未找到匹配的消息:', content, timestamp);
           return;
         }
-        
+
         const targetMessage = state.messages[messageIndex];
-        
+
         // 更新本地状态
         set(state => ({
-          messages: state.messages.map((m, idx) => 
+          messages: state.messages.map((m, idx) =>
             idx === messageIndex ? { ...m, duration } : m
           )
         }));
-        
+
         // 同步到 Supabase
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           await supabase.from('messages').update({ duration }).eq('id', targetMessage.id).eq('user_id', session.user.id);
         }
-        
+
         console.log('[DEBUG] 消息 duration 已更新:', content, duration, '分钟');
       },
 
@@ -457,18 +474,18 @@ export const useChatStore = create<ChatState>()(
       setMode: (mode) => set({ mode }),
       setIsMoodMode: (isMoodMode) => set({ isMoodMode }),
       setHasInitialized: (value) => set({ hasInitialized: value }),
-      
+
       clearHistory: async () => {
         set({ messages: [], lastActivityTime: null });
       }
     }),
     {
       name: 'chat-storage',
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         messages: state.messages,
         mode: state.mode,
         isMoodMode: state.isMoodMode,
-        lastActivityTime: state.lastActivityTime 
+        lastActivityTime: state.lastActivityTime
       }),
     }
   )

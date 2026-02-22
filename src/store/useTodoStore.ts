@@ -50,7 +50,7 @@ export const useTodoStore = create<TodoState>()(
   persist(
     (set, get) => ({
       todos: [],
-      categories: ['学习', '工作', '社交', '生活', '娱乐'],
+      categories: ['study', 'work', 'social', 'life', 'entertainment'],
       isLoading: false,
       activeTodoId: null,
 
@@ -62,13 +62,13 @@ export const useTodoStore = create<TodoState>()(
         const { data, error } = await supabase.from('todos')
           .select('*')
           .eq('user_id', session.user.id);
-          
+
         if (error) {
           console.error('Error fetching todos:', error);
           set({ isLoading: false });
           return;
         }
-        
+
         const todos = data.map((t: any) => ({
           id: t.id,
           content: t.content,
@@ -132,22 +132,22 @@ export const useTodoStore = create<TodoState>()(
         if (session) {
           // 2. 准备数据库更新数据
           const { ...remoteUpdates } = updates;
-          
+
           const dbUpdates: any = {
             ...remoteUpdates,
           };
-          
+
           // 字段映射转换
           if (remoteUpdates.dueDate) dbUpdates.due_date = remoteUpdates.dueDate;
           if (remoteUpdates.completedAt) dbUpdates.completed_at = remoteUpdates.completedAt;
           if (remoteUpdates.startedAt) dbUpdates.started_at = remoteUpdates.startedAt;
           if (typeof remoteUpdates.duration !== 'undefined') dbUpdates.duration = remoteUpdates.duration;
-          
+
           // 新增：处理置顶状态映射 (驼峰转下划线)
           if (typeof remoteUpdates.isPinned !== 'undefined') {
-             dbUpdates.is_pinned = remoteUpdates.isPinned;
+            dbUpdates.is_pinned = remoteUpdates.isPinned;
           }
-          
+
           // 删除前端专用的字段名，防止报错
           delete dbUpdates.dueDate;
           delete dbUpdates.completedAt;
@@ -176,7 +176,7 @@ export const useTodoStore = create<TodoState>()(
       togglePin: async (id) => {
         const todo = get().todos.find(t => t.id === id);
         if (!todo) return;
-        
+
         // 修改：直接调用 updateTodo
         // 它会同时处理：1.本地状态更新 2.同步到 Supabase (is_pinned)
         await get().updateTodo(id, { isPinned: !todo.isPinned });
@@ -184,7 +184,7 @@ export const useTodoStore = create<TodoState>()(
 
       deleteTodo: async (id) => {
         const todo = get().todos.find(t => t.id === id);
-        
+
         set(state => ({
           todos: state.todos.filter(t => t.id !== id)
         }));
@@ -210,11 +210,11 @@ export const useTodoStore = create<TodoState>()(
       },
 
       addCategory: (category) => set(state => ({ categories: [...state.categories, category] })),
-      
+
       checkDueDates: () => {
         const now = Date.now();
         const { todos, updateTodo } = get();
-        
+
         todos.forEach(todo => {
           if (todo.recurrence && todo.recurrence !== 'none' && todo.completed) {
             // Logic for recurrence... (omitted for brevity as it wasn't changed)
@@ -225,7 +225,7 @@ export const useTodoStore = create<TodoState>()(
       // 开始计时某个待办
       startTodo: async (id: string) => {
         const now = Date.now();
-        await get().updateTodo(id, { 
+        await get().updateTodo(id, {
           startedAt: now,
           completed: false,
           completedAt: undefined

@@ -39,18 +39,18 @@ const DEFAULT_EMOJI = '✨';
 /**
  * 生成AI Prompt用于选择Emoji
  */
-function generateEmojiPrompt(userRawContent: string, message: string): string {
-  return `基于以下用户活动和AI批注，选择一个最能代表这个情感瞬间的Unicode Emoji字符。
+export function generateEmojiPrompt(message: string, userRawContent?: string): string {
+  return `Based on the following user activity and AI annotation, choose a single Unicode Emoji character that best represents this emotional moment.
 
-用户活动/心情：${userRawContent}
-AI批注：${message}
+User Activity/Mood: ${userRawContent || 'None'}
+AI Annotation: ${message}
 
-要求：
-1. 选择一个有具体意象的Emoji（如🌙🌟🫧🕊️），避免通用符号（如❤️😊）
-2. 只输出一个Emoji字符，不要任何解释
-3. 选择能唤起诗意和画面感的符号
+Rules:
+1. Choose an emoji with clear, specific imagery (e.g. 🌙🌟🫧🕊️) and avoid generic basic symbols (e.g. ❤️😊).
+2. ONLY output ONE single Emoji character. No markdown, no explanations, no other text.
+3. Choose a symbol that evokes a poetic and visual feeling.
 
-输出：只返回一个Emoji字符`;
+Output: exactly one string character.`;
 }
 
 /**

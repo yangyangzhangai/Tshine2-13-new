@@ -512,18 +512,23 @@ export function computeAll(
  * 把 computeAll() 的结果组装成日记AI的输入文本。
  * 日记AI拿到这段文字后，只需专心写创意内容，不需要做任何计算。
  */
-export function formatForDiaryAI(result: ComputedResult): string {
-  const lines: string[] = ['【今日结构化数据】', ''];
+export function formatForDiaryAI(result: ComputedResult, lang: 'zh' | 'en' | 'it' = 'zh'): string {
+  const isZh = lang === 'zh';
+  const lines: string[] = [isZh ? '【今日结构化数据】' : '【Today\'s Structured Data】', ''];
 
-  const slotLabel: Record<string, string> = {
+  const slotLabel: Record<string, string> = isZh ? {
     morning: '上午',
     afternoon: '下午',
     evening: '晚间',
+  } : {
+    morning: 'Morning',
+    afternoon: 'Afternoon',
+    evening: 'Evening',
   };
 
   // ── 事件清单（按时段分组，智能过滤）──────────────────────────
   if (result.raw_items && result.raw_items.length > 0) {
-    lines.push('▸ 今日事件清单');
+    lines.push(isZh ? '▸ 今日事件清单' : '▸ Today\'s Event List');
     const slotOrder: Array<'morning' | 'afternoon' | 'evening'> = ['morning', 'afternoon', 'evening'];
     for (const slot of slotOrder) {
       let slotItems = result.raw_items.filter(i => i.time_slot === slot);
@@ -538,17 +543,17 @@ export function formatForDiaryAI(result: ComputedResult): string {
 
       lines.push(`  ${slotLabel[slot]}：`);
       for (const i of filtered) {
-        const catLabel = CATEGORY_CONFIG[i.category]?.label || i.category;
+        const catLabel = isZh ? (CATEGORY_CONFIG[i.category]?.label || i.category) : i.category.replace('_', ' ');
         lines.push(`    · ${i.name} (${minutesToDisplay(i.duration_min)}) [${catLabel}]`);
       }
       if (omitted > 0) {
-        lines.push(`    · …另有 ${omitted} 项琐碎事务`);
+        lines.push(isZh ? `    · …另有 ${omitted} 项琐碎事务` : `    · …and ${omitted} minor tasks`);
       }
     }
     // 无时段的事项
     const noSlotItems = result.raw_items.filter(i => !i.time_slot);
     if (noSlotItems.length > 0) {
-      lines.push('  未标注时段：');
+      lines.push(isZh ? '  未标注时段：' : '  Unspecified Time:');
       for (const i of noSlotItems.slice(0, 5)) {
         lines.push(`    · ${i.name} (${minutesToDisplay(i.duration_min)})`);
       }
@@ -558,7 +563,7 @@ export function formatForDiaryAI(result: ComputedResult): string {
 
   // ── 心情记录 ────────────────────────────────────────────────
   if (result.mood_records && result.mood_records.length > 0) {
-    lines.push('▸ 今日心情记录');
+    lines.push(isZh ? '▸ 今日心情记录' : '▸ Today\'s Mood Log');
     for (const mood of result.mood_records) {
       lines.push(`  ${mood.time}  「${mood.content}」`);
     }
@@ -566,38 +571,45 @@ export function formatForDiaryAI(result: ComputedResult): string {
   }
 
   // ── 光谱分布（含百分比 + 方括号进度条）──────────────────────
-  lines.push('▸ 今日光谱分布');
+  lines.push(isZh ? '▸ 今日光谱分布' : '▸ Spectrum Distribution');
   lines.push('');
   for (const s of result.spectrum) {
-    const anomaly = s.is_anomaly ? '  ⚠ 偏多' : '';
-    lines.push(`  ${s.emoji} ${s.label.padEnd(6)}  ${s.duration_str.padEnd(10)}  [${s.bar}]  ${s.percent_str}${anomaly}`);
+    const anomalyZh = s.is_anomaly ? '  ⚠ 偏多' : '';
+    const anomalyEn = s.is_anomaly ? '  ⚠ High' : '';
+    const anomaly = isZh ? anomalyZh : anomalyEn;
+    const label = isZh ? s.label : s.category.replace('_', ' ');
+    lines.push(`  ${s.emoji} ${label.padEnd(6)}  ${s.duration_str.padEnd(10)}  [${s.bar}]  ${s.percent_str}${anomaly}`);
     if (s.top_item) {
-      lines.push(`     └ 今日之最 → ${s.top_item.name}  ${s.top_item.duration_str}`);
+      lines.push(isZh ? `     └ 今日之最 → ${s.top_item.name}  ${s.top_item.duration_str}` : `     └ Top Item → ${s.top_item.name}  ${s.top_item.duration_str}`);
     }
   }
   lines.push('');
 
   // ── 光质读数 ────────────────────────────────────────────────
   const lq = result.light_quality;
-  lines.push('▸ 光质读数');
-  lines.push(`  专注聚光 vs 碎片散光  ${lq.focus_pct}  /  ${lq.scatter_pct}`);
-  lines.push(`  主动燃烧 vs 被动响应  ${lq.active_pct}  /  ${lq.passive_pct}`);
-  lines.push(`  待办着陆率            ${lq.todo_str}`);
+  lines.push(isZh ? '▸ 光质读数' : '▸ Light Quality');
+  lines.push(isZh ? `  专注聚光 vs 碎片散光  ${lq.focus_pct}  /  ${lq.scatter_pct}` : `  Focus vs Scatter  ${lq.focus_pct}  /  ${lq.scatter_pct}`);
+  lines.push(isZh ? `  主动燃烧 vs 被动响应  ${lq.active_pct}  /  ${lq.passive_pct}` : `  Active vs Passive  ${lq.active_pct}  /  ${lq.passive_pct}`);
+  lines.push(isZh ? `  待办着陆率            ${lq.todo_str}` : `  Todo Completion   ${lq.todo_str}`);
   lines.push('');
 
   // ── 能量曲线（含进度条）────────────────────────────────────
   if (result.energy_log && result.energy_log.length > 0) {
-    const levelLabel: Record<string, string> = {
+    const levelLabel: Record<string, string> = isZh ? {
       high: '⚡ 充沛',
       medium: '〰 平稳',
       low: '🔋 低谷',
+    } : {
+      high: '⚡ High',
+      medium: '〰 Medium',
+      low: '🔋 Low',
     };
     const levelBar: Record<string, string> = {
       high: buildBar(1.0, 8),
       medium: buildBar(0.625, 8),
       low: buildBar(0.25, 8),
     };
-    lines.push('▸ 今日能量曲线');
+    lines.push(isZh ? '▸ 今日能量曲线' : '▸ Energy Curve');
     for (const e of result.energy_log) {
       const slot = slotLabel[e.time_slot] || e.time_slot;
       const level = levelLabel[e.energy_level || ''] || '—';
@@ -610,22 +622,25 @@ export function formatForDiaryAI(result: ComputedResult): string {
 
   // ── 引力错位（有异常时展示）────────────────────────────────
   if (result.gravity_mismatch) {
-    lines.push('▸ 引力错位检测');
+    lines.push(isZh ? '▸ 引力错位检测' : '▸ Gravity Mismatch Detection');
     lines.push(`  ⚠ ${result.gravity_mismatch}`);
     lines.push('');
   }
 
   // ── 历史趋势（有多日数据时展示）────────────────────────────
   if (result.history_trends && result.history_trends.length > 0) {
-    lines.push('▸ 历史观测趋势');
+    lines.push(isZh ? '▸ 历史观测趋势' : '▸ Historical Trends');
     for (const t of result.history_trends) {
       let tag = '';
       if (t.is_positive) {
-        tag = '  ✦ 积极信号';
+        tag = isZh ? '  ✦ 积极信号' : '  ✦ Positive';
       } else if (t.is_warning) {
-        tag = '  ⚠ 状态预警';
+        tag = isZh ? '  ⚠ 状态预警' : '  ⚠ Warning';
       }
-      lines.push(`  ${t.metric.padEnd(10)}  ${t.direction}  今日 ${t.today}  均值 ${t.hist_avg}${tag}`);
+      lines.push(isZh
+        ? `  ${t.metric.padEnd(10)}  ${t.direction}  今日 ${t.today}  均值 ${t.hist_avg}${tag}`
+        : `  ${t.metric.padEnd(10)}  ${t.direction}  Today ${t.today}  Avg ${t.hist_avg}${tag}`
+      );
     }
     lines.push('');
   }
@@ -640,10 +655,11 @@ export function formatForDiaryAI(result: ComputedResult): string {
  */
 export function processClassifierOutput(
   rawClassifierOutput: string,
-  history: ComputedResult[] | null = null
+  history: ComputedResult[] | null = null,
+  lang: 'zh' | 'en' | 'it' = 'zh'
 ): { computed: ComputedResult; diaryInput: string } {
   const classified = parseClassifierResponse(rawClassifierOutput);
   const computed = computeAll(classified, history);
-  const diaryInput = formatForDiaryAI(computed);
+  const diaryInput = formatForDiaryAI(computed, lang);
   return { computed, diaryInput };
 }

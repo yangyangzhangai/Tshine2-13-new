@@ -144,6 +144,13 @@ const zh: TranslationKeys = {
     stardust_error_default: '记忆加载失败，请稍后重试',
     stardust_from: '来自 {{name}} · {{date}}',
 
+    // ── 待办分类 ──
+    category_study: '学习',
+    category_work: '工作',
+    category_social: '社交',
+    category_life: '生活',
+    category_entertainment: '娱乐',
+
     // ── 语言切换 ──
     language_switch: '语言',
     language_en: 'EN',

@@ -1,7 +1,7 @@
 const en = {
     // ── Common ──
-    app_name: 'Time Shine',
-    confirm: 'Confirm',
+    app_name: 'TimeShine',
+    confirm: 'Save',
     cancel: 'Cancel',
     save: 'Save',
     delete: 'Delete',
@@ -14,31 +14,31 @@ const en = {
     // ── Duration formatting ──
     duration_hours_minutes: '{{hours}}h {{mins}}m',
     duration_minutes: '{{mins}}m',
-    duration_label: 'Duration {{duration}}',
-    elapsed_label: 'Elapsed {{duration}}',
+    duration_label: '{{duration}}',
+    elapsed_label: 'Duration: {{duration}}',
 
     // ── Header ──
     header_login: 'Log in / Sign up',
     header_confirm_logout: 'Are you sure you want to log out?',
 
     // ── Bottom Nav ──
-    nav_record: 'Record',
-    nav_todo: 'Todos',
-    nav_report: 'Report',
+    nav_record: 'Track',
+    nav_todo: 'Tasks',
+    nav_report: 'Reports',
 
     // ── Chat / Record Page ──
-    chat_title: 'Record',
-    chat_ongoing: 'In progress',
-    chat_current_activity: 'Current: ',
-    chat_placeholder_mood: 'Log your mood (e.g. excited)… Tap ❤️ to switch to activity',
-    chat_placeholder_activity: 'Log your activity (e.g. lunch)… Tap ❤️ to switch to mood',
-    chat_switch_to_activity: 'Switch to activity mode',
-    chat_switch_to_mood: 'Switch to mood mode',
-    chat_confirm_delete: 'Are you sure you want to delete this record?',
-    chat_edit_record: 'Edit Record',
-    chat_insert_record: 'Insert Record',
-    chat_label_content: 'Content',
-    chat_placeholder_content: 'What did you do…',
+    chat_title: 'Track',
+    chat_ongoing: 'Tracking',
+    chat_current_activity: 'Tracking: ',
+    chat_placeholder_mood: 'Log your mood (e.g., excited)… Tap ❤️ to switch to activities',
+    chat_placeholder_activity: 'Log your activity (e.g., lunch)… Tap ❤️ to switch to mood',
+    chat_switch_to_activity: 'Track activities',
+    chat_switch_to_mood: 'Log mood',
+    chat_confirm_delete: 'Are you sure you want to delete this entry?',
+    chat_edit_record: 'Edit Entry',
+    chat_insert_record: 'Insert Entry',
+    chat_label_content: 'Activity',
+    chat_placeholder_content: 'What were you doing…',
     chat_label_start_time: 'Start Time',
     chat_label_end_time: 'End Time',
     chat_title_edit: 'Edit',
@@ -46,19 +46,19 @@ const en = {
     chat_title_delete: 'Delete',
 
     // ── Todo Page ──
-    todo_title: 'Todos',
+    todo_title: 'Tasks',
     todo_filter_daily: 'Today',
     todo_filter_weekly: 'This Week',
     todo_filter_monthly: 'This Month',
     todo_empty: 'No tasks yet',
-    todo_add: 'Add Task',
+    todo_add: 'New Task',
     todo_edit: 'Edit Task',
-    todo_label_content: 'Content',
-    todo_placeholder_content: 'What to do…',
+    todo_label_content: 'Task Name',
+    todo_placeholder_content: 'e.g., Read a book',
     todo_label_priority: 'Priority',
     todo_label_recurrence: 'Repeat',
     todo_label_category: 'Category',
-    todo_placeholder_custom_category: 'Custom…',
+    todo_placeholder_custom_category: 'New category…',
     todo_delete_confirm: 'Delete this task',
     todo_duration: 'Duration {{minutes}} min',
     todo_pin: 'Pin',
@@ -73,17 +73,17 @@ const en = {
     priority_not_important_not_urgent: 'Not Important, Not Urgent',
 
     // Recurrence labels
-    recurrence_none: 'No repeat',
+    recurrence_none: 'Never',
     recurrence_daily: 'Daily',
     recurrence_weekly: 'Weekly',
     recurrence_monthly: 'Monthly',
 
     // ── Report Page ──
-    report_title: 'Time Report',
-    report_calendar_view: 'Calendar View',
+    report_title: 'Reports',
+    report_calendar_view: 'Calendar',
     report_weekly: 'Weekly',
     report_monthly: 'Monthly',
-    report_custom: 'Custom Report',
+    report_custom: 'Custom',
     report_completed: 'Completed',
     report_total_tasks: 'Total Tasks',
     report_completion_rate: 'Completion Rate',
@@ -94,7 +94,7 @@ const en = {
     report_completion_trend: 'Completion Trend',
     report_activity_records: 'Activity Records',
     report_observer_analysis: 'Observer Analysis',
-    report_observer_waiting: 'The observer from Time Prism is waiting for records…',
+    report_observer_waiting: 'The Time Prism observer is waiting for your records…',
     report_generate_diary: 'View Today\'s Observation',
     report_generate_confirm: 'You can only generate one observation per day. Generate now?',
     report_generating: 'The observer is piecing together today\'s time fragments…',
@@ -135,12 +135,19 @@ const en = {
     annotation_condensing: 'Crystallizing…',
     annotation_condense: 'Crystallize',
     annotation_condensed: 'Crystallized',
-    annotation_hover_pause: 'Hovering — paused',
+    annotation_hover_pause: 'Paused on hover',
 
     // ── Stardust Card ──
     stardust_loading: 'Retrieving memory…',
     stardust_error_default: 'Failed to load memory — please try again later',
     stardust_from: 'From {{name}} · {{date}}',
+
+    // ── Todo Categories ──
+    category_study: 'Study',
+    category_work: 'Work',
+    category_social: 'Social',
+    category_life: 'Life',
+    category_entertainment: 'Entertainment',
 
     // ── Language Switcher ──
     language_switch: 'Language',

@@ -1,20 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { 
-  AIAnnotation, 
-  AnnotationEvent, 
+import type {
+  AIAnnotation,
+  AnnotationEvent,
   AnnotationEventType,
   AnnotationState,
-  TodayActivity 
+  TodayActivity
 } from '../types/annotation';
 import { callAnnotationAPI } from '../api/client';
 import { shouldGenerateAnnotation, recordEvent } from './annotationHelpers';
+import i18n from '../i18n';
 
 interface AnnotationStore extends AnnotationState {
   // 内部状态（不持久化）
   lastAnnotationTime: number;
-  
+
   // Actions
   triggerAnnotation: (event: AnnotationEvent) => Promise<void>;
   dismissAnnotation: () => void;
@@ -41,14 +42,14 @@ export const useAnnotationStore = create<AnnotationStore>()(
   persist(
     (set, get) => ({
       currentAnnotation: null,
-      
+
       todayStats: {
         date: getTodayString(),
         speakCount: 0,
         lastSpeakTime: 0,
         events: [],
       },
-      
+
       config: {
         dailyLimit: 5,
         enabled: true,
@@ -107,13 +108,13 @@ export const useAnnotationStore = create<AnnotationStore>()(
         try {
           // 准备用户上下文
           const todayEvents = get().todayStats.events;
-          const activities = todayEvents.filter(e => 
+          const activities = todayEvents.filter(e =>
             e.type === 'activity_completed' || e.type === 'activity_recorded'
           );
-          const totalDuration = activities.reduce((sum, e) => 
+          const totalDuration = activities.reduce((sum, e) =>
             sum + (e.data?.duration || 0), 0
           );
-          
+
           // 获取最近批注内容（避免重复）
           const recentAnnotations = todayEvents
             .filter(e => e.type === 'annotation_generated')
@@ -140,6 +141,7 @@ export const useAnnotationStore = create<AnnotationStore>()(
               recentAnnotations,
               todayActivitiesList,
             },
+            lang: (i18n.language?.split('-')[0] || 'en') as 'zh' | 'en',
           });
 
           // 创建批注对象
@@ -214,10 +216,10 @@ export const useAnnotationStore = create<AnnotationStore>()(
        */
       getTodayStats: () => {
         const { todayStats } = get();
-        const activities = todayStats.events.filter(e => 
+        const activities = todayStats.events.filter(e =>
           e.type === 'activity_completed' || e.type === 'activity_recorded'
         );
-        const totalDuration = activities.reduce((sum, e) => 
+        const totalDuration = activities.reduce((sum, e) =>
           sum + (e.data?.duration || 0), 0
         );
         return {

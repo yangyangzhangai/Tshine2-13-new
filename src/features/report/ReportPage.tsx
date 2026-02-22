@@ -161,7 +161,7 @@ export const ReportPage = () => {
   const [date, setDate] = useState<Value>(new Date());
   const { reports, generateReport, triggerAIAnalysis, generateTimeshineDiary } = useReportStore();
   const { todos } = useTodoStore();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [showReportList, setShowReportList] = useState<'weekly' | 'monthly' | 'custom' | null>(null);
 
@@ -238,6 +238,7 @@ export const ReportPage = () => {
               onChange={setDate}
               value={date}
               onClickDay={handleDateClick}
+              locale={i18n.language}
               className="w-full border-none text-sm"
             />
           </div>
@@ -328,8 +329,8 @@ export const ReportPage = () => {
                   <Sparkles size={16} /> {t('report_observer_analysis')}
                 </h3>
 
-                {/* 未生成状态 */}
-                {(!selectedReport.aiAnalysis || selectedReport.aiAnalysis === '观察员分析功能即将上线...') ? (
+                {/* 未生成/空闲状态 */}
+                {selectedReport.analysisStatus === 'idle' ? (
                   <div className="text-center py-2">
                     <p className="text-sm opacity-80 mb-3">{t('report_observer_waiting')}</p>
                     <button
@@ -343,17 +344,17 @@ export const ReportPage = () => {
                       {t('report_generate_diary')}
                     </button>
                   </div>
-                ) : selectedReport.aiAnalysis === '正在生成观察手记...' ? (
+                ) : selectedReport.analysisStatus === 'generating' ? (
                   /* 生成中状态 */
                   <div className="flex flex-col items-center justify-center py-4 space-y-2">
                     <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-sm font-medium text-blue-800 tracking-wide mt-2">{t('report_generating')}</p>
                     <p className="text-xs text-blue-500 opacity-80 mt-1">{t('report_generating_patience')}</p>
                   </div>
-                ) : (selectedReport.aiAnalysis.includes('请稍后重试') || selectedReport.aiAnalysis.startsWith('生成手记失败') || selectedReport.aiAnalysis.startsWith('生成观察手记时出错')) ? (
+                ) : selectedReport.analysisStatus === 'error' ? (
                   /* 错误状态 - 可以重试 */
                   <div className="bg-red-50 p-3 rounded border border-red-100">
-                    <p className="text-sm text-red-600 mb-2">{selectedReport.aiAnalysis}</p>
+                    <p className="text-sm text-red-600 mb-2">{selectedReport.errorMessage}</p>
                     <button
                       onClick={() => generateTimeshineDiary(selectedReport.id)}
                       className="text-xs bg-white border border-red-200 text-red-600 px-3 py-1 rounded hover:bg-red-50"

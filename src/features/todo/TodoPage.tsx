@@ -31,6 +31,14 @@ const TodoItem = ({
   const textRef = useRef<HTMLParagraphElement>(null);
   const { t } = useTranslation();
 
+  // Translate category key to localized label
+  const catMap: Record<string, string> = {
+    study: t('category_study'), work: t('category_work'), social: t('category_social'),
+    life: t('category_life'), entertainment: t('category_entertainment'),
+    '学习': t('category_study'), '工作': t('category_work'), '社交': t('category_social'),
+    '生活': t('category_life'), '娱乐': t('category_entertainment'),
+  };
+  const tCat = (key: string) => catMap[key] || key;
   useEffect(() => {
     const checkOverflow = () => {
       if (textRef.current && !isExpanded) {
@@ -83,7 +91,7 @@ const TodoItem = ({
             {getPriorityLabel(todo.priority)}
           </span>
           <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
-            {todo.category}
+            {tCat(todo.category)}
           </span>
           {todo.recurrence && todo.recurrence !== 'none' && (
             <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100 flex items-center gap-1">
@@ -142,6 +150,15 @@ export const TodoPage = () => {
   const { sendMessage, setMode } = useChatStore();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  // Translate category key to localized label
+  const catMap: Record<string, string> = {
+    study: t('category_study'), work: t('category_work'), social: t('category_social'),
+    life: t('category_life'), entertainment: t('category_entertainment'),
+    '学习': t('category_study'), '工作': t('category_work'), '社交': t('category_social'),
+    '生活': t('category_life'), '娱乐': t('category_entertainment'),
+  };
+  const tCat = (key: string) => catMap[key] || key;
   const [filter, setFilter] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -414,7 +431,7 @@ export const TodoPage = () => {
                     onChange={e => setCategory(e.target.value)}
                     className="flex-1 p-2 border border-gray-300 rounded-lg outline-none bg-white"
                   >
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    {categories.map(c => <option key={c} value={c}>{tCat(c)}</option>)}
                   </select>
                   <input
                     type="text"

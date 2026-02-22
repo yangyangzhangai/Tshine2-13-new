@@ -53,7 +53,7 @@ interface AnnotationRequest {
     recentAnnotations?: string[];
     todayActivitiesList?: any[];
   };
-  lang?: 'zh' | 'en';
+  lang?: 'zh' | 'en' | 'it';
 }
 
 interface AnnotationResponse {
@@ -128,7 +128,7 @@ export async function callAnnotationAPI(request: AnnotationRequest): Promise<Ann
 
 interface ClassifyRequest {
   rawInput: string;
-  lang?: 'zh' | 'en';
+  lang?: 'zh' | 'en' | 'it';
 }
 
 interface ClassifyResponse {
@@ -159,7 +159,7 @@ interface DiaryRequest {
   rawInput?: string;
   date?: string;
   historyContext?: string;
-  lang?: 'zh' | 'en';
+  lang?: 'zh' | 'en' | 'it';
   userName?: string;
 }
 
