@@ -321,12 +321,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const apiKey = process.env.CHUTES_API_KEY;
-  if (!apiKey) {
-    res.status(500).json({ error: 'Server configuration error: Missing CHUTES_API_KEY' });
-    return;
-  }
-
   // 浣跨敤 ZhiPu API
   const apiUrl = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
   const model = 'glm-4.7-flash';
