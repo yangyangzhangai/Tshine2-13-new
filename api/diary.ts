@@ -204,11 +204,11 @@ Use a storytelling tone. You are the diary subject—incorporate your own reacti
 ─────────────────────────────
 ▸ Today's Spectrum
 
-Write one sentence of observation for each category in the spectrum provided. Directly quote the progress bar, duration, and the "Top Item" [今日之最] from the data panel:
+Write one sentence of observation for each category in the spectrum provided. Directly quote the progress bar, duration, and the "Top Item" from the data panel:
 - 🔵 Deep Focus 2h [████░░░░░░] —— Describe the state of calm immersion
-     └ 今日之最 → Thesis Writing  1h 40min (If this line exists in data, MUST preserve it)
+     └ Top Item → Thesis Writing  1h 40min (If this line exists in data, MUST preserve it)
 - 🟢 Recharge 1.5h [███░░░░░░░] —— Describe the state of active nourishment
-     └ 今日之最 → Walking  45min (If it exists)
+     └ Top Item → Walking  45min (If it exists)
 - 🟡 Body Care 8h [████████░░] —— Describe the state of physical maintenance
 - 🟠 Necessary 2h [████░░░░░░] —— Describe the state of daily operations
 - 🟣 Social Duty 1h [██░░░░░░░░] —— Describe the state of interpersonal interaction
@@ -353,7 +353,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const result = await response.json();
-    let content = result.choices?.[0]?.message?.content || '无法生成观察手记';
+    let content = result.choices?.[0]?.message?.content || '';
+
+    // 如果返回内容看起来像错误信息，视为失败
+    if (!content || content.startsWith('ERROR:') || content.includes('Cannot read')) {
+      const errorMsg = content || 'AI 返回内容为空';
+      console.error('Diary API returned error content:', errorMsg);
+      res.status(500).json({
+        error: 'AI 服务返回异常',
+        details: errorMsg
+      });
+      return;
+    }
 
     // 清理可能的 think 标签
     content = content.replace(/<think>[\s\S]*?<\/think>/g, '');
