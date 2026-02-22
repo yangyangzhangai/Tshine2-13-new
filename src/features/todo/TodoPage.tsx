@@ -6,15 +6,15 @@ import { Plus, Trash2, CheckCircle, Circle, Edit2, ChevronDown, ChevronUp, Repea
 import { cn } from '../../lib/utils';
 import { format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 
-const TodoItem = ({ 
-  todo, 
-  toggleTodo, 
+const TodoItem = ({
+  todo,
+  toggleTodo,
   togglePin,
   handleOpenModal,
   handleStartTodo,
   activeTodoId,
-  getPriorityColor, 
-  getPriorityLabel 
+  getPriorityColor,
+  getPriorityLabel
 }: {
   todo: Todo;
   toggleTodo: (id: string) => void;
@@ -49,31 +49,31 @@ const TodoItem = ({
       <button onClick={() => toggleTodo(todo.id)} className="mt-1 flex-shrink-0 text-gray-400 hover:text-blue-600">
         {todo.completed ? <CheckCircle className="text-green-500" size={20} /> : <Circle size={20} />}
       </button>
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex items-start">
-           <p 
-             ref={textRef}
-             className={cn(
-               "text-sm font-medium text-gray-900 flex-1", 
-               todo.completed && "line-through text-gray-400",
-               !isExpanded && "truncate"
-             )}
-             onClick={() => setIsExpanded(!isExpanded)}
-           >
-             {todo.content}
-           </p>
-           {isOverflowing && (
-             <button 
-               onClick={(e) => {
-                 e.stopPropagation();
-                 setIsExpanded(!isExpanded);
-               }}
-               className="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0 p-0.5"
-             >
-               {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-             </button>
-           )}
+          <p
+            ref={textRef}
+            className={cn(
+              "text-sm font-medium text-gray-900 flex-1",
+              todo.completed && "line-through text-gray-400",
+              !isExpanded && "truncate"
+            )}
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            {todo.content}
+          </p>
+          {isOverflowing && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+              className="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0 p-0.5"
+            >
+              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2 mt-2 items-center">
@@ -97,10 +97,10 @@ const TodoItem = ({
 
       <div className="flex flex-col items-end space-y-1 flex-shrink-0">
         <div className="flex items-center space-x-1">
-          <button 
-            onClick={() => togglePin(todo.id)} 
+          <button
+            onClick={() => togglePin(todo.id)}
             className={cn(
-              "p-1 rounded transition-colors", 
+              "p-1 rounded transition-colors",
               todo.isPinned ? "text-blue-600 bg-blue-100 hover:bg-blue-200" : "text-gray-300 hover:text-blue-500 hover:bg-gray-50"
             )}
             title={todo.isPinned ? "取消置顶" : "置顶"}
@@ -108,12 +108,12 @@ const TodoItem = ({
             <ArrowUp size={18} />
           </button>
           {!todo.completed && (
-            <button 
+            <button
               onClick={() => handleStartTodo(todo)}
               className={cn(
                 "p-1 rounded transition-colors",
-                activeTodoId === todo.id 
-                  ? "text-green-600 bg-green-100 hover:bg-green-200 animate-pulse" 
+                activeTodoId === todo.id
+                  ? "text-green-600 bg-green-100 hover:bg-green-200 animate-pulse"
                   : "text-green-500 hover:text-green-600 hover:bg-green-50"
               )}
               title={activeTodoId === todo.id ? "进行中" : "开始计时"}
@@ -130,9 +130,6 @@ const TodoItem = ({
             耗时 {todo.duration}分钟
           </span>
         )}
-        <span className="text-xs text-gray-400">
-          {format(todo.createdAt, 'MM-dd HH:mm')}
-        </span>
       </div>
     </div>
   );
@@ -145,12 +142,12 @@ export const TodoPage = () => {
   const [filter, setFilter] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
   useEffect(() => {
     fetchTodos();
     checkDueDates();
   }, [checkDueDates, fetchTodos]);
-  
+
   // Form State
   const [content, setContent] = useState('');
   const [priority, setPriority] = useState<Priority>('urgent-important');
@@ -228,7 +225,7 @@ export const TodoPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
-    
+
     const finalCategory = customCategory.trim() || category;
     if (customCategory.trim() && !categories.includes(customCategory.trim())) {
       addCategory(customCategory.trim());
@@ -244,7 +241,7 @@ export const TodoPage = () => {
     } else {
       addTodo(content, priority, finalCategory, filter, undefined, recurrence);
     }
-    
+
     setContent('');
     setCustomCategory('');
     setRecurrence('none');
@@ -273,15 +270,15 @@ export const TodoPage = () => {
   const handleStartTodo = async (todo: Todo) => {
     // 1. 更新 todo 状态（开始计时）
     await startTodo(todo.id);
-    
+
     // 2. 立即创建消息记录（关键：在跳转前创建，避免 Effect 竞态条件）
     const now = Date.now();
     await sendMessage(todo.content, now, 'record');
-    
+
     // 3. 设置活跃待办和模式（消息已创建，不需要通过 URL 传递）
     setActiveTodoId(todo.id);
     setMode('record');
-    
+
     // 4. 跳转到记录模式页面
     navigate('/chat');
   };
@@ -295,7 +292,7 @@ export const TodoPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-gray-50 relative">
+    <div className="flex flex-col h-full bg-gray-50 relative">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 p-4 sticky top-0 z-10">
         <h1 className="text-lg font-bold text-center mb-4">待办管理</h1>
@@ -322,12 +319,12 @@ export const TodoPage = () => {
             <p>暂无待办任务</p>
           </div>
         )}
-        
+
         {sortedTodos.map((todo) => (
-          <TodoItem 
-            key={todo.id} 
-            todo={todo} 
-            toggleTodo={toggleTodo} 
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            toggleTodo={toggleTodo}
             togglePin={togglePin}
             handleOpenModal={handleOpenModal}
             handleStartTodo={handleStartTodo}
@@ -341,7 +338,8 @@ export const TodoPage = () => {
       {/* Add Button */}
       <button
         onClick={() => handleOpenModal()}
-        className="absolute bottom-24 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform active:scale-95"
+        className="fixed right-6 z-20 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform active:scale-95"
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px) + 1rem)' }}
       >
         <Plus size={24} />
       </button>
@@ -363,7 +361,7 @@ export const TodoPage = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">内容</label>

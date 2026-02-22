@@ -8,3 +8,8 @@
 .font-mood {
   font-family: 'LXGW WenKai', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
+
+/* iOS 安全区域支持 */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
