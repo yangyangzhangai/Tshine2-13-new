@@ -330,7 +330,7 @@ export const ReportPage = () => {
                 </h3>
 
                 {/* 未生成/空闲状态 */}
-                {selectedReport.analysisStatus === 'idle' ? (
+                {selectedReport.analysisStatus === 'idle' || (!selectedReport.analysisStatus && !selectedReport.aiAnalysis) ? (
                   <div className="text-center py-2">
                     <p className="text-sm opacity-80 mb-3">{t('report_observer_waiting')}</p>
                     <button
