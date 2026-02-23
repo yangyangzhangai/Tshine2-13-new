@@ -10,6 +10,7 @@ import type {
 } from '../types/annotation';
 import { callAnnotationAPI } from '../api/client';
 import { shouldGenerateAnnotation, recordEvent } from './annotationHelpers';
+import { supabase } from '../api/supabase';
 
 interface AnnotationStore extends AnnotationState {
   // 内部状态（不持久化）
@@ -143,8 +144,9 @@ export const useAnnotationStore = create<AnnotationStore>()(
           });
 
           // 创建批注对象
-          const annotation: AIAnnotation = {
-            id: uuidv4(),
+          const annotationId = uuidv4();
+            const annotation: AIAnnotation = {
+            id: annotationId,
             content: response.content,
             tone: response.tone,
             timestamp: Date.now(),
@@ -169,6 +171,23 @@ export const useAnnotationStore = create<AnnotationStore>()(
               ],
             },
           });
+
+          // 异步同步到云端
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session) {
+            const { error: insertError } = await supabase.from('annotations').insert([{
+              id: annotationId,
+              user_id: sessionData.session.user.id,
+              content: annotation.content,
+              tone: annotation.tone,
+              event_timestamp: annotation.timestamp,
+              related_event: annotation.relatedEvent,
+              created_at: new Date(annotation.timestamp).toISOString(),
+            }]);
+            if (insertError) {
+              console.error('[Annotation] 云端同步失败:', insertError);
+            }
+          }
 
           console.log('[AI Annotator] 批注已生成:', response.content);
         } catch (error) {
