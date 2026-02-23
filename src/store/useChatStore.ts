@@ -23,6 +23,11 @@ export interface Message {
   stardustEmoji?: string; // 珍藏的Emoji字符（本地展示用，避免频繁查询store）
 }
 
+interface YesterdaySummary {
+  count: number;
+  lastContent: string;
+}
+
 interface ChatState {
   messages: Message[];
   mode: 'chat' | 'record';
@@ -30,7 +35,15 @@ interface ChatState {
   lastActivityTime: number | null;
   isLoading: boolean;
   hasInitialized: boolean;
+  // Day-based loading state
+  oldestLoadedDate: string | null; // YYYY-MM-DD of the earliest loaded day
+  hasMoreHistory: boolean;
+  isLoadingMore: boolean;
+  yesterdaySummary: YesterdaySummary | null;
+  currentDateStr: string | null; // YYYY-MM-DD of "today" when messages were loaded
   fetchMessages: () => Promise<void>;
+  fetchOlderMessages: () => Promise<void>;
+  checkAndRefreshForNewDay: () => void;
   sendMessage: (content: string, customTimestamp?: number, forcedMode?: 'chat' | 'record') => Promise<void>;
   sendMood: (content: string) => Promise<void>;
   insertActivity: (prevId: string | null, nextId: string | null, content: string, startTime: number, endTime: number) => Promise<void>;
@@ -52,6 +65,12 @@ export const useChatStore = create<ChatState>()(
       lastActivityTime: null,
       isLoading: false,
       hasInitialized: false,
+      // Day-based loading state
+      oldestLoadedDate: null,
+      hasMoreHistory: true,
+      isLoadingMore: false,
+      yesterdaySummary: null,
+      currentDateStr: null,
 
       fetchMessages: async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -62,15 +81,39 @@ export const useChatStore = create<ChatState>()(
 
         set({ isLoading: true });
         try {
-          const { data, error } = await supabase
+          // Calculate today's 00:00 in local timezone
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const todayStartMs = todayStart.getTime();
+          const todayStr = todayStart.toISOString().slice(0, 10);
+
+          // Calculate yesterday's 00:00
+          const yesterdayStart = new Date(todayStart);
+          yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+          const yesterdayStartMs = yesterdayStart.getTime();
+
+          // Fetch today's messages
+          const { data: todayData, error: todayError } = await supabase
             .from('messages')
             .select('*')
             .eq('user_id', session.user.id)
+            .gte('timestamp', todayStartMs)
             .order('timestamp', { ascending: true });
 
-          if (error) throw error;
+          if (todayError) throw todayError;
 
-          const messages = data.map((m: any) => ({
+          // Fetch yesterday's messages (for summary)
+          const { data: yesterdayData, error: yesterdayError } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .gte('timestamp', yesterdayStartMs)
+            .lt('timestamp', todayStartMs)
+            .order('timestamp', { ascending: true });
+
+          if (yesterdayError) throw yesterdayError;
+
+          const messages = (todayData || []).map((m: any) => ({
             id: m.id,
             content: m.content,
             timestamp: Number(m.timestamp),
@@ -80,11 +123,89 @@ export const useChatStore = create<ChatState>()(
             mode: (m.activity_type === 'chat' ? 'chat' : 'record') as 'chat' | 'record',
             isMood: m.is_mood || false
           }));
-          set({ messages });
+
+          // Build yesterday summary
+          let yesterdaySummary: YesterdaySummary | null = null;
+          if (yesterdayData && yesterdayData.length > 0) {
+            const lastYesterday = yesterdayData[yesterdayData.length - 1];
+            yesterdaySummary = {
+              count: yesterdayData.length,
+              lastContent: lastYesterday.content,
+            };
+          }
+
+          set({
+            messages,
+            oldestLoadedDate: todayStr,
+            hasMoreHistory: true,
+            yesterdaySummary,
+            currentDateStr: todayStr,
+          });
         } catch (error) {
           console.error('Error fetching messages:', error);
         } finally {
           set({ isLoading: false, hasInitialized: true });
+        }
+      },
+
+      fetchOlderMessages: async () => {
+        const state = get();
+        if (state.isLoadingMore || !state.hasMoreHistory || !state.oldestLoadedDate) return;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        set({ isLoadingMore: true });
+        try {
+          // Calculate the day before oldestLoadedDate
+          const oldestDate = new Date(state.oldestLoadedDate + 'T00:00:00');
+          const prevDayStart = new Date(oldestDate);
+          prevDayStart.setDate(prevDayStart.getDate() - 1);
+          prevDayStart.setHours(0, 0, 0, 0);
+          const prevDayStartMs = prevDayStart.getTime();
+          const oldestDateMs = oldestDate.getTime();
+          const prevDayStr = prevDayStart.toISOString().slice(0, 10);
+
+          const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .gte('timestamp', prevDayStartMs)
+            .lt('timestamp', oldestDateMs)
+            .order('timestamp', { ascending: true });
+
+          if (error) throw error;
+
+          const olderMessages = (data || []).map((m: any) => ({
+            id: m.id,
+            content: m.content,
+            timestamp: Number(m.timestamp),
+            type: m.type as MessageType,
+            duration: m.duration,
+            activityType: m.activity_type,
+            mode: (m.activity_type === 'chat' ? 'chat' : 'record') as 'chat' | 'record',
+            isMood: m.is_mood || false
+          }));
+
+          set(state => ({
+            messages: [...olderMessages, ...state.messages],
+            oldestLoadedDate: prevDayStr,
+            hasMoreHistory: olderMessages.length > 0,
+          }));
+        } catch (error) {
+          console.error('Error fetching older messages:', error);
+        } finally {
+          set({ isLoadingMore: false });
+        }
+      },
+
+      checkAndRefreshForNewDay: () => {
+        const state = get();
+        const todayStr = new Date().toISOString().slice(0, 10);
+        // If the stored date differs from actual today, we crossed midnight
+        if (state.currentDateStr && state.currentDateStr !== todayStr) {
+          console.log('[DayRefresh] Midnight crossed, refreshing messages...');
+          state.fetchMessages();
         }
       },
 
@@ -485,7 +606,8 @@ IMPORTANT: You must generate your final response entirely and strictly in ${targ
         messages: state.messages,
         mode: state.mode,
         isMoodMode: state.isMoodMode,
-        lastActivityTime: state.lastActivityTime
+        lastActivityTime: state.lastActivityTime,
+        currentDateStr: state.currentDateStr,
       }),
     }
   )
