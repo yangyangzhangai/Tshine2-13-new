@@ -186,17 +186,20 @@ export const useAnnotationStore = create<AnnotationStore>()(
           });
 
           // 异步同步到云端
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            await supabase.from('annotations').insert([{
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session) {
+            const { error: insertError } = await supabase.from('annotations').insert([{
               id: annotationId,
-              user_id: session.user.id,
+              user_id: sessionData.session.user.id,
               content: annotation.content,
               tone: annotation.tone,
               event_timestamp: annotation.timestamp,
               related_event: annotation.relatedEvent,
               created_at: new Date(annotation.timestamp).toISOString(),
-            }]).catch(err => console.error('[Annotation] 云端同步失败:', err));
+            }]);
+            if (insertError) {
+              console.error('[Annotation] 云端同步失败:', insertError);
+            }
           }
 
           console.log('[AI Annotator] 批注已生成:', response.content);
