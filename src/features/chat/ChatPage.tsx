@@ -1,23 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useChatStore } from '../../store/useChatStore';
 import { useTodoStore } from '../../store/useTodoStore';
 import { useStardustStore } from '../../store/useStardustStore';
-import { Send, Activity, Edit2, Plus, Trash2, X, Save, Heart } from 'lucide-react';
+import { Send, Activity, Edit2, Plus, Trash2, X, Save, Heart, ChevronUp, Loader2 } from 'lucide-react';
 import { cn, formatDuration } from '../../lib/utils';
-import { format, addDays, setHours, setMinutes } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { StardustEmoji } from '../../components/StardustEmoji';
 import { StardustCard } from '../../components/StardustCard';
 import type { StardustCardData } from '../../types/stardust';
 
 export const ChatPage = () => {
-  const { messages, sendMessage, fetchMessages, updateActivity, insertActivity, deleteActivity, isLoading, isMoodMode, setIsMoodMode, sendMood, hasInitialized, setHasInitialized, updateMessageDuration } = useChatStore();
+  const {
+    messages, sendMessage, fetchMessages, fetchOlderMessages, checkAndRefreshForNewDay,
+    updateActivity, insertActivity, deleteActivity, isLoading, isLoadingMore,
+    hasMoreHistory, yesterdaySummary, isMoodMode, setIsMoodMode, sendMood,
+    hasInitialized, setHasInitialized, updateMessageDuration,
+  } = useChatStore();
   const { addTodo, activeTodoId, completeActiveTodo, setActiveTodoId, todos } = useTodoStore();
   const stardustMemories = useStardustStore(state => state.memories);
   const getStardustByMessageId = useStardustStore(state => state.getStardustByMessageId);
   const [searchParams, setSearchParams] = useSearchParams();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
   const [currentDuration, setCurrentDuration] = useState(0);
 
   // Edit/Insert State
@@ -33,21 +41,91 @@ export const ChatPage = () => {
     position: { x: number; y: number };
   } | null>(null);
 
-  // 组件挂载时：重置状态并获取消息
+  // ── 初始化 ──────────────────────────────────────────────────
   useEffect(() => {
     setHasInitialized(false);
     fetchMessages();
   }, []);
 
-  // 简单的 URL 参数处理：只清理残留的 todoId（消息已在 TodoPage 创建）
+  // ── URL 参数清理 ────────────────────────────────────────────
   useEffect(() => {
     const todoId = searchParams.get('todoId');
     if (todoId) {
-      // 清理 URL（消息已在跳转前创建，这里只需清理参数）
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
+  // ── 跨天自动刷新 ────────────────────────────────────────────
+  useEffect(() => {
+    // 每 30 秒检查一次是否跨过凌晨
+    const interval = setInterval(() => {
+      checkAndRefreshForNewDay();
+    }, 30_000);
+
+    // 从后台切回时也检查
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkAndRefreshForNewDay();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [checkAndRefreshForNewDay]);
+
+  // ── 上滑加载更多 (IntersectionObserver) ─────────────────────
+  const handleLoadMore = useCallback(async () => {
+    const container = scrollContainerRef.current;
+    if (!container || !hasMoreHistory || isLoadingMore) return;
+
+    // 记录加载前的滚动高度，加载后补偿位置
+    const prevScrollHeight = container.scrollHeight;
+    await fetchOlderMessages();
+
+    // 使用 rAF 确保在 DOM 更新后调整滚动位置
+    requestAnimationFrame(() => {
+      const newScrollHeight = container.scrollHeight;
+      container.scrollTop += newScrollHeight - prevScrollHeight;
+    });
+  }, [hasMoreHistory, isLoadingMore, fetchOlderMessages]);
+
+  useEffect(() => {
+    const sentinel = topSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreHistory && !isLoadingMore) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [handleLoadMore, hasMoreHistory, isLoadingMore]);
+
+  // ── 新消息滚动到底部 ────────────────────────────────────────
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length]);
+
+  // ── 当前活动计时器 ──────────────────────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg) {
+        const duration = Math.floor((Date.now() - lastMsg.timestamp) / (1000 * 60));
+        setCurrentDuration(duration);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [messages]);
+
+  // ── 编辑 / 插入 handlers ────────────────────────────────────
   const handleEditClick = (msg: any) => {
     setEditingId(msg.id);
     setInsertingAfterId(null);
@@ -75,31 +153,21 @@ export const ChatPage = () => {
 
   const handleSave = async () => {
     if (!editContent || !editStartTime || !editEndTime) return;
-
-    const parseTime = (timeStr: string) => {
-      return new Date(timeStr).getTime();
-    };
+    const parseTime = (s: string) => new Date(s).getTime();
 
     if (editingId) {
       const msg = messages.find(m => m.id === editingId);
       if (msg) {
-        const start = parseTime(editStartTime);
-        const end = parseTime(editEndTime);
-        await updateActivity(editingId, editContent, start, end);
+        await updateActivity(editingId, editContent, parseTime(editStartTime), parseTime(editEndTime));
       }
     } else if (insertingAfterId) {
       const prevMsg = messages.find(m => m.id === insertingAfterId);
       if (prevMsg) {
-        const start = parseTime(editStartTime);
-        const end = parseTime(editEndTime);
-
         const index = messages.findIndex(m => m.id === insertingAfterId);
         const nextMsg = messages[index + 1];
-
-        await insertActivity(insertingAfterId, nextMsg?.id || null, editContent, start, end);
+        await insertActivity(insertingAfterId, nextMsg?.id || null, editContent, parseTime(editStartTime), parseTime(editEndTime));
       }
     }
-
     setEditingId(null);
     setInsertingAfterId(null);
   };
@@ -111,27 +179,15 @@ export const ChatPage = () => {
   };
 
   const handleSend = async () => {
-    console.log('[DEBUG] handleSend 开始 - input:', input.trim());
     if (!input.trim()) return;
-
-    // 记录待办信息用于后续更新 message duration
     const todoToComplete = activeTodoId ? todos.find(t => t.id === activeTodoId) : null;
 
-    // 只要存在 activeTodoId 且不是心情模式，就自动完成待办
-    console.log('[DEBUG] handleSend 检查条件 - isMoodMode:', isMoodMode, 'activeTodoId:', activeTodoId);
     if (!isMoodMode && activeTodoId) {
-      console.log('[DEBUG] 条件满足（非心情+有待办），调用 completeActiveTodo');
       await completeActiveTodo();
-      console.log('[DEBUG] completeActiveTodo 完成');
-
-      // 关键修复：同步更新对应 message 的 duration（解决耗时显示为 null 的问题）
       if (todoToComplete && todoToComplete.startedAt) {
         const duration = Math.round((Date.now() - todoToComplete.startedAt) / (1000 * 60));
-        console.log('[DEBUG] 同步更新 message duration:', todoToComplete.content, duration, '分钟');
         await updateMessageDuration(todoToComplete.content, todoToComplete.startedAt, duration);
       }
-    } else {
-      console.log('[DEBUG] 条件不满足，跳过 completeActiveTodo');
     }
 
     if (isMoodMode) {
@@ -140,7 +196,6 @@ export const ChatPage = () => {
       await sendMessage(input);
     }
     setInput('');
-    console.log('[DEBUG] handleSend 结束');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -150,21 +205,10 @@ export const ChatPage = () => {
     }
   };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Update current duration timer
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const lastMsg = messages[messages.length - 1];
-      if (lastMsg) {
-        const duration = Math.floor((Date.now() - lastMsg.timestamp) / (1000 * 60));
-        setCurrentDuration(duration);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [messages]);
+  // ── 辅助：计算日期分隔线 ─────────────────────────────────────
+  const getDateLabel = (ts: number) => {
+    return format(ts, 'M月d日 EEEE', { locale: zhCN });
+  };
 
   const lastActivity = messages.filter(m => !m.isMood).slice(-1)[0];
 
@@ -174,115 +218,178 @@ export const ChatPage = () => {
       <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-center sticky top-0 z-10">
         <h1 className="text-lg font-semibold text-gray-800">记录</h1>
       </header>
+
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => {
-          return (
-            <div key={msg.id} className="flex flex-col space-y-1">
-              {msg.isMood ? (
-                // Mood Record
-                <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-pink-50 p-3 rounded-xl shadow-sm border border-pink-100 hover:border-pink-200 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-pink-500"></div>
-                    <div className="flex flex-col">
-                      <span className="font-mood text-gray-900">{msg.content}</span>
-                      {/* 星尘珍藏Emoji - 放在左边内容区 */}
-                      {(() => {
-                        const stardust = getStardustByMessageId(msg.id);
-                        return stardust ? (
-                          <div className="mt-1">
-                            <StardustEmoji
-                              emoji={stardust.emojiChar}
-                              size="sm"
-                              onClick={(e) => {
-                                const rect = (e.target as HTMLElement).getBoundingClientRect();
-                                setSelectedStardust({
-                                  data: {
-                                    emojiChar: stardust.emojiChar,
-                                    message: stardust.message,
-                                    alienName: stardust.alienName || 'T.S',
-                                    createdAt: stardust.createdAt,
-                                  },
-                                  position: {
-                                    x: rect.left + rect.width / 2,
-                                    y: rect.top,
-                                  },
-                                });
-                              }}
-                            />
-                          </div>
-                        ) : null;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">
-                      {format(msg.timestamp, 'MM-dd HH:mm')}
-                    </div>
-                  </div>
-                  <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
-                  </div>
-                </div>
-              ) : (
-                // Activity Record
-                <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-900">{msg.content}</span>
-                      {/* 星尘珍藏Emoji - 放在左边内容区 */}
-                      {(() => {
-                        const stardust = getStardustByMessageId(msg.id);
-                        return stardust ? (
-                          <div className="mt-1">
-                            <StardustEmoji
-                              emoji={stardust.emojiChar}
-                              size="sm"
-                              onClick={(e) => {
-                                const rect = (e.target as HTMLElement).getBoundingClientRect();
-                                setSelectedStardust({
-                                  data: {
-                                    emojiChar: stardust.emojiChar,
-                                    message: stardust.message,
-                                    alienName: stardust.alienName || 'T.S',
-                                    createdAt: stardust.createdAt,
-                                  },
-                                  position: {
-                                    x: rect.left + rect.width / 2,
-                                    y: rect.top,
-                                  },
-                                });
-                              }}
-                            />
-                          </div>
-                        ) : null;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">
-                      {format(msg.timestamp, 'MM-dd HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'MM-dd HH:mm') : '进行中'}
-                    </div>
-                    {/* 耗时显示 */}
-                    {msg.duration !== undefined && (
-                      <div className="text-xs font-bold text-green-600 mt-1">
-                        耗时 {formatDuration(msg.duration)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                    <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={14} /></button>
-                    <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={14} /></button>
-                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
-                  </div>
-                </div>
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+
+        {/* ── 顶部哨兵：触发上滑加载 ── */}
+        <div ref={topSentinelRef} className="h-1" />
+
+        {/* ── 加载旧消息 Loading ── */}
+        {isLoadingMore && (
+          <div className="flex items-center justify-center py-3 gap-2 text-gray-400 text-sm">
+            <Loader2 size={16} className="animate-spin" />
+            <span>加载更多记录…</span>
+          </div>
+        )}
+
+        {/* ── 没有更多历史 ── */}
+        {!hasMoreHistory && messages.length > 0 && (
+          <div className="flex items-center justify-center py-3 text-xs text-gray-300">
+            — 已是最早的记录 —
+          </div>
+        )}
+
+        {/* ── 昨日回顾引导区 ── */}
+        {yesterdaySummary && (
+          <div
+            onClick={handleLoadMore}
+            className="rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 px-4 py-3 flex items-start gap-3 shadow-sm cursor-pointer hover:border-indigo-300 hover:shadow-md active:scale-[0.98] transition-all"
+          >
+            <div className="text-2xl mt-0.5">🌙</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-indigo-800">
+                昨天你记录了 {yesterdaySummary.count} 件事
+              </p>
+              <p className="text-xs text-indigo-500 mt-0.5 truncate">
+                最后在做：{yesterdaySummary.lastContent}
+              </p>
+              {hasMoreHistory && (
+                <p className="text-xs text-indigo-400 mt-1.5 flex items-center gap-1">
+                  <ChevronUp size={12} />
+                  点击或上滑查看昨天的记录
+                </p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── 今天没有消息时的空状态 ── */}
+        {messages.length === 0 && !isLoading && hasInitialized && !yesterdaySummary && (
+          <div className="flex flex-col items-center justify-center py-16 text-center text-gray-400">
+            <div className="text-4xl mb-3">✨</div>
+            <p className="text-sm font-medium">新的一天，从一条记录开始</p>
+            <p className="text-xs mt-1 text-gray-300">记录你正在做的事情</p>
+          </div>
+        )}
+
+        {/* ── 消息列表（含日期分隔线）── */}
+        {messages.map((msg, index) => {
+          const prevMsg = messages[index - 1];
+          const showDateSep = !prevMsg || !isSameDay(msg.timestamp, prevMsg.timestamp);
+
+          return (
+            <React.Fragment key={msg.id}>
+              {/* 日期分隔线 */}
+              {showDateSep && (
+                <div className="flex items-center gap-2 py-1">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {getDateLabel(msg.timestamp)}
+                  </span>
+                  <div className="flex-1 h-px bg-gray-200" />
+                </div>
+              )}
+
+              <div className="flex flex-col space-y-1">
+                {msg.isMood ? (
+                  // Mood Record
+                  <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-pink-50 p-3 rounded-xl shadow-sm border border-pink-100 hover:border-pink-200 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 rounded-full bg-pink-500" />
+                      <div className="flex flex-col">
+                        <span className="font-mood text-gray-900">{msg.content}</span>
+                        {(() => {
+                          const stardust = getStardustByMessageId(msg.id);
+                          return stardust ? (
+                            <div className="mt-1">
+                              <StardustEmoji
+                                emoji={stardust.emojiChar}
+                                size="sm"
+                                onClick={(e) => {
+                                  const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                  setSelectedStardust({
+                                    data: {
+                                      emojiChar: stardust.emojiChar,
+                                      message: stardust.message,
+                                      alienName: stardust.alienName || 'T.S',
+                                      createdAt: stardust.createdAt,
+                                    },
+                                    position: { x: rect.left + rect.width / 2, y: rect.top },
+                                  });
+                                }}
+                              />
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">
+                        {format(msg.timestamp, 'HH:mm')}
+                      </div>
+                    </div>
+                    <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
+                      <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                ) : (
+                  // Activity Record
+                  <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">{msg.content}</span>
+                        {(() => {
+                          const stardust = getStardustByMessageId(msg.id);
+                          return stardust ? (
+                            <div className="mt-1">
+                              <StardustEmoji
+                                emoji={stardust.emojiChar}
+                                size="sm"
+                                onClick={(e) => {
+                                  const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                  setSelectedStardust({
+                                    data: {
+                                      emojiChar: stardust.emojiChar,
+                                      message: stardust.message,
+                                      alienName: stardust.alienName || 'T.S',
+                                      createdAt: stardust.createdAt,
+                                    },
+                                    position: { x: rect.left + rect.width / 2, y: rect.top },
+                                  });
+                                }}
+                              />
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">
+                        {format(msg.timestamp, 'HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'HH:mm') : '进行中'}
+                      </div>
+                      {msg.duration !== undefined && (
+                        <div className="text-xs font-bold text-green-600 mt-1">
+                          耗时 {formatDuration(msg.duration)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
+                      <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={14} /></button>
+                      <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={14} /></button>
+                      <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </React.Fragment>
           );
         })}
+
         <div ref={messagesEndRef} />
       </div>
+
       {/* Current Activity Indicator */}
       {(lastActivity || activeTodoId) && (
         <div className="px-4 py-2 bg-green-50 border-t border-green-100 flex items-center justify-between">
@@ -310,7 +417,6 @@ export const ChatPage = () => {
                 <X size={20} />
               </button>
             </div>
-
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">内容</label>
@@ -322,7 +428,6 @@ export const ChatPage = () => {
                   placeholder="做了什么..."
                 />
               </div>
-
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">开始时间</label>
@@ -344,7 +449,6 @@ export const ChatPage = () => {
                 </div>
               </div>
             </div>
-
             <button
               onClick={handleSave}
               className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
