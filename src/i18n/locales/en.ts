@@ -153,6 +153,13 @@ const en = {
     language_switch: 'Language',
     language_en: 'EN',
     language_zh: '中',
+
+    // ── Yesterday Review (New Day) ──
+    yesterday_summary: 'You logged {{count}} entries yesterday',
+    yesterday_last_activity: 'Last activity: {{content}}',
+    yesterday_tap_to_view: "Tap or swipe up to see yesterday's entries",
+    new_day_start: 'Start your day with a new record',
+    record_what_you_do: "Record what you're doing",
 } as const;
 
 // Key-set type: zh.ts must have the same keys, but values can be any string

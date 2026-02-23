@@ -251,15 +251,15 @@ export const ChatPage = () => {
             <div className="text-2xl mt-0.5">🌙</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-indigo-800">
-                昨天你记录了 {yesterdaySummary.count} 件事
+                {t('yesterday_summary', { count: yesterdaySummary.count })}
               </p>
               <p className="text-xs text-indigo-500 mt-0.5 truncate">
-                最后在做：{yesterdaySummary.lastContent}
+                {t('yesterday_last_activity', { content: yesterdaySummary.lastContent })}
               </p>
               {hasMoreHistory && (
                 <p className="text-xs text-indigo-400 mt-1.5 flex items-center gap-1">
                   <ChevronUp size={12} />
-                  点击或上滑查看昨天的记录
+                  {t('yesterday_tap_to_view')}
                 </p>
               )}
             </div>
@@ -270,8 +270,8 @@ export const ChatPage = () => {
         {messages.length === 0 && !isLoading && hasInitialized && !yesterdaySummary && (
           <div className="flex flex-col items-center justify-center py-16 text-center text-gray-400">
             <div className="text-4xl mb-3">✨</div>
-            <p className="text-sm font-medium">新的一天，从一条记录开始</p>
-            <p className="text-xs mt-1 text-gray-300">记录你正在做的事情</p>
+            <p className="text-sm font-medium">{t('new_day_start')}</p>
+            <p className="text-xs mt-1 text-gray-300">{t('record_what_you_do')}</p>
           </div>
         )}
 

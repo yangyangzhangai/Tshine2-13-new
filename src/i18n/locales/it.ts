@@ -155,6 +155,13 @@ const it: TranslationKeys = {
     language_switch: 'Lingua',
     language_en: 'EN',
     language_zh: '中',
+
+    // ── Riepilogo di ieri (Nuovo giorno) ──
+    yesterday_summary: 'Ieri hai registrato {{count}} attività',
+    yesterday_last_activity: 'Ultima attività: {{content}}',
+    yesterday_tap_to_view: 'Tocca o scorri verso l\'alto per vedere i record di ieri',
+    new_day_start: 'Inizia la tua giornata con un nuovo record',
+    record_what_you_do: 'Registra ciò che stai facendo',
 };
 
 export default it;
