@@ -281,107 +281,111 @@ export const ChatPage = () => {
           const showDateSep = !prevMsg || !isSameDay(msg.timestamp, prevMsg.timestamp);
 
           return (
-            <div key={msg.id} className="flex flex-col space-y-1">
-              {msg.isMood ? (
-                // Mood Record
-                <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-pink-50 p-3 rounded-xl shadow-sm border border-pink-100 hover:border-pink-200 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-pink-500"></div>
-                    <div className="flex flex-col">
-                      <span className="font-mood text-gray-900">{msg.content}</span>
-                      {/* 星尘珍藏Emoji - 放在左边内容区 */}
-                      {(() => {
-                        const stardust = getStardustByMessageId(msg.id);
-                        return stardust ? (
-                          <div className="mt-1">
-                            <StardustEmoji
-                              emoji={stardust.emojiChar}
-                              size="sm"
-                              onClick={(e) => {
-                                const rect = (e.target as HTMLElement).getBoundingClientRect();
-                                setSelectedStardust({
-                                  data: {
-                                    emojiChar: stardust.emojiChar,
-                                    message: stardust.message,
-                                    alienName: stardust.alienName || 'T.S',
-                                    createdAt: stardust.createdAt,
-                                  },
-                                  position: {
-                                    x: rect.left + rect.width / 2,
-                                    y: rect.top,
-                                  },
-                                });
-                              }}
-                            />
-                          </div>
-                        ) : null;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">
-                      {format(msg.timestamp, 'MM-dd HH:mm')}
-                    </div>
-                  </div>
-                  <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title={t('chat_title_delete')}><Trash2 size={14} /></button>
-                  </div>
-                </div>
-              ) : (
-                // Activity Record
-                <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-900">{msg.content}</span>
-                      {/* 星尘珍藏Emoji - 放在左边内容区 */}
-                      {(() => {
-                        const stardust = getStardustByMessageId(msg.id);
-                        return stardust ? (
-                          <div className="mt-1">
-                            <StardustEmoji
-                              emoji={stardust.emojiChar}
-                              size="sm"
-                              onClick={(e) => {
-                                const rect = (e.target as HTMLElement).getBoundingClientRect();
-                                setSelectedStardust({
-                                  data: {
-                                    emojiChar: stardust.emojiChar,
-                                    message: stardust.message,
-                                    alienName: stardust.alienName || 'T.S',
-                                    createdAt: stardust.createdAt,
-                                  },
-                                  position: {
-                                    x: rect.left + rect.width / 2,
-                                    y: rect.top,
-                                  },
-                                });
-                              }}
-                            />
-                          </div>
-                        ) : null;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">
-                      {format(msg.timestamp, 'MM-dd HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'MM-dd HH:mm') : t('chat_ongoing')}
-                    </div>
-                    {/* 耗时显示 */}
-                    {msg.duration !== undefined && (
-                      <div className="text-xs font-bold text-green-600 mt-1">
-                        {t('duration_label', { duration: formatDuration(msg.duration, t) })}
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                    <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title={t('chat_title_edit')}><Edit2 size={14} /></button>
-                    <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title={t('chat_title_insert')}><Plus size={14} /></button>
-                    <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title={t('chat_title_delete')}><Trash2 size={14} /></button>
-                  </div>
+            <React.Fragment key={msg.id}>
+              {/* 日期分隔线 */}
+              {showDateSep && (
+                <div className="flex items-center gap-2 py-1">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {getDateLabel(msg.timestamp)}
+                  </span>
+                  <div className="flex-1 h-px bg-gray-200" />
                 </div>
               )}
-            </div>
+
+              <div className="flex flex-col space-y-1">
+                {msg.isMood ? (
+                  // Mood Record
+                  <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-pink-50 p-3 rounded-xl shadow-sm border border-pink-100 hover:border-pink-200 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 rounded-full bg-pink-500" />
+                      <div className="flex flex-col">
+                        <span className="font-mood text-gray-900">{msg.content}</span>
+                        {(() => {
+                          const stardust = getStardustByMessageId(msg.id);
+                          return stardust ? (
+                            <div className="mt-1">
+                              <StardustEmoji
+                                emoji={stardust.emojiChar}
+                                size="sm"
+                                onClick={(e) => {
+                                  const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                  setSelectedStardust({
+                                    data: {
+                                      emojiChar: stardust.emojiChar,
+                                      message: stardust.message,
+                                      alienName: stardust.alienName || 'T.S',
+                                      createdAt: stardust.createdAt,
+                                    },
+                                    position: { x: rect.left + rect.width / 2, y: rect.top },
+                                  });
+                                }}
+                              />
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">
+                        {format(msg.timestamp, 'HH:mm')}
+                      </div>
+                    </div>
+                    <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
+                      <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                ) : (
+                  // Activity Record
+                  <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">{msg.content}</span>
+                        {(() => {
+                          const stardust = getStardustByMessageId(msg.id);
+                          return stardust ? (
+                            <div className="mt-1">
+                              <StardustEmoji
+                                emoji={stardust.emojiChar}
+                                size="sm"
+                                onClick={(e) => {
+                                  const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                  setSelectedStardust({
+                                    data: {
+                                      emojiChar: stardust.emojiChar,
+                                      message: stardust.message,
+                                      alienName: stardust.alienName || 'T.S',
+                                      createdAt: stardust.createdAt,
+                                    },
+                                    position: { x: rect.left + rect.width / 2, y: rect.top },
+                                  });
+                                }}
+                              />
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">
+                        {format(msg.timestamp, 'HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'HH:mm') : '进行中'}
+                      </div>
+                      {msg.duration !== undefined && (
+                        <div className="text-xs font-bold text-green-600 mt-1">
+                          耗时 {formatDuration(msg.duration)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
+                      <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={14} /></button>
+                      <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={14} /></button>
+                      <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </React.Fragment>
           );
         })}
 
