@@ -10,11 +10,15 @@ import type {
 } from '../types/annotation';
 import { callAnnotationAPI } from '../api/client';
 import { shouldGenerateAnnotation, recordEvent } from './annotationHelpers';
+import { supabase } from '../api/supabase';
 import i18n from '../i18n';
 
 interface AnnotationStore extends AnnotationState {
   // 内部状态（不持久化）
   lastAnnotationTime: number;
+
+  // 历史批注（云端同步）
+  annotations: AIAnnotation[];
 
   // Actions
   triggerAnnotation: (event: AnnotationEvent) => Promise<void>;
@@ -22,6 +26,10 @@ interface AnnotationStore extends AnnotationState {
   resetDailyStats: () => void;
   updateConfig: (config: Partial<AnnotationState['config']>) => void;
   getTodayStats: () => { activities: number; duration: number; events: AnnotationEvent[] };
+
+  // 云端同步
+  fetchAnnotations: () => Promise<void>;
+  syncLocalAnnotations: (userId: string) => Promise<void>;
 }
 
 /**
@@ -42,6 +50,7 @@ export const useAnnotationStore = create<AnnotationStore>()(
   persist(
     (set, get) => ({
       currentAnnotation: null,
+      annotations: [],
 
       todayStats: {
         date: getTodayString(),
@@ -144,9 +153,12 @@ export const useAnnotationStore = create<AnnotationStore>()(
             lang: (i18n.language?.split('-')[0] || 'en') as 'zh' | 'en',
           });
 
+          // 先创建 id，后续同步需要
+          const annotationId = uuidv4();
+
           // 创建批注对象
           const annotation: AIAnnotation = {
-            id: uuidv4(),
+            id: annotationId,
             content: response.content,
             tone: response.tone,
             timestamp: Date.now(),
@@ -157,6 +169,7 @@ export const useAnnotationStore = create<AnnotationStore>()(
           // 更新状态
           set({
             currentAnnotation: annotation,
+            annotations: [...get().annotations, annotation],
             todayStats: {
               ...get().todayStats,
               speakCount: get().todayStats.speakCount + 1,
@@ -166,11 +179,25 @@ export const useAnnotationStore = create<AnnotationStore>()(
                 {
                   type: 'annotation_generated' as AnnotationEventType,
                   timestamp: Date.now(),
-                  data: { content: response.content },
+                  data: { content: response.content, id: annotationId, tone: response.tone },
                 },
               ],
             },
           });
+
+          // 异步同步到云端
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            await supabase.from('annotations').insert([{
+              id: annotationId,
+              user_id: session.user.id,
+              content: annotation.content,
+              tone: annotation.tone,
+              event_timestamp: annotation.timestamp,
+              related_event: annotation.relatedEvent,
+              created_at: new Date(annotation.timestamp).toISOString(),
+            }]).catch(err => console.error('[Annotation] 云端同步失败:', err));
+          }
 
           console.log('[AI Annotator] 批注已生成:', response.content);
         } catch (error) {
@@ -228,12 +255,72 @@ export const useAnnotationStore = create<AnnotationStore>()(
           events: todayStats.events,
         };
       },
+
+      /**
+       * 从云端拉取历史批注
+       */
+      fetchAnnotations: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data, error } = await supabase
+          .from('annotations')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          const annotations: AIAnnotation[] = data.map((row: any) => ({
+            id: row.id,
+            content: row.content,
+            tone: row.tone,
+            timestamp: row.event_timestamp,
+            relatedEvent: row.related_event,
+            displayDuration: 8000,
+          }));
+          set({ annotations });
+        }
+      },
+
+      /**
+       * 同步本地批注到云端
+       */
+      syncLocalAnnotations: async (userId: string) => {
+        const { todayStats } = get();
+
+        // 从今日事件里提取批注，用已有的 id
+        const localAnnotations = todayStats.events
+          .filter(e => e.type === 'annotation_generated' && e.data?.id)
+          .map(e => ({
+            id: e.data.id,
+            user_id: userId,
+            content: e.data?.content || '',
+            tone: e.data?.tone || 'playful',
+            event_timestamp: e.timestamp,
+            related_event: e,
+            created_at: new Date(e.timestamp).toISOString(),
+          }));
+
+        if (localAnnotations.length === 0) return;
+
+        const { error } = await supabase
+          .from('annotations')
+          .upsert(localAnnotations, { onConflict: 'id' });
+
+        if (!error) {
+          await get().fetchAnnotations();
+        } else {
+          console.error('[Annotation] syncLocalAnnotations 失败:', error);
+        }
+      },
     }),
     {
       name: 'annotation-storage',
       partialize: (state) => ({
         todayStats: state.todayStats,
         config: state.config,
+        currentAnnotation: state.currentAnnotation,
+        annotations: state.annotations,
       }),
     }
   )
