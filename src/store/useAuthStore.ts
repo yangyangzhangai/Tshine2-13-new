@@ -3,6 +3,8 @@ import { supabase } from '../api/supabase';
 import { useChatStore } from './useChatStore';
 import { useTodoStore } from './useTodoStore';
 import { useReportStore } from './useReportStore';
+import { useAnnotationStore } from './useAnnotationStore';
+import { useStardustStore } from './useStardustStore';
 
 interface AuthState {
   user: any | null;
@@ -33,7 +35,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         console.log('User signed in. Syncing local data...');
         await syncLocalDataToSupabase(currentUser.id);
 
-        // After sync, fetch the latest data from server (which now includes our synced data)
+        // 先同步本地 annotation 到云端
+        await useAnnotationStore.getState().syncLocalAnnotations(currentUser.id);
+        // syncLocalAnnotations 成功后内部会调用 fetchAnnotations
+
+        // 再拉取其他云端数据
         await useChatStore.getState().fetchMessages();
         await useTodoStore.getState().fetchTodos();
         await useReportStore.getState().fetchReports();
@@ -43,6 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         useChatStore.setState({ messages: [] });
         useTodoStore.setState({ todos: [] });
         useReportStore.setState({ reports: [] });
+        useAnnotationStore.setState({ annotations: [], currentAnnotation: null });
       }
     });
   },
