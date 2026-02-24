@@ -23,7 +23,6 @@ interface StardustStore {
   hasStardust: (messageId: string) => boolean;
 
   // Sync
-  fetchStardustMemories: () => Promise<void>;
   syncPendingStardusts: () => Promise<void>;
   getPendingSyncCount: () => number;
 
@@ -340,52 +339,6 @@ export const useStardustStore = create<StardustStore>()(
        */
       hasStardust: (messageId: string) => {
         return get().memories.some((m) => m.messageId === messageId);
-      },
-
-      /**
-       * 从云端获取珍藏数据
-       * 在用户登录后调用，实现跨设备同步
-       */
-      fetchStardustMemories: async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log('[Stardust] 无用户会话，跳过云端获取');
-          return;
-        }
-
-        try {
-          const { data, error } = await supabase.from('stardust_memories')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .order('created_at', { ascending: false });
-
-          if (error) {
-            console.error('[Stardust] 获取云端数据失败:', error);
-            return;
-          }
-
-          if (!data || data.length === 0) {
-            console.log('[Stardust] 云端无珍藏数据');
-            return;
-          }
-
-          const memories = data.map((m: any) => ({
-            id: m.id,
-            messageId: m.message_id,
-            userId: m.user_id,
-            message: m.message,
-            emojiChar: m.emoji_char,
-            userRawContent: m.user_raw_content,
-            createdAt: new Date(m.created_at).getTime(),
-            alienName: m.alien_name,
-            syncStatus: 'synced' as SyncStatus,
-          }));
-
-          set({ memories });
-          console.log(`[Stardust] 从云端获取了 ${memories.length} 条珍藏`);
-        } catch (error) {
-          console.error('[Stardust] 获取云端数据异常:', error);
-        }
       },
 
       /**

@@ -22,9 +22,6 @@ interface AnnotationStore extends AnnotationState {
   resetDailyStats: () => void;
   updateConfig: (config: Partial<AnnotationState['config']>) => void;
   getTodayStats: () => { activities: number; duration: number; events: AnnotationEvent[] };
-  
-  // Sync
-  fetchAnnotations: () => Promise<void>;
 }
 
 /**
@@ -247,64 +244,6 @@ export const useAnnotationStore = create<AnnotationStore>()(
           duration: totalDuration,
           events: todayStats.events,
         };
-      },
-
-      /**
-       * 从云端获取批注历史
-       * 在用户登录后调用，实现跨设备同步
-       */
-      fetchAnnotations: async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log('[Annotation] 无用户会话，跳过云端获取');
-          return;
-        }
-
-        try {
-          const { data, error } = await supabase.from('annotations')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .order('created_at', { ascending: false })
-            .limit(100);
-
-          if (error) {
-            console.error('[Annotation] 获取云端数据失败:', error);
-            return;
-          }
-
-          if (!data || data.length === 0) {
-            console.log('[Annotation] 云端无批注数据');
-            return;
-          }
-
-          // 将云端批注事件合并到 todayStats.events
-          const cloudEvents: AnnotationEvent[] = data.map((a: any) => ({
-            type: 'annotation_generated' as AnnotationEventType,
-            timestamp: new Date(a.created_at).getTime(),
-            data: { content: a.content },
-          }));
-
-          const currentEvents = get().todayStats.events;
-          const currentEventTypes = new Set(currentEvents.map(e => `${e.type}-${e.timestamp}`));
-          
-          // 只添加不在本地的云端事件
-          const newEvents = cloudEvents.filter(e => 
-            !currentEventTypes.has(`${e.type}-${e.timestamp}`)
-          );
-
-          if (newEvents.length > 0) {
-            set((state) => ({
-              todayStats: {
-                ...state.todayStats,
-                events: [...state.todayStats.events, ...newEvents],
-              },
-            }));
-          }
-
-          console.log(`[Annotation] 从云端获取了 ${data.length} 条批注，新增 ${newEvents.length} 条`);
-        } catch (error) {
-          console.error('[Annotation] 获取云端数据异常:', error);
-        }
       },
     }),
     {
