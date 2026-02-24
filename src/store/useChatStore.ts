@@ -1,3 +1,12 @@
+// 安全地获取本地日期的 YYYY-MM-DD 字符串，不经过 UTC 转换
+function getLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { persist } from 'zustand/middleware';
@@ -84,7 +93,7 @@ export const useChatStore = create<ChatState>()(
           const todayStart = new Date();
           todayStart.setHours(0, 0, 0, 0);
           const todayStartMs = todayStart.getTime();
-          const todayStr = todayStart.toISOString().slice(0, 10);
+          const todayStr = getLocalDateString(todayStart);
 
           // Calculate yesterday's 00:00
           const yesterdayStart = new Date(todayStart);
@@ -163,7 +172,7 @@ export const useChatStore = create<ChatState>()(
           prevDayStart.setHours(0, 0, 0, 0);
           const prevDayStartMs = prevDayStart.getTime();
           const oldestDateMs = oldestDate.getTime();
-          const prevDayStr = prevDayStart.toISOString().slice(0, 10);
+          const prevDayStr = getLocalDateString(prevDayStart);
 
           const { data, error } = await supabase
             .from('messages')
@@ -200,7 +209,7 @@ export const useChatStore = create<ChatState>()(
 
       checkAndRefreshForNewDay: () => {
         const state = get();
-        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayStr = getLocalDateString(new Date());
         // If the stored date differs from actual today, we crossed midnight
         if (state.currentDateStr && state.currentDateStr !== todayStr) {
           console.log('[DayRefresh] Midnight crossed, refreshing messages...');
