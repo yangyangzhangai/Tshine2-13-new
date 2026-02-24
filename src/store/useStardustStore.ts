@@ -24,6 +24,7 @@ interface StardustStore {
 
   // Sync
   syncPendingStardusts: () => Promise<void>;
+  fetchStardusts: () => Promise<void>;
   getPendingSyncCount: () => number;
 
   // Generation state
@@ -383,6 +384,43 @@ export const useStardustStore = create<StardustStore>()(
        */
       getPendingSyncCount: () => {
         return get().memories.filter((m) => m.syncStatus === 'pending_sync').length;
+      },
+
+      /**
+       * 从云端拉取星尘珍藏（跨设备同步）
+       * 注意：调用前应先执行 syncPendingStardusts，确保本地 pending 已推送
+       */
+      fetchStardusts: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data, error } = await supabase
+          .from('stardust_memories')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('[Stardust] 拉取珍藏失败:', error);
+          return;
+        }
+
+        if (data) {
+          const memories: StardustMemory[] = data.map((row: any) => ({
+            id: row.id,
+            messageId: row.message_id,
+            userId: row.user_id,
+            message: row.message,
+            emojiChar: row.emoji_char,
+            userRawContent: row.user_raw_content,
+            createdAt: new Date(row.created_at).getTime(),
+            alienName: row.alien_name,
+            syncStatus: 'synced' as SyncStatus,
+          }));
+
+          set({ memories });
+          console.log(`[Stardust] 已拉取 ${memories.length} 条珍藏`);
+        }
       },
 
       /**

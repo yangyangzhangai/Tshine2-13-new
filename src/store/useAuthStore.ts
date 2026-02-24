@@ -4,6 +4,7 @@ import { useChatStore } from './useChatStore';
 import { useTodoStore } from './useTodoStore';
 import { useReportStore } from './useReportStore';
 import { useAnnotationStore } from './useAnnotationStore';
+import { useStardustStore } from './useStardustStore';
 
 interface AuthState {
   user: any | null;
@@ -42,6 +43,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await useChatStore.getState().fetchMessages();
         await useTodoStore.getState().fetchTodos();
         await useReportStore.getState().fetchReports();
+
+        // Stardust 同步（顺序关键：先推本地 pending，再拉云端全量）
+        await useStardustStore.getState().syncPendingStardusts();
+        await useStardustStore.getState().fetchStardusts();
       }
       else if (event === 'SIGNED_OUT') {
         console.log('User signed out. Clearing local state...');
