@@ -3,7 +3,8 @@ import { supabase } from '../api/supabase';
 import { useChatStore } from './useChatStore';
 import { useTodoStore } from './useTodoStore';
 import { useReportStore } from './useReportStore';
-
+import { useStardustStore } from './useStardustStore';
+import { useAnnotationStore } from './useAnnotationStore';
 interface AuthState {
   user: any | null;
   loading: boolean;
@@ -22,6 +23,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { data: { session } } = await supabase.auth.getSession();
     set({ user: session?.user || null, loading: false });
 
+    // 如果已有 session（页面刷新时），立即获取云端数据
+    if (session?.user) {
+      console.log('[Auth] 已有会话，获取云端数据...');
+      await Promise.all([
+        useChatStore.getState().fetchMessages(),
+        useTodoStore.getState().fetchTodos(),
+        useReportStore.getState().fetchReports(),
+        useStardustStore.getState().fetchStardustMemories(),
+        useAnnotationStore.getState().fetchAnnotations(),
+      ]);
+      console.log('[Auth] 云端数据获取完成');
+    }
+
     // Listen for changes
     supabase.auth.onAuthStateChange(async (event, session) => {
       const previousUser = get().user;
@@ -37,12 +51,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await useChatStore.getState().fetchMessages();
         await useTodoStore.getState().fetchTodos();
         await useReportStore.getState().fetchReports();
+        await useStardustStore.getState().fetchStardustMemories();
+        await useAnnotationStore.getState().fetchAnnotations();
       }
       else if (event === 'SIGNED_OUT') {
         console.log('User signed out. Clearing local state...');
         useChatStore.setState({ messages: [] });
         useTodoStore.setState({ todos: [] });
         useReportStore.setState({ reports: [] });
+        useStardustStore.setState({ memories: [] });
+        useAnnotationStore.setState({ 
+          currentAnnotation: null,
+          todayStats: {
+            date: new Date().toISOString().split('T')[0],
+            speakCount: 0,
+            lastSpeakTime: 0,
+            events: [],
+          },
+        });
       }
     });
   },
@@ -144,5 +170,13 @@ async function syncLocalDataToSupabase(userId: string) {
     } else {
       console.log(`Synced ${reports.length} reports.`);
     }
+  }
+
+  // 4. Sync Stardust Memories
+  const stardustStore = useStardustStore.getState();
+  const pendingStardusts = stardustStore.memories.filter(m => m.syncStatus === 'pending_sync');
+  if (pendingStardusts.length > 0) {
+    console.log(`Syncing ${pendingStardusts.length} pending stardust memories...`);
+    await stardustStore.syncPendingStardusts();
   }
 }
