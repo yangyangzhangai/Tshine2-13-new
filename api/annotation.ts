@@ -415,7 +415,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         { role: 'user', content: userPrompt },
       ],
       temperature: lang === 'zh' ? 0.9 : 0.8,
-      max_tokens: 180,
+      // gpt-oss 推理 token 占比高，给 EN/IT 更高 completion 上限，避免只产出 reasoning 不产出最终正文
+      max_tokens: lang === 'zh' ? 180 : 480,
       stream: false,
     };
 
