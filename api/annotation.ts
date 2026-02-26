@@ -436,6 +436,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const data = await response.json();
+    const firstChoice = data?.choices?.[0];
+    const firstMessage = firstChoice?.message;
+
+    // Debug: gpt-oss 在部分场景会给出 reasoning，但 message.content 为空
+    console.log('[Annotation API] LLM meta:', {
+      lang,
+      model,
+      finish_reason: firstChoice?.finish_reason,
+      stop_reason: firstChoice?.stop_reason,
+      usage: data?.usage,
+      content_type: typeof firstMessage?.content,
+      content_len: typeof firstMessage?.content === 'string' ? firstMessage.content.length : null,
+      has_reasoning: !!firstMessage?.reasoning,
+      has_reasoning_content: !!firstMessage?.reasoning_content,
+      reasoning_len: typeof firstMessage?.reasoning === 'string' ? firstMessage.reasoning.length : null,
+      reasoning_content_len: typeof firstMessage?.reasoning_content === 'string' ? firstMessage.reasoning_content.length : null,
+    });
 
     if (!data.choices || data.choices.length === 0) {
       const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
@@ -443,9 +460,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    let content: string = data.choices[0]?.message?.content;
+    let content: string = firstMessage?.content;
 
     if (!content || !content.trim()) {
+      console.warn('[Annotation API] empty_content details:', {
+        eventType,
+        lang,
+        finish_reason: firstChoice?.finish_reason,
+        stop_reason: firstChoice?.stop_reason,
+        content: firstMessage?.content,
+        reasoning: typeof firstMessage?.reasoning === 'string' ? firstMessage.reasoning.slice(0, 300) : firstMessage?.reasoning,
+        reasoning_content: typeof firstMessage?.reasoning_content === 'string'
+          ? firstMessage.reasoning_content.slice(0, 300)
+          : firstMessage?.reasoning_content,
+      });
       const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
       res.status(200).json({ ...defaultAnnotation, displayDuration: 8000, source: 'default', reason: 'empty_content' });
       return;
