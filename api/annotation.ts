@@ -408,23 +408,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const systemPrompt = getSystemPrompt(lang);
     const model = getModel(lang);
 
+    const requestBody: any = {
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: lang === 'zh' ? 0.9 : 0.8,
+      max_tokens: 180,
+      stream: false,
+    };
+
+    // gpt-oss 会先输出 reasoning_content，容易命中 '\n\n' 提前停止，导致 message.content 为空
+    if (lang === 'zh') {
+      requestBody.stop = ['\n\n', '\n- ', '\n1. '];
+    }
+
     const response = await fetch('https://llm.chutes.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: lang === 'zh' ? 0.9 : 0.8,
-        max_tokens: 180,
-        stop: ['\n\n', '\n- ', '\n1. '],
-        stream: false,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
