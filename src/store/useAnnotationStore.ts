@@ -203,11 +203,13 @@ export const useAnnotationStore = create<AnnotationStore>()(
           }
 
           if (response.source === 'default') {
-            console.warn('[AI Annotator] 批注使用兜底:', {
-              eventType: event.type,
-              reason: response.reason,
-              content: response.content,
-            });
+            console.warn(
+              '[AI Annotator] 批注使用兜底:',
+              `event=${event.type}`,
+              `reason=${response.reason || 'unknown'}`,
+              `source=${response.source}`,
+              `content=${response.content}`
+            );
           } else {
             console.log('[AI Annotator] 批注已生成(AI):', response.content);
           }
