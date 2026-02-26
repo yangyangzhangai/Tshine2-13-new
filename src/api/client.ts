@@ -60,6 +60,8 @@ interface AnnotationResponse {
   content: string;
   tone: 'playful' | 'celebrating' | 'concerned' | 'curious';
   displayDuration: number;
+  source?: 'ai' | 'default';
+  reason?: 'no_key' | 'fetch_failed' | 'empty_response' | 'empty_content' | 'extract_failed' | 'exception';
 }
 
 /**

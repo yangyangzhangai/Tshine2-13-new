@@ -202,7 +202,15 @@ export const useAnnotationStore = create<AnnotationStore>()(
             }
           }
 
-          console.log('[AI Annotator] 批注已生成:', response.content);
+          if (response.source === 'default') {
+            console.warn('[AI Annotator] 批注使用兜底:', {
+              eventType: event.type,
+              reason: response.reason,
+              content: response.content,
+            });
+          } else {
+            console.log('[AI Annotator] 批注已生成(AI):', response.content);
+          }
         } catch (error) {
           console.error('[AI Annotator] 生成批注失败:', error);
         }
