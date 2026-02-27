@@ -63,7 +63,6 @@
   background: transparent;
   font-size: 0.8rem;
   color: #111827;
-  font-family: 'Gentium Basic', 'Source Han Sans SC', 'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 .calendar-wrapper .react-calendar__tile:enabled:hover,
