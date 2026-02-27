@@ -373,7 +373,7 @@ export const ChatPage = () => {
                       </div>
                       {msg.duration !== undefined && (
                         <div className="text-xs font-bold text-green-600 mt-1">
-                          耗时 {formatDuration(msg.duration)}
+                          {t('duration_label', { duration: formatDuration(msg.duration, t) })}
                         </div>
                       )}
                     </div>

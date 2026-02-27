@@ -14,7 +14,7 @@ const en = {
     // ── Duration formatting ──
     duration_hours_minutes: '{{hours}}h {{mins}}m',
     duration_minutes: '{{mins}}m',
-    duration_label: '{{duration}}',
+    duration_label: 'Duration {{duration}}',
     elapsed_label: 'Duration: {{duration}}',
 
     // ── Header ──
