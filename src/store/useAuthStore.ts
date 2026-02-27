@@ -43,6 +43,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await useChatStore.getState().fetchMessages();
         await useTodoStore.getState().fetchTodos();
         await useReportStore.getState().fetchReports();
+
+        // Stardust 同步（顺序关键：先推本地 pending，再拉云端全量）
+        await useStardustStore.getState().syncPendingStardusts();
+        await useStardustStore.getState().fetchStardusts();
       }
       else if (event === 'SIGNED_OUT') {
         console.log('User signed out. Clearing local state...');

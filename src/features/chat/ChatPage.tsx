@@ -3,19 +3,21 @@ import { useSearchParams } from 'react-router-dom';
 import { useChatStore } from '../../store/useChatStore';
 import { useTodoStore } from '../../store/useTodoStore';
 import { useStardustStore } from '../../store/useStardustStore';
-import { Send, Activity, Edit2, Plus, Trash2, X, Save, Heart, ChevronUp, Loader2 } from 'lucide-react';
+import { Send, Activity, Edit2, Plus, Trash2, X, Save, ChevronUp, Loader2, Umbrella, Pencil } from 'lucide-react';
 import { cn, formatDuration } from '../../lib/utils';
 import { format, isSameDay } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { StardustEmoji } from '../../components/StardustEmoji';
 import { StardustCard } from '../../components/StardustCard';
 import type { StardustCardData } from '../../types/stardust';
+import { useMoodStore } from '../../store/useMoodStore';
+import { allMoodOptions } from '../../lib/mood';
 
 export const ChatPage = () => {
   const {
     messages, sendMessage, fetchMessages, fetchOlderMessages, checkAndRefreshForNewDay,
-    updateActivity, insertActivity, deleteActivity, isLoading, isLoadingMore,
-    hasMoreHistory, yesterdaySummary, isMoodMode, setIsMoodMode, sendMood,
+    updateActivity, insertActivity, deleteActivity, endActivity, isLoading, isLoadingMore,
+    hasMoreHistory, yesterdaySummary,
     hasInitialized, setHasInitialized, updateMessageDuration,
   } = useChatStore();
   const { addTodo, activeTodoId, completeActiveTodo, setActiveTodoId, todos } = useTodoStore();
@@ -27,6 +29,18 @@ export const ChatPage = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const [currentDuration, setCurrentDuration] = useState(0);
+  const [moodPickerFor, setMoodPickerFor] = useState<string | null>(null);
+  const [customMoodInput, setCustomMoodInput] = useState('');
+  const [customLabelInput, setCustomLabelInput] = useState('');
+  const [showCustomLabelInput, setShowCustomLabelInput] = useState(false);
+  const saveCustomLabel = (value: string) => {
+    const next = value.trim() || '自定义';
+    setCustomLabelInput(next);
+    if (moodPickerFor) {
+      setCustomMoodLabel(moodPickerFor, next);
+    }
+    setShowCustomLabelInput(false);
+  };
 
   // Edit/Insert State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -40,6 +54,14 @@ export const ChatPage = () => {
     data: StardustCardData;
     position: { x: number; y: number };
   } | null>(null);
+  const activityMood = useMoodStore(state => state.activityMood);
+  const setMood = useMoodStore(state => state.setMood);
+  const customMoodLabel = useMoodStore(state => state.customMoodLabel);
+  const setCustomMoodLabel = useMoodStore(state => state.setCustomMoodLabel);
+  const customMoodOptions = useMoodStore(state => state.customMoodOptions);
+  const addCustomMoodOption = useMoodStore(state => state.addCustomMoodOption);
+  const moodNote = useMoodStore(state => state.moodNote);
+  const setMoodNote = useMoodStore(state => state.setMoodNote);
 
   // ── 初始化 ──────────────────────────────────────────────────
   useEffect(() => {
@@ -116,10 +138,12 @@ export const ChatPage = () => {
   // ── 当前活动计时器 ──────────────────────────────────────────
   useEffect(() => {
     const interval = setInterval(() => {
-      const lastMsg = messages[messages.length - 1];
-      if (lastMsg) {
-        const duration = Math.floor((Date.now() - lastMsg.timestamp) / (1000 * 60));
+      const activeRecord = [...messages].reverse().find(m => m.mode === 'record' && !m.isMood && m.duration === undefined);
+      if (activeRecord) {
+        const duration = Math.floor((Date.now() - activeRecord.timestamp) / (1000 * 60));
         setCurrentDuration(duration);
+      } else {
+        setCurrentDuration(0);
       }
     }, 1000);
     return () => clearInterval(interval);
@@ -182,7 +206,7 @@ export const ChatPage = () => {
     if (!input.trim()) return;
     const todoToComplete = activeTodoId ? todos.find(t => t.id === activeTodoId) : null;
 
-    if (!isMoodMode && activeTodoId) {
+    if (activeTodoId) {
       await completeActiveTodo();
       if (todoToComplete && todoToComplete.startedAt) {
         const duration = Math.round((Date.now() - todoToComplete.startedAt) / (1000 * 60));
@@ -190,11 +214,7 @@ export const ChatPage = () => {
       }
     }
 
-    if (isMoodMode) {
-      await sendMood(input);
-    } else {
-      await sendMessage(input);
-    }
+    await sendMessage(input);
     setInput('');
   };
 
@@ -210,7 +230,7 @@ export const ChatPage = () => {
     return format(ts, 'M月d日 EEEE', { locale: zhCN });
   };
 
-  const lastActivity = messages.filter(m => !m.isMood).slice(-1)[0];
+  const activeRecord = [...messages].reverse().find(m => m.mode === 'record' && !m.isMood && m.duration === undefined);
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
@@ -294,11 +314,11 @@ export const ChatPage = () => {
               <div className="flex flex-col space-y-1">
                 {msg.isMood ? (
                   // Mood Record
-                  <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-pink-50 p-3 rounded-xl shadow-sm border border-pink-100 hover:border-pink-200 transition-colors">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 rounded-full bg-pink-500" />
+                  <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-sky-200/70 p-2 rounded-lg transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
                       <div className="flex flex-col">
-                        <span className="font-mood text-gray-900">{msg.content}</span>
+                        <span className="font-mood text-sm text-gray-900" style={{ fontFamily: 'Songti SC, SimSun, STSong, serif' }}>{msg.content}</span>
                         {(() => {
                           const stardust = getStardustByMessageId(msg.id);
                           return stardust ? (
@@ -306,6 +326,7 @@ export const ChatPage = () => {
                               <StardustEmoji
                                 emoji={stardust.emojiChar}
                                 size="sm"
+                                className="scale-90"
                                 onClick={(e) => {
                                   const rect = (e.target as HTMLElement).getBoundingClientRect();
                                   setSelectedStardust({
@@ -325,7 +346,7 @@ export const ChatPage = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-gray-500">
+                      <div className="text-[10px] text-gray-500">
                         {format(msg.timestamp, 'HH:mm')}
                       </div>
                     </div>
@@ -335,11 +356,37 @@ export const ChatPage = () => {
                   </div>
                 ) : (
                   // Activity Record
-                  <div data-message-id={msg.id} className="group relative flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">{msg.content}</span>
+                  <div data-message-id={msg.id} className="group relative flex items-start justify-between bg-white p-2 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors">
+                    <div className="flex items-start space-x-2 flex-1 min-w-0">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <span
+                            className="text-sm text-gray-900 truncate"
+                            style={{ fontFamily: '"Source Han Serif SC","Noto Serif SC","Songti SC","SimSun","STSong",serif' }}
+                          >
+                            {msg.content}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMoodPickerFor(msg.id);
+                              setCustomMoodInput(moodNote[msg.id] || '');
+                              setCustomLabelInput(customMoodLabel[msg.id] || '');
+                              setShowCustomLabelInput(false);
+                            }}
+                            className={cn(
+                              'inline-flex items-center justify-center px-2.5 py-[3px] text-[10px] rounded-full border border-[0.5px] whitespace-nowrap',
+                              customMoodLabel[msg.id] || activityMood[msg.id]
+                                ? 'bg-sky-50 text-sky-700 border-sky-200'
+                                : 'bg-gray-50 text-gray-400 border-gray-200'
+                            )}
+                            style={{ fontFamily: 'Songti SC, SimSun, STSong, serif' }}
+                            title="调整心情标签"
+                          >
+                            {customMoodLabel[msg.id] || activityMood[msg.id] || '待识别'}
+                          </button>
+                        </div>
                         {(() => {
                           const stardust = getStardustByMessageId(msg.id);
                           return stardust ? (
@@ -365,20 +412,36 @@ export const ChatPage = () => {
                         })()}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500">
-                        {format(msg.timestamp, 'HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'HH:mm') : '进行中'}
-                      </div>
-                      {msg.duration !== undefined && (
-                        <div className="text-xs font-bold text-green-600 mt-1">
-                          耗时 {formatDuration(msg.duration)}
+                    <div className="text-right w-28 shrink-0 flex flex-col items-end -mt-0.5 relative">
+                      <div className="flex items-center gap-1">
+                        {msg.duration === undefined && (
+                          <button
+                            onClick={() => endActivity(msg.id)}
+                            className="text-[9px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5 hover:bg-gray-50"
+                          >
+                            结束
+                          </button>
+                        )}
+                        <div className="text-[10px] text-gray-500 whitespace-nowrap relative group/time cursor-pointer flex flex-col items-end">
+                          <div>
+                            {format(msg.timestamp, 'HH:mm')} - {msg.duration !== undefined
+                              ? `${format(msg.timestamp + msg.duration * 60 * 1000, 'HH:mm')}`
+                              : '进行中'}
+                          </div>
+                          {msg.duration !== undefined && (
+                            <div className="mt-1">
+                              <div className="w-8 h-8 rounded-full border border-sky-300 text-sky-700 bg-white/80 flex items-center justify-center text-[9px] font-semibold shadow-sm">
+                                {formatDuration(msg.duration)}
+                              </div>
+                            </div>
+                          )}
+                          <div className="absolute -top-4 right-0 hidden group-hover/time:flex space-x-0.5 bg-white/90 backdrop-blur-sm rounded-full p-0.5 shadow-sm border border-gray-200">
+                            <button onClick={() => handleEditClick(msg)} className="p-0.5 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={12} /></button>
+                            <button onClick={() => handleInsertClick(msg)} className="p-0.5 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={12} /></button>
+                            <button onClick={() => handleDelete(msg.id)} className="p-0.5 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={12} /></button>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    <div className="absolute right-2 top-2 hidden group-hover:flex space-x-1 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm border border-gray-100">
-                      <button onClick={() => handleEditClick(msg)} className="p-1 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={14} /></button>
-                      <button onClick={() => handleInsertClick(msg)} className="p-1 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={14} /></button>
-                      <button onClick={() => handleDelete(msg.id)} className="p-1 text-gray-500 hover:text-red-600" title="删除"><Trash2 size={14} /></button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -391,15 +454,15 @@ export const ChatPage = () => {
       </div>
 
       {/* Current Activity Indicator */}
-      {(lastActivity || activeTodoId) && (
+      {(activeRecord || activeTodoId) && (
         <div className="px-4 py-2 bg-green-50 border-t border-green-100 flex items-center justify-between">
           <div className="flex items-center space-x-2 text-green-700">
             <Activity size={16} className="animate-pulse" />
             <span className="text-sm font-medium">
               正在进行: <span className="font-bold">
                 {activeTodoId
-                  ? todos.find(t => t.id === activeTodoId)?.content || lastActivity?.content
-                  : lastActivity?.content}
+                  ? todos.find(t => t.id === activeTodoId)?.content || activeRecord?.content
+                  : activeRecord?.content}
               </span>
             </span>
           </div>
@@ -460,44 +523,123 @@ export const ChatPage = () => {
         </div>
       )}
 
+      {moodPickerFor && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40 p-4">
+          <div className="bg-gradient-to-br from-rose-50/90 via-pink-50/85 to-rose-100/80 w-full max-w-xs rounded-xl p-4 shadow-lg relative">
+            <button
+              type="button"
+              onClick={() => setMoodPickerFor(null)}
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
+            <h3 className="text-sm font-medium text-gray-800 mb-3 pr-6 flex items-center gap-1.5">
+              <span>选择这条记录的心情</span>
+              <span className="inline-flex items-center justify-center rounded-full bg-rose-50 text-rose-500 p-[3px]">
+                <Umbrella size={12} className="stroke-[1.8]" />
+              </span>
+            </h3>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {allMoodOptions().map(opt => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      setMood(moodPickerFor, opt);
+                      setCustomMoodLabel(moodPickerFor, undefined);
+                      setShowCustomLabelInput(false);
+                      setMoodPickerFor(null);
+                    }}
+                    className="inline-flex items-center justify-center px-2.5 py-[3px] text-[10px] rounded-full border border-gray-200 text-slate-700 bg-white hover:bg-gray-50 shadow-sm"
+                    style={{ fontFamily: 'Songti SC, SimSun, STSong, serif' }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomLabelInput(true);
+                  const next = customMoodLabel[moodPickerFor] || customLabelInput || '自定义';
+                  setCustomLabelInput(next);
+                  setCustomMoodLabel(moodPickerFor, next);
+                }}
+                className="inline-flex items-center justify-center px-2.5 py-[3px] text-[10px] rounded-full border border-gray-200 text-rose-700 bg-white hover:bg-gray-50 shadow-sm"
+                style={{ fontFamily: 'Songti SC, SimSun, STSong, serif' }}
+              >
+                {showCustomLabelInput ? (
+                  <input
+                    type="text"
+                    value={customLabelInput}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCustomLabelInput(value);
+                      if (moodPickerFor) {
+                        setCustomMoodLabel(moodPickerFor, value.trim() || '自定义');
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveCustomLabel(customLabelInput);
+                      }
+                    }}
+                    onBlur={() => saveCustomLabel(customLabelInput)}
+                    className="w-16 bg-transparent text-[10px] text-rose-700 focus:outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  customMoodLabel[moodPickerFor] || '自定义'
+                )}
+              </button>
+            </div>
+            <div className="border-t border-gray-100 pt-3 mt-2">
+              <div className="flex items-center gap-1 text-xs text-rose-500 mb-1">
+                <span>心情记录</span>
+                <Pencil size={12} className="stroke-[1.8]" />
+              </div>
+              <div className="mb-1">
+                <textarea
+                  value={customMoodInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setCustomMoodInput(value);
+                    if (moodPickerFor) {
+                      setMoodNote(moodPickerFor, value);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      setMoodPickerFor(null);
+                    }
+                  }}
+                  className="w-full border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-rose-300 resize-none max-h-24 overflow-y-auto leading-snug"
+                  rows={2}
+                  placeholder="写下你做这件事时的心情..."
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Input Area */}
       <div className="bg-white border-t border-gray-200 p-4 pb-safe">
-        <div className={cn(
-          "flex items-center space-x-2 rounded-full px-4 py-2 transition-all duration-300",
-          isMoodMode
-            ? "bg-pink-50 border border-pink-400"
-            : "bg-gray-100"
-        )}>
-          <button
-            onClick={() => setIsMoodMode(!isMoodMode)}
-            className={cn(
-              "transition-all duration-300",
-              isMoodMode
-                ? "text-pink-500 animate-pulse scale-110"
-                : "text-gray-400 hover:text-gray-600"
-            )}
-            title={isMoodMode ? "切换到活动模式" : "切换到心情模式"}
-          >
-            <Heart size={18} fill={isMoodMode ? "currentColor" : "none"} />
-          </button>
+        <div className="flex items-center space-x-2 rounded-full px-4 py-2 bg-gray-100">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isMoodMode ? "记录当前心情（如激动）... 点击爱心切换成活动记录" : "记录当前活动 (如: 吃饭)... 点击爱心切换成心情记录"}
+            placeholder="记录当前活动（如：吃饭）..."
             className="flex-1 bg-transparent border-none focus:outline-none text-sm"
             disabled={isLoading}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className={cn(
-              "p-2 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300",
-              isMoodMode
-                ? "bg-pink-500 hover:bg-pink-600"
-                : "bg-blue-500 hover:bg-blue-600"
-            )}
+            className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
           >
             {isLoading ? <Activity className="animate-spin" size={16} /> : <Send size={16} />}
           </button>
