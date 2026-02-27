@@ -356,6 +356,7 @@ export const useReportStore = create<ReportState>()(
 
         const chatStore = useChatStore.getState();
         const todoStore = useTodoStore.getState();
+        const moodStoreForDiary = useMoodStore.getState();
 
         // 设置加载状态
         get().updateReport(reportId, { aiAnalysis: '正在生成观察手记...' });
@@ -412,6 +413,10 @@ export const useReportStore = create<ReportState>()(
             const timeStr = format(m.timestamp, 'HH:mm');
             const durationStr = m.duration ? ` (${m.duration}分钟)` : '';
             rawInputLines.push(`- ${timeStr} ${m.content}${durationStr}`);
+            const note = moodStoreForDiary.moodNote[m.id];
+            if (note && note.trim()) {
+              rawInputLines.push(`  心情记录：${note.trim()}`);
+            }
           });
 
           if (moodMessages.length > 0) {

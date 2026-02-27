@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useChatStore } from '../../store/useChatStore';
 import { useTodoStore } from '../../store/useTodoStore';
 import { useStardustStore } from '../../store/useStardustStore';
-import { Send, Activity, Edit2, Plus, Trash2, X, Save, ChevronUp, Loader2 } from 'lucide-react';
+import { Send, Activity, Edit2, Plus, Trash2, X, Save, ChevronUp, Loader2, Umbrella, Pencil } from 'lucide-react';
 import { cn, formatDuration } from '../../lib/utils';
 import { format, isSameDay } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -29,6 +29,18 @@ export const ChatPage = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const [currentDuration, setCurrentDuration] = useState(0);
+  const [moodPickerFor, setMoodPickerFor] = useState<string | null>(null);
+  const [customMoodInput, setCustomMoodInput] = useState('');
+  const [customLabelInput, setCustomLabelInput] = useState('');
+  const [showCustomLabelInput, setShowCustomLabelInput] = useState(false);
+  const saveCustomLabel = (value: string) => {
+    const next = value.trim() || '自定义';
+    setCustomLabelInput(next);
+    if (moodPickerFor) {
+      setCustomMoodLabel(moodPickerFor, next);
+    }
+    setShowCustomLabelInput(false);
+  };
 
   // Edit/Insert State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -44,6 +56,12 @@ export const ChatPage = () => {
   } | null>(null);
   const activityMood = useMoodStore(state => state.activityMood);
   const setMood = useMoodStore(state => state.setMood);
+  const customMoodLabel = useMoodStore(state => state.customMoodLabel);
+  const setCustomMoodLabel = useMoodStore(state => state.setCustomMoodLabel);
+  const customMoodOptions = useMoodStore(state => state.customMoodOptions);
+  const addCustomMoodOption = useMoodStore(state => state.addCustomMoodOption);
+  const moodNote = useMoodStore(state => state.moodNote);
+  const setMoodNote = useMoodStore(state => state.setMoodNote);
 
   // ── 初始化 ──────────────────────────────────────────────────
   useEffect(() => {
@@ -349,32 +367,25 @@ export const ChatPage = () => {
                           >
                             {msg.content}
                           </span>
-                          <div className="flex flex-wrap gap-[1px]">
-                            {allMoodOptions().map(opt => {
-                              const selected = activityMood[msg.id] === opt;
-                              return (
-                                <button
-                                  key={opt}
-                                  onClick={() => setMood(msg.id, opt)}
-                                  className={cn(
-                                    'inline-flex items-center justify-center px-1.5 py-[2px] text-[9px] rounded-full border border-[0.5px]',
-                                    selected
-                                      ? 'bg-sky-400 text-white border-sky-400 shadow-sm'
-                                      : 'bg-transparent text-slate-700 border-gray-200'
-                                  )}
-                                  style={{
-                                    fontFamily: 'Songti SC, SimSun, STSong, serif',
-                                    boxShadow: selected
-                                      ? 'inset 0 0.5px 0 rgba(255,255,255,0.7), 0 1px 2px rgba(15,23,42,0.18)'
-                                      : undefined,
-                                  }}
-                                  title="设置心情"
-                                >
-                                  {opt}
-                                </button>
-                              );
-                            })}
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMoodPickerFor(msg.id);
+                              setCustomMoodInput(moodNote[msg.id] || '');
+                              setCustomLabelInput(customMoodLabel[msg.id] || '');
+                              setShowCustomLabelInput(false);
+                            }}
+                            className={cn(
+                              'inline-flex items-center justify-center px-2.5 py-[3px] text-[10px] rounded-full border border-[0.5px] whitespace-nowrap',
+                              customMoodLabel[msg.id] || activityMood[msg.id]
+                                ? 'bg-sky-50 text-sky-700 border-sky-200'
+                                : 'bg-gray-50 text-gray-400 border-gray-200'
+                            )}
+                            style={{ fontFamily: 'Songti SC, SimSun, STSong, serif' }}
+                            title="调整心情标签"
+                          >
+                            {customMoodLabel[msg.id] || activityMood[msg.id] || '待识别'}
+                          </button>
                         </div>
                         {(() => {
                           const stardust = getStardustByMessageId(msg.id);
@@ -411,10 +422,19 @@ export const ChatPage = () => {
                             结束
                           </button>
                         )}
-                        <div className="text-[10px] text-gray-500 whitespace-nowrap relative group/time cursor-pointer">
-                          {format(msg.timestamp, 'HH:mm')} - {msg.duration !== undefined
-                            ? `${format(msg.timestamp + msg.duration * 60 * 1000, 'HH:mm')} · ${formatDuration(msg.duration)}`
-                            : '进行中'}
+                        <div className="text-[10px] text-gray-500 whitespace-nowrap relative group/time cursor-pointer flex flex-col items-end">
+                          <div>
+                            {format(msg.timestamp, 'HH:mm')} - {msg.duration !== undefined
+                              ? `${format(msg.timestamp + msg.duration * 60 * 1000, 'HH:mm')}`
+                              : '进行中'}
+                          </div>
+                          {msg.duration !== undefined && (
+                            <div className="mt-1">
+                              <div className="w-8 h-8 rounded-full border border-sky-300 text-sky-700 bg-white/80 flex items-center justify-center text-[9px] font-semibold shadow-sm">
+                                {formatDuration(msg.duration)}
+                              </div>
+                            </div>
+                          )}
                           <div className="absolute -top-4 right-0 hidden group-hover/time:flex space-x-0.5 bg-white/90 backdrop-blur-sm rounded-full p-0.5 shadow-sm border border-gray-200">
                             <button onClick={() => handleEditClick(msg)} className="p-0.5 text-gray-500 hover:text-blue-600" title="编辑"><Edit2 size={12} /></button>
                             <button onClick={() => handleInsertClick(msg)} className="p-0.5 text-gray-500 hover:text-green-600" title="在此后插入"><Plus size={12} /></button>
@@ -499,6 +519,107 @@ export const ChatPage = () => {
               <Save size={16} />
               <span>保存</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {moodPickerFor && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40 p-4">
+          <div className="bg-gradient-to-br from-rose-50/90 via-pink-50/85 to-rose-100/80 w-full max-w-xs rounded-xl p-4 shadow-lg relative">
+            <button
+              type="button"
+              onClick={() => setMoodPickerFor(null)}
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
+            <h3 className="text-sm font-medium text-gray-800 mb-3 pr-6 flex items-center gap-1.5">
+              <span>选择这条记录的心情</span>
+              <span className="inline-flex items-center justify-center rounded-full bg-rose-50 text-rose-500 p-[3px]">
+                <Umbrella size={12} className="stroke-[1.8]" />
+              </span>
+            </h3>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {allMoodOptions().map(opt => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      setMood(moodPickerFor, opt);
+                      setCustomMoodLabel(moodPickerFor, undefined);
+                      setShowCustomLabelInput(false);
+                      setMoodPickerFor(null);
+                    }}
+                    className="inline-flex items-center justify-center px-2.5 py-[3px] text-[10px] rounded-full border border-gray-200 text-slate-700 bg-white hover:bg-gray-50 shadow-sm"
+                    style={{ fontFamily: 'Songti SC, SimSun, STSong, serif' }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomLabelInput(true);
+                  const next = customMoodLabel[moodPickerFor] || customLabelInput || '自定义';
+                  setCustomLabelInput(next);
+                  setCustomMoodLabel(moodPickerFor, next);
+                }}
+                className="inline-flex items-center justify-center px-2.5 py-[3px] text-[10px] rounded-full border border-gray-200 text-rose-700 bg-white hover:bg-gray-50 shadow-sm"
+                style={{ fontFamily: 'Songti SC, SimSun, STSong, serif' }}
+              >
+                {showCustomLabelInput ? (
+                  <input
+                    type="text"
+                    value={customLabelInput}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCustomLabelInput(value);
+                      if (moodPickerFor) {
+                        setCustomMoodLabel(moodPickerFor, value.trim() || '自定义');
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveCustomLabel(customLabelInput);
+                      }
+                    }}
+                    onBlur={() => saveCustomLabel(customLabelInput)}
+                    className="w-16 bg-transparent text-[10px] text-rose-700 focus:outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  customMoodLabel[moodPickerFor] || '自定义'
+                )}
+              </button>
+            </div>
+            <div className="border-t border-gray-100 pt-3 mt-2">
+              <div className="flex items-center gap-1 text-xs text-rose-500 mb-1">
+                <span>心情记录</span>
+                <Pencil size={12} className="stroke-[1.8]" />
+              </div>
+              <div className="mb-1">
+                <textarea
+                  value={customMoodInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setCustomMoodInput(value);
+                    if (moodPickerFor) {
+                      setMoodNote(moodPickerFor, value);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      setMoodPickerFor(null);
+                    }
+                  }}
+                  className="w-full border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-rose-300 resize-none max-h-24 overflow-y-auto leading-snug"
+                  rows={2}
+                  placeholder="写下你做这件事时的心情..."
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
