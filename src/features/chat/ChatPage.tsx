@@ -7,7 +7,7 @@ import { useStardustStore } from '../../store/useStardustStore';
 import { Send, Activity, Edit2, Plus, Trash2, X, Save, Heart, ChevronUp, Loader2 } from 'lucide-react';
 import { cn, formatDuration } from '../../lib/utils';
 import { format, isSameDay } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { zhCN, enUS, it } from 'date-fns/locale';
 import { StardustEmoji } from '../../components/StardustEmoji';
 import { StardustCard } from '../../components/StardustCard';
 import type { StardustCardData } from '../../types/stardust';
@@ -28,7 +28,7 @@ export const ChatPage = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const [currentDuration, setCurrentDuration] = useState(0);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Edit/Insert State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -209,7 +209,15 @@ export const ChatPage = () => {
 
   // ── 辅助：计算日期分隔线 ─────────────────────────────────────
   const getDateLabel = (ts: number) => {
-    return format(ts, 'M月d日 EEEE', { locale: zhCN });
+    const currentLang = i18n.language?.split('-')[0] || 'en';
+    const locale = currentLang === 'zh' ? zhCN : currentLang === 'it' ? it : enUS;
+    const datePattern =
+      currentLang === 'zh'
+        ? 'M月d日 EEEE'
+        : currentLang === 'it'
+          ? 'd MMMM EEEE'
+          : 'MMMM d, EEEE';
+    return format(ts, datePattern, { locale });
   };
 
   const lastActivity = messages.filter(m => !m.isMood).slice(-1)[0];
@@ -369,7 +377,7 @@ export const ChatPage = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-gray-500">
-                        {format(msg.timestamp, 'HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'HH:mm') : '进行中'}
+                        {format(msg.timestamp, 'HH:mm')} - {msg.duration !== undefined ? format(msg.timestamp + msg.duration * 60 * 1000, 'HH:mm') : t('chat_ongoing')}
                       </div>
                       {msg.duration !== undefined && (
                         <div className="text-xs font-bold text-green-600 mt-1">
