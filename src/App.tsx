@@ -1,0 +1,112 @@
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BottomNav } from './components/BottomNav';
+import { Header } from './components/Header';
+import { AIAnnotationBubble } from './components/AIAnnotationBubble';
+import { ChatPage } from './features/chat/ChatPage';
+import { TodoPage } from './features/todo/TodoPage';
+import { ReportPage } from './features/report/ReportPage';
+import { AuthPage } from './pages/AuthPage';
+import { useAuthStore } from './store/useAuthStore';
+import { useChatStore } from './store/useChatStore';
+import { StardustAnimation } from './components/StardustAnimation';
+import { useStardustStore } from './store/useStardustStore';
+
+const MainLayout = () => {
+  const messages = useChatStore(state => state.messages);
+  const [animationState, setAnimationState] = React.useState<{
+    isActive: boolean;
+    sourceRect: DOMRect | null;
+    targetRect: DOMRect | null;
+    emojiChar: string;
+  }>({
+    isActive: false,
+    sourceRect: null,
+    targetRect: null,
+    emojiChar: '✨',
+  });
+
+  // 获取最后一个记录模式的消息（活动或心情，作为凝结目标）
+  const lastRecordMessage = React.useMemo(() => {
+    return messages
+      .filter(m => m.mode === 'record')
+      .slice(-1)[0];
+  }, [messages]);
+
+  // 处理凝结动画
+  const handleCondense = React.useCallback((emojiChar?: string) => {
+    // 获取气泡位置（作为动画起点）
+    const bubbleElement = document.querySelector('[data-stardust-bubble]');
+    const targetElement = lastRecordMessage 
+      ? document.querySelector(`[data-message-id="${lastRecordMessage.id}"]`)
+      : null;
+
+    if (bubbleElement && targetElement) {
+      setAnimationState({
+        isActive: true,
+        sourceRect: bubbleElement.getBoundingClientRect(),
+        targetRect: targetElement.getBoundingClientRect(),
+        emojiChar: emojiChar || '✨', // 使用批注中提取的emoji，如果没有则默认星星
+      });
+    }
+  }, [lastRecordMessage]);
+
+  // 动画完成回调
+  const handleAnimationComplete = React.useCallback(() => {
+    setAnimationState(prev => ({ ...prev, isActive: false }));
+    // 触发一次messages的读取来刷新UI显示新创建的Emoji
+    if (lastRecordMessage) {
+      // 强制ChatPage重新渲染以显示Emoji
+      window.dispatchEvent(new CustomEvent('stardust-created', { 
+        detail: { messageId: lastRecordMessage.id } 
+      }));
+    }
+  }, [lastRecordMessage]);
+
+  return (
+    <div className="fixed inset-0 bg-gray-50 flex flex-col overflow-hidden">
+      <Header />
+      <main className="flex-1 overflow-hidden pt-14 pb-16 relative">
+        <Outlet />
+      </main>
+      <BottomNav />
+      {/* AI 批注气泡 - 全局显示 */}
+      <AIAnnotationBubble 
+        relatedMessage={lastRecordMessage}
+        onCondense={handleCondense}
+      />
+      {/* 星尘凝结动画 */}
+      <StardustAnimation
+        isActive={animationState.isActive}
+        sourceRect={animationState.sourceRect}
+        targetRect={animationState.targetRect}
+        emojiChar={animationState.emojiChar}
+        onComplete={handleAnimationComplete}
+      />
+    </div>
+  );
+};
+
+function App() {
+  const initializeAuth = useAuthStore(state => state.initialize);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Navigate to="/chat" replace />} />
+          <Route path="chat" element={<ChatPage />} />
+          <Route path="todo" element={<TodoPage />} />
+          <Route path="report" element={<ReportPage />} />
+        </Route>
+        <Route path="/auth" element={<AuthPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
