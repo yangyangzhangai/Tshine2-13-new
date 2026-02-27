@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../api/supabase';
 import { useTodoStore } from './useTodoStore';
 import { useChatStore } from './useChatStore';
+import { useMoodStore } from './useMoodStore';
 import { useAuthStore } from './useAuthStore';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, format, eachDayOfInterval, isSameDay } from 'date-fns';
 import { zhCN } from 'date-fns/locale/zh-CN';
@@ -14,6 +15,10 @@ export interface ReportStats {
   completedTodos: number;
   totalTodos: number;
   completionRate: number;
+  moodDistribution?: {
+    mood: string;
+    minutes: number;
+  }[];
   recurringStats?: {
     name: string;
     completed: boolean; // For daily
@@ -224,6 +229,26 @@ export const useReportStore = create<ReportState>()(
             };
           });
         }
+
+        const moodStore = useMoodStore.getState();
+        const moodMinutes: Record<string, number> = {};
+        chatStore.messages
+          .filter(m =>
+            m.timestamp >= start.getTime() &&
+            m.timestamp <= end.getTime() &&
+            m.mode === 'record' &&
+            !m.isMood &&
+            m.duration !== undefined
+          )
+          .forEach(m => {
+            const mood = moodStore.activityMood[m.id];
+            if (!mood) return;
+            const minutes = m.duration || 0;
+            moodMinutes[mood] = (moodMinutes[mood] || 0) + minutes;
+          });
+        stats.moodDistribution = Object.entries(moodMinutes)
+          .map(([mood, minutes]) => ({ mood, minutes }))
+          .sort((a, b) => b.minutes - a.minutes);
 
         const newReport: Report = {
           id: uuidv4(),
