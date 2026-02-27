@@ -117,15 +117,13 @@ async function generateEmojiWithAI(userRawContent: string, message: string): Pro
 
     console.log('[Stardust] 开始调用AI生成Emoji...');
 
-    // 调用AI服务生成Emoji（使用与 aiService 相同的模型）
-    const response = await fetch('https://llm.chutes.ai/v1/chat/completions', {
+    // 调用服务端 API 生成 Emoji，避免在前端暴露外部模型密钥
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer cpk_38f7d5fd384e4b22a1dfbfcda753b36b.222def67407b56dea6d82490041412aa.pndwFrTxPgF323q5yxLABuCYEZgr2EpV',
       },
       body: JSON.stringify({
-        model: 'NousResearch/Hermes-4-405B-FP8-TEE', // 使用与 aiService 相同的模型
         messages: [
           { role: 'system', content: '你是一个Emoji选择助手，根据情感内容选择最合适的Unicode Emoji。只输出Emoji字符，不要解释。' },
           { role: 'user', content: generateEmojiPrompt(userRawContent, message) },
@@ -142,7 +140,7 @@ async function generateEmojiWithAI(userRawContent: string, message: string): Pro
     }
 
     const data = await response.json();
-    const rawContent = data.choices?.[0]?.message?.content;
+    const rawContent = data?.content;
 
     console.log('[Stardust] AI完整响应:', JSON.stringify(data, null, 2));
     console.log('[Stardust] AI原始内容:', rawContent);

@@ -1,14 +1,11 @@
 /**
- * AI 服务层 - Chutes API 封装
+ * AI 服务层 - Server API 封装
  * 
- * 使用 Chutes.ai 的 OpenAI 兼容接口
- * Base URL: https://api.chutes.ai/v1
- * 模型: llama-3.1-8b
+ * 通过项目后端 `/api/chat` 统一访问模型服务
  */
 
 import type { 
   ChutesRequest, 
-  ChutesResponse, 
   ChutesMessage,
   AnnotationRequest, 
   AnnotationResponse,
@@ -16,11 +13,10 @@ import type {
 } from '../types/annotation';
 import { removeThinkingTags, extractComment } from '../lib/utils';
 
-// Chutes API 配置
+// AI 配置（实际请求由服务端统一路由）
 const CHUTES_CONFIG = {
-  baseURL: 'https://llm.chutes.ai/v1',
-  apiKey: 'cpk_38f7d5fd384e4b22a1dfbfcda753b36b.222def67407b56dea6d82490041412aa.pndwFrTxPgF323q5yxLABuCYEZgr2EpV',
-  model: 'NousResearch/Hermes-4-405B-FP8-TEE',  // Hermes 4 405B FP8 TEE
+  baseURL: '/api',
+  model: 'qwen-plus',
   defaultTemperature: 0.9,
   defaultMaxTokens: 512,  // 增加 token 限制，为推理模型留出思考空间
 };
@@ -41,11 +37,10 @@ export async function callChutesAPI(
   };
 
   try {
-    const response = await fetch(`${CHUTES_CONFIG.baseURL}/chat/completions`, {
+    const response = await fetch(`${CHUTES_CONFIG.baseURL}/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CHUTES_CONFIG.apiKey}`,
       },
       body: JSON.stringify(requestBody),
     });
@@ -58,13 +53,8 @@ export async function callChutesAPI(
       );
     }
 
-    const data: ChutesResponse = await response.json();
-    
-    if (!data.choices || data.choices.length === 0) {
-      throw new Error('Empty response from Chutes API');
-    }
-
-    const content = data.choices[0]?.message?.content;
+    const data = await response.json() as { content?: string };
+    const content = data?.content;
     if (!content) {
       console.error('[AI Service] API 返回内容为空:', data);
       throw new Error('Empty content from Chutes API');

@@ -292,7 +292,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const apiKey = process.env.CHUTES_API_KEY;
+  const apiKey = process.env.QWEN_API_KEY;
+  const baseUrl = process.env.DASHSCOPE_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
   if (!apiKey) {
     res.status(500).json({ error: 'Server configuration error: Missing API key' });
     return;
@@ -324,14 +325,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const response = await fetch('https://llm.chutes.ai/v1/chat/completions', {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'Qwen/Qwen3-235B-A22B-Instruct-2507-TEE', // 统一使用 Qwen 支持多语言
+        model: 'qwen-plus',
         messages: [
           { role: 'system', content: finalSystemPrompt },
           { role: 'user', content: userContent }

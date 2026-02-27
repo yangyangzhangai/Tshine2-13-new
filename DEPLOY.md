@@ -20,7 +20,7 @@ AI 服务 (Chutes)
     ↓
 计算层 (纯代码)               ← 本地计算光谱/进度条/异常
     ↓
-/api/diary (Hermes-4-405B)    ← 顶配日记生成
+/api/diary (qwen-plus)    ← 观察手记生成
     ↓
 诗意观察手记
 ```
@@ -47,7 +47,8 @@ cp .env.example .env
 
 ```bash
 # Chutes AI API Key (必需)
-CHUTES_API_KEY=your_chutes_api_key_here
+QWEN_API_KEY=your_qwen_api_key_here
+DASHSCOPE_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 
 # Supabase 配置
 VITE_SUPABASE_URL=your_supabase_url
@@ -91,7 +92,8 @@ npx vercel --prod
 
 | 变量名 | 说明 | 必需 |
 |--------|------|------|
-| `CHUTES_API_KEY` | Chutes AI API Key | 是 |
+| `QWEN_API_KEY` | DashScope API Key | 是 |
+| `DASHSCOPE_BASE_URL` | DashScope OpenAI 兼容基础地址 | 否（有默认值） |
 | `VITE_SUPABASE_URL` | Supabase 项目 URL | 是 |
 | `VITE_SUPABASE_ANON_KEY` | Supabase Anon Key | 是 |
 
@@ -101,18 +103,17 @@ npx vercel --prod
 
 - `POST /api/chat` - AI 聊天
 - `POST /api/classify` - **步骤1: 活动分类** (Qwen2.5-7B)
-- `POST /api/diary` - **步骤3: 生成观察手记** (Hermes-4-405B)
+- `POST /api/diary` - **步骤3: 生成观察手记** (qwen-plus)
 - `POST /api/annotation` - AI 智能批注
 
 ## 获取 API Keys
 
-### Chutes API Key
-1. 访问 https://chutes.ai/
+### DashScope API Key
+1. 访问 https://dashscope.aliyun.com/
 2. 注册并登录
-3. 在 Dashboard 获取 API Key
+3. 在控制台获取 API Key
 4. 使用的模型:
-   - 分类: `Qwen/Qwen2.5-7B-Instruct` (轻量、快速)
-   - 日记: `NousResearch/Hermes-4-405B-FP8-TEE` (顶配、创意)
+   - 通用对话/批注/日记/报告: `qwen-plus`
 
 ### Supabase 配置
 1. 访问 https://supabase.com/
@@ -152,7 +153,7 @@ A: 检查 Vercel Dashboard 的 Function Logs，确认环境变量是否正确配
 A: 在 Vercel Dashboard → Environment Variables 中更新，然后重新部署。
 
 ### Q: 观察手记生成失败?
-A: 检查 Chutes API Key 是否有足够配额，以及模型 `NousResearch/Hermes-4-405B-FP8-TEE` 是否可用。
+A: 检查 DashScope API Key 是否有足够配额，以及模型 `qwen-plus` 是否可用。
 
 ## 安全注意事项
 

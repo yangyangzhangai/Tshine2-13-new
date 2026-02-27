@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 /**
  * Vercel Serverless Function - Chat API
- * 调用 Chutes AI (Hermes-4-405B-FP8-TEE) 进行对话
+ * 调用 DashScope(OpenAI兼容) 进行对话
  * 
  * POST /api/chat
  * Body: { messages: [{ role: string, content: string }], temperature?: number, max_tokens?: number }
@@ -32,21 +32,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const apiKey = process.env.CHUTES_API_KEY;
+  const apiKey = process.env.QWEN_API_KEY;
+  const baseUrl = process.env.DASHSCOPE_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
   if (!apiKey) {
     res.status(500).json({ error: 'Server configuration error: Missing API key' });
     return;
   }
 
   try {
-    const response = await fetch('https://llm.chutes.ai/v1/chat/completions', {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'NousResearch/Hermes-4-405B-FP8-TEE',
+        model: 'qwen-plus',
         messages,
         temperature,
         max_tokens,
@@ -56,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Chutes API error:', response.status, errorText);
+      console.error('AI API error:', response.status, errorText);
       res.status(response.status).json({ 
         error: `AI service error: ${response.statusText}`,
         details: errorText

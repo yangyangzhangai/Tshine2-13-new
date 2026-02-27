@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 /**
  * Vercel Serverless Function - Annotation API
- * 调用 Chutes AI 生成AI批注（气泡）
+ * 调用 DashScope(OpenAI兼容) 生成AI批注（气泡）
  *
  * POST /api/annotation
  * Body: { eventType: string, eventData: {...}, userContext: {...}, lang: 'zh' | 'en' | 'it' }
@@ -296,8 +296,8 @@ function getDefaultAnnotations(lang: string): Record<string, { content: string; 
 }
 
 function getModel(lang: string): string {
-  if (lang === 'zh') return 'Qwen/Qwen3-235B-A22B-Instruct-2507-TEE';
-  return 'openai/gpt-oss-120b-TEE';
+  if (lang === 'zh') return 'qwen-plus';
+  return 'qwen-plus';
 }
 
 function buildTodayActivitiesText(activities: any[], lang: string): string {
@@ -399,7 +399,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const defaultSet = getDefaultAnnotations(lang);
-  const apiKey = process.env.CHUTES_API_KEY;
+  const apiKey = process.env.QWEN_API_KEY;
+  const baseUrl = process.env.DASHSCOPE_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 
   if (!apiKey) {
     const defaultAnnotation = defaultSet[eventType] || defaultSet.activity_completed;
@@ -446,17 +447,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         { role: 'user', content: userPrompt },
       ],
       temperature: lang === 'zh' ? 0.9 : 0.8,
-      // gpt-oss 推理 token 占比高，给 EN/IT 更高 completion 上限，避免只产出 reasoning 不产出最终正文
+      // EN/IT 生成更长文本时给更高 completion 上限，避免正文被截断
       max_tokens: lang === 'zh' ? 180 : 480,
       stream: false,
     };
 
-    // gpt-oss 会先输出 reasoning_content，容易命中 '\n\n' 提前停止，导致 message.content 为空
+    // 中文场景维持原 stop 策略，避免输出拖长
     if (lang === 'zh') {
       requestBody.stop = ['\n\n', '\n- ', '\n1. '];
     }
 
-    const response = await fetch('https://llm.chutes.ai/v1/chat/completions', {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -477,7 +478,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const firstChoice = data?.choices?.[0];
     const firstMessage = firstChoice?.message;
 
-    // Debug: gpt-oss 在部分场景会给出 reasoning，但 message.content 为空
+    // Debug: 记录返回元信息，便于排查空内容问题
     console.log('[Annotation API] LLM meta:', {
       lang,
       model,

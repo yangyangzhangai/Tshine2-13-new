@@ -213,21 +213,22 @@ ${data.activities?.map((a: any) => `- ${a.time}: ${a.content} (耗时: ${a.durat
 总任务: ${data.stats?.totalTodos || 0}
 `;
 
-  const apiKey = process.env.CHUTES_API_KEY;
+  const apiKey = process.env.QWEN_API_KEY;
+  const baseUrl = process.env.DASHSCOPE_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
   if (!apiKey) {
     res.status(500).json({ error: 'Server configuration error: Missing API key' });
     return;
   }
 
   try {
-    const response = await fetch('https://llm.chutes.ai/v1/chat/completions', {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'NousResearch/Hermes-4-405B-FP8-TEE',
+        model: 'qwen-plus',
         messages: [{ role: 'user', content: context }],
         temperature: 0.7,
         max_tokens: 4096,

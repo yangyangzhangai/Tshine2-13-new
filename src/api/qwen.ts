@@ -1,10 +1,14 @@
 import { removeThinkingTags } from '../lib/utils';
 
-const API_KEY = 'sk-6fb1648dfc80491dab239eee034c15cf';
-const BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+const API_KEY = import.meta.env.VITE_QWEN_API_KEY || '';
+const BASE_URL = import.meta.env.VITE_DASHSCOPE_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 
 export const chatWithQwen = async (messages: { role: string; content: string }[]) => {
   try {
+    if (!API_KEY) {
+      throw new Error('Missing VITE_QWEN_API_KEY');
+    }
+
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
