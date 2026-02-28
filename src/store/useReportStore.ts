@@ -15,6 +15,13 @@ export interface ReportStats {
   completedTodos: number;
   totalTodos: number;
   completionRate: number;
+  actionAnalysis?: {
+    category: '健康' | '成长' | '快乐' | '其他';
+    minutes: number;
+    percent: number;
+  }[];
+  actionSummary?: string;
+  moodSummary?: string;
   moodDistribution?: {
     mood: string;
     minutes: number;
@@ -195,6 +202,64 @@ export const useReportStore = create<ReportState>()(
               name: t.content,
               completed: t.completed
             }));
+
+          // 今日行动分析（基于记录页内容与时长的本地分析）
+          // 仅在“当天已结束”（非当前进行中的今日）时生成；若是今天尚未过零点，则暂不生成，前端显示占位
+          const now = new Date();
+          const isSameDayAsNow =
+            now.getFullYear() === targetDate.getFullYear() &&
+            now.getMonth() === targetDate.getMonth() &&
+            now.getDate() === targetDate.getDate();
+
+          if (!isSameDayAsNow) {
+            const healthKw = ['跑步','健身','瑜伽','冥想','散步','睡','早睡','拉伸','爬山','游泳'];
+            const growthKw = ['学习','阅读','复习','写作','编程','课程','笔记','训练','练习','备考'];
+            const joyKw = ['电影','游戏','音乐','朋友','聚会','美食','旅行','逛街','画画','唱歌'];
+
+            const minutesByCat: Record<'健康'|'成长'|'快乐'|'其他', number> = { 健康: 0, 成长: 0, 快乐: 0, 其他: 0 };
+
+            const recs = useChatStore.getState().messages.filter(m =>
+              m.timestamp >= start.getTime() &&
+              m.timestamp <= end.getTime() &&
+              m.mode === 'record' &&
+              !m.isMood &&
+              m.duration !== undefined &&
+              m.duration > 0
+            );
+
+            recs.forEach(m => {
+              const c = m.content || '';
+              const mm = m.duration || 0;
+              const has = (arr: string[]) => arr.some(k => c.includes(k));
+              let cat: '健康'|'成长'|'快乐'|'其他' = '其他';
+              if (has(healthKw)) cat = '健康';
+              else if (has(growthKw)) cat = '成长';
+              else if (has(joyKw)) cat = '快乐';
+              minutesByCat[cat] += mm;
+            });
+
+            const totalActMin = Object.values(minutesByCat).reduce((s, v) => s + v, 0);
+            if (totalActMin > 0) {
+              const entries = (Object.keys(minutesByCat) as Array<'健康'|'成长'|'快乐'|'其他'>).map(k => ({
+                category: k,
+                minutes: minutesByCat[k],
+                percent: minutesByCat[k] / totalActMin
+              })).filter(e => e.minutes > 0);
+              stats.actionAnalysis = entries;
+
+              // 生成约100字的鼓励式总结
+              const top = [...entries].sort((a,b)=>b.minutes-a.minutes)[0];
+              const sec = [...entries].sort((a,b)=>b.minutes-a.minutes)[1];
+              const parts: string[] = [];
+              parts.push(`今天你的时间主要投入在「${top.category}」上，约${Math.round(top.percent*100)}%。`);
+              if (sec) parts.push(`同时也照顾了「${sec.category}」，平衡得不错。`);
+              if (top.category === '健康') parts.push('继续爱护身体，它是效率和心情的根基。');
+              if (top.category === '成长') parts.push('稳稳地向前一点点，就是最好的积累。');
+              if (top.category === '快乐') parts.push('把开心装进口袋，明天会更有劲。');
+              parts.push('做得很好，给自己一个小小的表扬。');
+              stats.actionSummary = parts.join('');
+            }
+          }
         } else {
           // Weekly/Monthly Recurring Stats
           // Group by recurrenceId or content
@@ -241,7 +306,12 @@ export const useReportStore = create<ReportState>()(
             m.duration !== undefined
           )
           .forEach(m => {
-            const mood = moodStore.activityMood[m.id];
+            const baseMood = moodStore.activityMood[m.id];
+            const customLabel = moodStore.customMoodLabel[m.id];
+            const useCustom = (moodStore as any).customMoodApplied?.[m.id] === true;
+            const mood = (useCustom && customLabel && customLabel.trim() && customLabel.trim() !== '自定义')
+              ? customLabel.trim()
+              : baseMood;
             if (!mood) return;
             const minutes = m.duration || 0;
             moodMinutes[mood] = (moodMinutes[mood] || 0) + minutes;
@@ -249,6 +319,23 @@ export const useReportStore = create<ReportState>()(
         stats.moodDistribution = Object.entries(moodMinutes)
           .map(([mood, minutes]) => ({ mood, minutes }))
           .sort((a, b) => b.minutes - a.minutes);
+
+        // 心情简评（仅在非当天生成，零点后更新）
+        const now2 = new Date();
+        const isSameDayNow =
+          now2.getFullYear() === targetDate.getFullYear() &&
+          now2.getMonth() === targetDate.getMonth() &&
+          now2.getDate() === targetDate.getDate();
+        if (!isSameDayNow && stats.moodDistribution && stats.moodDistribution.length > 0) {
+          const totalMin = stats.moodDistribution.reduce((s, v) => s + v.minutes, 0);
+          const top = stats.moodDistribution[0];
+          const sec = stats.moodDistribution[1];
+          const parts: string[] = [];
+          parts.push(`今天你的情绪主色调是「${top.mood}」，约${Math.round(top.minutes / totalMin * 100)}%。`);
+          if (sec) parts.push(`同时也有「${sec.mood}」穿插其间，节奏自然。`);
+          parts.push('谢谢你真诚地记录心情，每一步都不白费。愿你在照顾感受的同时，继续把自己放在第一位。');
+          stats.moodSummary = parts.join('');
+        }
 
         const newReport: Report = {
           id: uuidv4(),
