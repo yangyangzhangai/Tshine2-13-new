@@ -8,12 +8,18 @@ import { useMoodStore } from '../../store/useMoodStore';
 import { FileText, Sparkles, X, BarChart2, Clock, CheckCircle, Circle } from 'lucide-react';
 import { format, isSameDay, startOfDay, endOfDay } from 'date-fns';
 import { cn, formatDuration } from '../../lib/utils';
+import { getMoodColor } from '../../lib/moodColor';
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 const ActivityRecordsView = ({ report }: { report: Report }) => {
   const messages = useChatStore(state => state.messages);
+  const activityMood = useMoodStore(state => state.activityMood);
+  const customMoodLabel = useMoodStore(state => state.customMoodLabel);
+  const customMoodApplied = useMoodStore(state => state.customMoodApplied);
+  const moodNote = useMoodStore(state => state.moodNote);
+  const [readonlyMoodFor, setReadonlyMoodFor] = React.useState<string | null>(null);
 
   const start = report.startDate || startOfDay(new Date(report.date)).getTime();
   const end = report.endDate || endOfDay(new Date(report.date)).getTime();
@@ -39,11 +45,44 @@ const ActivityRecordsView = ({ report }: { report: Report }) => {
             <span className="text-gray-400 font-mono text-[10px] w-20 flex-shrink-0">
               {format(msg.timestamp, 'MM-dd HH:mm')}
             </span>
-            <span className="flex-1 text-[11px] text-gray-700 truncate mx-2" title={msg.content}>
-              {msg.content}
-            </span>
+            <div className="flex-1 flex items-center gap-2 min-w-0 mx-2">
+              <span className="text-[11px] text-gray-700 truncate" title={msg.content}>
+                {msg.content}
+              </span>
+              <button
+                type="button"
+                onClick={() => setReadonlyMoodFor(msg.id)}
+                className="inline-flex items-center justify-center px-2 py-[2px] text-[9px] rounded-full whitespace-nowrap shadow-sm transition-colors text-slate-700"
+                style={
+                  (() => {
+                    const label = (customMoodApplied[msg.id] && customMoodLabel[msg.id] && customMoodLabel[msg.id] !== '自定义')
+                      ? customMoodLabel[msg.id]!
+                      : activityMood[msg.id];
+                    if (label === '焦虑') {
+                      return {
+                        background: 'repeating-linear-gradient(45deg,#E5E7EB 0,#E5E7EB 1px,#9CA3AF 1px,#9CA3AF 2px,#6B7280 2px,#6B7280 3px)',
+                        border: 'none',
+                      } as React.CSSProperties;
+                    }
+                    const bg = label ? getMoodColor(label) : undefined;
+                    return bg ? { backgroundColor: bg, border: 'none' } as React.CSSProperties : {};
+                  })()
+                }
+                title="查看心情记录"
+              >
+                {(() => {
+                  const label = (customMoodApplied[msg.id] && customMoodLabel[msg.id] && customMoodLabel[msg.id] !== '自定义')
+                    ? customMoodLabel[msg.id]!
+                    : activityMood[msg.id];
+                  return label || '待识别';
+                })()}
+              </button>
+            </div>
             {msg.duration ? (
-              <span className="text-[9px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full flex-shrink-0 text-center whitespace-nowrap">
+              <span
+                className="inline-flex items-center justify-center text-[9px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full flex-shrink-0 text-center"
+                style={{ minWidth: '9em' }}
+              >
                 {formatDuration(msg.duration)}
               </span>
             ) : (
@@ -52,21 +91,72 @@ const ActivityRecordsView = ({ report }: { report: Report }) => {
           </div>
         ))}
       </div>
+      {readonlyMoodFor && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setReadonlyMoodFor(null)}>
+          <div className="bg-pink-50 w-full max-w-xs rounded-xl p-4 shadow-lg relative border border-pink-100" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setReadonlyMoodFor(null)}
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              aria-label="关闭"
+            >
+              <X size={16} />
+            </button>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs text-gray-500">心情</span>
+              <span
+                className="inline-flex items-center justify-center px-2.5 py-[3px] text-[10px] rounded-full whitespace-nowrap shadow-sm text-slate-700"
+                style={
+                  (() => {
+                    const id = readonlyMoodFor!;
+                    const label = (customMoodApplied[id] && customMoodLabel[id] && customMoodLabel[id] !== '自定义')
+                      ? customMoodLabel[id]!
+                      : activityMood[id];
+                    if (label === '焦虑') {
+                      return {
+                        background: 'repeating-linear-gradient(45deg,#E5E7EB 0,#E5E7EB 1px,#9CA3AF 1px,#9CA3AF 2px,#6B7280 2px,#6B7280 3px)',
+                        border: 'none',
+                      } as React.CSSProperties;
+                    }
+                    const bg = label ? getMoodColor(label) : undefined;
+                    return bg ? { backgroundColor: bg, border: 'none' } as React.CSSProperties : {};
+                  })()
+                }
+              >
+                {(() => {
+                  const id = readonlyMoodFor!;
+                  const label = (customMoodApplied[id] && customMoodLabel[id] && customMoodLabel[id] !== '自定义')
+                    ? customMoodLabel[id]!
+                    : activityMood[id];
+                  return label || '待识别';
+                })()}
+              </span>
+            </div>
+            <div className="border-t border-gray-100 pt-3 mt-2">
+              <div className="flex items-center gap-1 text-sm font-light text-gray-500 mb-1" style={{ fontFamily: 'PingFang SC, -apple-system, system-ui, sans-serif' }}>
+                <span>心情记录</span>
+              </div>
+              <div>
+                <textarea
+                  value={moodNote[readonlyMoodFor] || ''}
+                  readOnly
+                  disabled
+                  className="w-full border border-gray-100 bg-gray-50 text-gray-500 rounded-lg px-2 py-1 text-xs resize-none max-h-24 overflow-y-auto leading-snug cursor-not-allowed"
+                  rows={2}
+                  placeholder="暂无记录"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const moodColors: Record<string, string> = {
-  开心: '#F9A8D4',   // 稍微加深的粉红（马卡龙）
-  平静: '#93C5FD',  // 稍微加深的天蓝
-  专注: '#86EFAC',  // 稍微加深的绿色
-  满足: '#FDE68A',  // 稍微加深的嫩黄色
-  疲惫: '#9CA3AF',  // 更深一些的灰
-  无聊: '#C7D2FE',  // 略深的浅紫
-  低落: '#60A5FA',  // 略深的蓝
-};
+/* colors come from getMoodColor to keep consistent across pages */
 
-const MoodPieChart = ({ distribution }: { distribution: { mood: string; minutes: number }[] }) => {
+const MoodPieChart = ({ distribution, extraRight }: { distribution: { mood: string; minutes: number }[], extraRight?: React.ReactNode }) => {
   const totalMinutes = distribution.reduce((sum, d) => sum + d.minutes, 0);
   if (totalMinutes === 0) return null;
 
@@ -96,7 +186,7 @@ const MoodPieChart = ({ distribution }: { distribution: { mood: string; minutes:
   const radius = 14;
 
   return (
-    <div className="flex items-center justify-center gap-4">
+    <div className="grid grid-cols-[96px_140px_200px] items-center gap-4 w-[480px] mx-auto">
       <svg viewBox="0 0 32 32" className="w-24 h-24">
         <defs>
           <pattern id="anxiousPattern" x="0" y="0" width="2" height="2" patternUnits="userSpaceOnUse">
@@ -124,7 +214,7 @@ const MoodPieChart = ({ distribution }: { distribution: { mood: string; minutes:
               ? '#F3F4F6'
               : s.mood === '焦虑'
                 ? 'url(#anxiousPattern)'
-                : (moodColors[s.mood] || '#93C5FD');
+                : (getMoodColor(s.mood) || '#93C5FD');
           return (
             <path key={`${s.mood}-${s.start}`} d={d} fill={fill} />
           );
@@ -133,21 +223,21 @@ const MoodPieChart = ({ distribution }: { distribution: { mood: string; minutes:
       <div className="space-y-1">
         {distribution.map((d) => (
           <div key={d.mood} className="flex items-center gap-2 text-xs text-gray-600">
-            <span
-              className="inline-block w-2 h-2 rounded-full"
-              style={{
-                background:
-                  d.mood === '焦虑'
-                    ? 'repeating-linear-gradient(45deg,#E5E7EB 0,#E5E7EB 1px,#9CA3AF 1px,#9CA3AF 2px,#6B7280 2px,#6B7280 3px)'
-                    : (moodColors[d.mood] || '#93C5FD')
-              }}
-            />
+            <span className="inline-block w-2 h-2 rounded-full" style={{
+              background:
+                d.mood === '焦虑'
+                  ? 'repeating-linear-gradient(45deg,#E5E7EB 0,#E5E7EB 1px,#9CA3AF 1px,#9CA3AF 2px,#6B7280 2px,#6B7280 3px)'
+                  : (getMoodColor(d.mood) || '#93C5FD')
+            }} />
             <span>{d.mood}</span>
             <span className="text-gray-400">
               {d.minutes} 分钟 · {Math.round((d.minutes / dayMinutes) * 100)}%
             </span>
           </div>
         ))}
+      </div>
+      <div className="self-center text-center">
+        {extraRight}
       </div>
     </div>
   );
@@ -157,24 +247,24 @@ const ReportStatsView = ({ stats, type, onShowTasks }: { stats: ReportStats, typ
   return (
     <div className="space-y-6">
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="grid grid-cols-3 gap-3 text-center">
         <div
-          className="bg-blue-50 p-3 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+          className="bg-blue-50 p-2.5 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
           onClick={() => onShowTasks('completed')}
         >
-          <div className="text-2xl font-bold text-blue-600">{stats.completedTodos}</div>
-          <div className="text-xs text-blue-400">已完成</div>
+          <div className="text-xl font-bold text-blue-600">{stats.completedTodos}</div>
+          <div className="text-[10px] text-blue-400">已完成</div>
         </div>
         <div
-          className="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+          className="bg-gray-50 p-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
           onClick={() => onShowTasks('total')}
         >
-          <div className="text-2xl font-bold text-gray-600">{stats.totalTodos}</div>
-          <div className="text-xs text-gray-400">总任务</div>
+          <div className="text-xl font-bold text-gray-600">{stats.totalTodos}</div>
+          <div className="text-[10px] text-gray-400">总任务</div>
         </div>
-        <div className="bg-green-50 p-3 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">{(stats.completionRate * 100).toFixed(0)}%</div>
-          <div className="text-xs text-green-400">完成率</div>
+        <div className="bg-green-50 p-2.5 rounded-lg">
+          <div className="text-xl font-bold text-green-600">{(stats.completionRate * 100).toFixed(0)}%</div>
+          <div className="text-[10px] text-green-400">完成率</div>
         </div>
       </div>
 
@@ -257,6 +347,8 @@ export const ReportPage = () => {
   const { todos } = useTodoStore();
   const chatMessages = useChatStore(state => state.messages);
   const activityMood = useMoodStore(state => state.activityMood);
+  const customMoodLabel = useMoodStore(state => state.customMoodLabel);
+  const customMoodApplied = useMoodStore(state => state.customMoodApplied);
   const reportScrollRef = useRef<HTMLDivElement | null>(null);
   const reportHeaderRef = useRef<HTMLDivElement | null>(null);
   const [showFloatingClose, setShowFloatingClose] = useState(false);
@@ -313,7 +405,12 @@ export const ReportPage = () => {
               m.duration !== undefined
             )
             .forEach(m => {
-              const mood = activityMood[m.id];
+              const baseMood = activityMood[m.id];
+              const customLabel = customMoodLabel[m.id];
+              const useCustom = customMoodApplied[m.id] === true;
+              const mood = (useCustom && customLabel && customLabel.trim() && customLabel.trim() !== '自定义')
+                ? customLabel.trim()
+                : baseMood;
               if (!mood) return;
               const minutes = m.duration || 0;
               moodMinutes[mood] = (moodMinutes[mood] || 0) + minutes;
@@ -553,12 +650,92 @@ export const ReportPage = () => {
               {/* Activity Records */}
               <ActivityRecordsView report={selectedReport} />
 
-              {/* Mood Records (Daily) */}
+              {/* 今日行动分析（放在活动记录下方，心情光谱上方） */}
+              {selectedReport.type === 'daily' && (
+                <div>
+                  <h3 className="font-bold mb-3 text-sm text-gray-700">今日行动分析</h3>
+                  <div className="bg-white border border-gray-100 rounded-lg p-3">
+                    <div className="w-[480px] mx-auto grid grid-cols-[96px_140px_200px] items-center gap-4">
+                      {selectedReport.stats?.actionAnalysis && selectedReport.stats.actionAnalysis.length > 0 ? (
+                        <>
+                          {(() => {
+                            const items = selectedReport.stats!.actionAnalysis!;
+                            const total = items.reduce((s, v) => s + v.minutes, 0);
+                            let cur = 0;
+                            const centerX = 16, centerY = 16, radius = 14;
+                            const color = (cat: string) => cat === '健康' ? '#34D399' : cat === '成长' ? '#60A5FA' : cat === '快乐' ? '#F59E0B' : '#E5E7EB';
+                            const slices = items.map(it => {
+                              const frac = it.minutes / total;
+                              const st = cur, ed = cur + frac;
+                              cur += frac;
+                              const startAngle = 2 * Math.PI * st - Math.PI / 2;
+                              const endAngle = 2 * Math.PI * ed - Math.PI / 2;
+                              const x1 = centerX + radius * Math.cos(startAngle);
+                              const y1 = centerY + radius * Math.sin(startAngle);
+                              const x2 = centerX + radius * Math.cos(endAngle);
+                              const y2 = centerY + radius * Math.sin(endAngle);
+                              const largeArc = frac > 0.5 ? 1 : 0;
+                              const d = [`M ${centerX} ${centerY}`, `L ${x1} ${y1}`, `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`, 'Z'].join(' ');
+                              return { d, fill: color(it.category) };
+                            });
+                            return (
+                              <svg viewBox="0 0 32 32" className="w-24 h-24">
+                                {slices.map((p, i) => <path key={i} d={p.d} fill={p.fill} />)}
+                              </svg>
+                            );
+                          })()}
+                          <div className="space-y-1">
+                            {selectedReport.stats.actionAnalysis.map(a => (
+                              <div key={a.category} className="flex items-center gap-2 text-xs text-gray-600">
+                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: a.category === '健康' ? '#34D399' : a.category === '成长' ? '#60A5FA' : a.category === '快乐' ? '#F59E0B' : '#E5E7EB' }} />
+                                <span>{a.category}</span>
+                                <span className="text-gray-400">{a.minutes} 分钟 · {Math.round(a.percent * 100)}%</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="self-center text-center">
+                            {selectedReport.stats.actionSummary && (
+                              <p className="text-[12px] text-gray-600 leading-relaxed font-light">
+                                {selectedReport.stats.actionSummary}
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* 占位饼图（与心情光谱大小一致） */}
+                          <svg viewBox="0 0 32 32" className="w-24 h-24">
+                            <circle cx="16" cy="16" r="14" fill="#F3F4F6" />
+                            <path d="M16 2 A14 14 0 0 1 30 16 L16 16 Z" fill="#E5E7EB" />
+                          </svg>
+                          <div className="space-y-1" />
+                          <div className="self-center text-center">
+                            <p className="text-xs text-gray-600">零点后更新</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 今日心情光谱（在行动分析下方） */}
               {dailyMoodDistribution.length > 0 && (
                 <div>
                   <h3 className="font-bold mb-3 text-sm text-gray-700">今日心情光谱</h3>
                   <div className="bg-white border border-gray-100 rounded-lg p-3">
-                    <MoodPieChart distribution={dailyMoodDistribution} />
+                    <MoodPieChart
+                      distribution={dailyMoodDistribution}
+                      extraRight={
+                        selectedReport.stats?.moodSummary ? (
+                          <p className="text-[12px] text-gray-600 leading-relaxed font-light">
+                            {selectedReport.stats.moodSummary}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-600">零点后更新</p>
+                        )
+                      }
+                    />
                   </div>
                 </div>
               )}
@@ -573,6 +750,7 @@ export const ReportPage = () => {
               ) : (
                 <div className="text-gray-500 text-center py-10">暂无数据</div>
               )}
+
             </div>
             </div>
           </div>
