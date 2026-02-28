@@ -55,8 +55,7 @@ export const Header = () => {
               className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer"
               title="点击更换头像"
               onClick={() => {
-                setShowAvatarModal(true);
-                setShowAvatarMenu(false);
+                fileRef.current?.click();
               }}
             >
               {user.user_metadata?.avatar_url ? (
