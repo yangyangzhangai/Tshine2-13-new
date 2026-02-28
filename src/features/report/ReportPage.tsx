@@ -423,6 +423,53 @@ export const ReportPage = () => {
         })()
       : [];
 
+  // 实时“今日行动分析”分布（仅当查看当天日报时使用）
+  const liveActionAnalysis =
+    selectedReport && selectedReport.type === 'daily' &&
+    new Date(selectedReport.date).toDateString() === new Date().toDateString()
+      ? (() => {
+          const start = selectedReport.startDate || startOfDay(new Date(selectedReport.date)).getTime();
+          const end = selectedReport.endDate || endOfDay(new Date(selectedReport.date)).getTime();
+          const msgs = chatMessages.filter(m =>
+            m.timestamp >= start &&
+            m.timestamp <= end &&
+            m.mode === 'record' &&
+            !m.isMood &&
+            m.duration !== undefined &&
+            m.duration > 0
+          );
+          const kw: Record<'生存'|'连接与交互'|'成长与创造'|'修复与娱乐'|'巅峰体验', string[]> = {
+            生存: ['吃饭','用餐','餐','午餐','晚餐','早餐','睡','睡觉','小憩','午休','卫生','洗澡','刷牙','如厕','上厕所','排泄','工作','上班','打工','谋生','收入','加班','通勤','地铁','公交','打车','看病','就医','体检','保险','储蓄','理财','交房租','交水电','缴费','打扫','清洁','扫地','拖地','收纳','整理','洗衣','做饭','买菜'],
+            连接与交互: ['家人','父母','孩子','朋友','同学','聊天','闲聊','约会','恋爱','拥抱','陪伴','育儿','沟通','会议','面谈','讨论','协作','对接','商务','谈判','聚会','酒局','发朋友圈','社交媒体','微博','小红书','点赞','私信','人情','联络'],
+            成长与创造: ['学习','读书','阅读','复盘','复习','上课','课程','作业','考试','备考','练习','刻意练习','训练','写作','绘画','画画','设计','编程','开发','产品','发明','创造','深度思考','笔记','宗教','信仰','哲学','志愿','公益','义工','意义'],
+            修复与娱乐: ['短视频','刷视频','刷抖音','刷快手','追剧','电影','电视剧','音乐','听歌','发呆','旅行','旅游','出游','游戏','打游戏','电竞','运动','跑步','健身','瑜伽','看演出','观演','冥想','正念','心理','咨询','日记','倾诉'],
+            巅峰体验: ['心流','忘我','沉浸','人琴合一','上头','出神','状态拉满','登山','攀登','冲顶','破 PB','比赛夺冠','婚礼','结婚','毕业典礼','节日','团聚','庆典']
+          };
+          const categories: Array<'生存'|'连接与交互'|'成长与创造'|'修复与娱乐'|'巅峰体验'|'其他'> =
+            ['生存','连接与交互','成长与创造','修复与娱乐','巅峰体验','其他'];
+          const minutesByCat: Record<(typeof categories)[number], number> = {
+            生存: 0, 连接与交互: 0, 成长与创造: 0, 修复与娱乐: 0, 巅峰体验: 0, 其他: 0
+          };
+          const has = (arr: string[], c: string) => arr.some(k => c.includes(k));
+          msgs.forEach(m => {
+            const c = m.content || '';
+            const mm = m.duration || 0;
+            let cat: (typeof categories)[number] = '其他';
+            if (has(kw.巅峰体验, c)) cat = '巅峰体验';
+            else if (has(kw.成长与创造, c)) cat = '成长与创造';
+            else if (has(kw.连接与交互, c)) cat = '连接与交互';
+            else if (has(kw.修复与娱乐, c)) cat = '修复与娱乐';
+            else if (has(kw.生存, c)) cat = '生存';
+            minutesByCat[cat] += mm;
+          });
+          const total = Object.values(minutesByCat).reduce((s, v) => s + v, 0);
+          if (total <= 0) return [];
+          return (Object.keys(minutesByCat) as Array<(typeof categories)[number]>)
+            .map(k => ({ category: k, minutes: minutesByCat[k], percent: minutesByCat[k] / total }))
+            .filter(e => e.minutes > 0);
+        })()
+      : [];
+
   const handleDateClick = (value: Date) => {
     // Check if report exists for this date
     const existingReport = reports.find(r =>
@@ -656,14 +703,23 @@ export const ReportPage = () => {
                   <h3 className="font-bold mb-3 text-sm text-gray-700">今日行动分析</h3>
                   <div className="bg-white border border-gray-100 rounded-lg p-3">
                     <div className="w-[480px] mx-auto grid grid-cols-[96px_140px_200px] items-center gap-4">
-                      {selectedReport.stats?.actionAnalysis && selectedReport.stats.actionAnalysis.length > 0 ? (
+                      {(liveActionAnalysis.length > 0 ? liveActionAnalysis : (selectedReport.stats?.actionAnalysis || [])).length > 0 ? (
                         <>
                           {(() => {
-                            const items = selectedReport.stats!.actionAnalysis!;
+                            const items = (liveActionAnalysis.length > 0 ? liveActionAnalysis : (selectedReport.stats!.actionAnalysis!));
                             const total = items.reduce((s, v) => s + v.minutes, 0);
                             let cur = 0;
                             const centerX = 16, centerY = 16, radius = 14;
-                            const color = (cat: string) => cat === '健康' ? '#34D399' : cat === '成长' ? '#60A5FA' : cat === '快乐' ? '#F59E0B' : '#E5E7EB';
+                          const color = (cat: string) => {
+                            switch (cat) {
+                              case '生存': return '#A3E635';       // lime-400
+                              case '连接与交互': return '#60A5FA'; // blue-400
+                              case '成长与创造': return '#34D399'; // green-500 (softened globally)
+                              case '修复与娱乐': return '#F59E0B'; // amber-500
+                              case '巅峰体验': return '#C084FC';   // violet-400
+                              default: return '#E5E7EB';           // gray-200
+                            }
+                          };
                             const slices = items.map(it => {
                               const frac = it.minutes / total;
                               const st = cur, ed = cur + frac;
@@ -685,9 +741,18 @@ export const ReportPage = () => {
                             );
                           })()}
                           <div className="space-y-1">
-                            {selectedReport.stats.actionAnalysis.map(a => (
+                            {(liveActionAnalysis.length > 0 ? liveActionAnalysis : (selectedReport.stats!.actionAnalysis!)).map(a => (
                               <div key={a.category} className="flex items-center gap-2 text-xs text-gray-600">
-                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: a.category === '健康' ? '#34D399' : a.category === '成长' ? '#60A5FA' : a.category === '快乐' ? '#F59E0B' : '#E5E7EB' }} />
+                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: ((): string => {
+                                  switch (a.category) {
+                                    case '生存': return '#A3E635';
+                                    case '连接与交互': return '#60A5FA';
+                                    case '成长与创造': return '#34D399';
+                                    case '修复与娱乐': return '#F59E0B';
+                                    case '巅峰体验': return '#C084FC';
+                                    default: return '#E5E7EB';
+                                  }
+                                })() }} />
                                 <span>{a.category}</span>
                                 <span className="text-gray-400">{a.minutes} 分钟 · {Math.round(a.percent * 100)}%</span>
                               </div>
@@ -695,7 +760,7 @@ export const ReportPage = () => {
                           </div>
                           <div className="self-center text-center">
                             {selectedReport.stats.actionSummary && (
-                              <p className="text-[12px] text-gray-600 leading-relaxed font-light">
+                              <p className="text-[12px] text-gray-600 leading-relaxed font-light break-words">
                                 {selectedReport.stats.actionSummary}
                               </p>
                             )}
@@ -728,11 +793,11 @@ export const ReportPage = () => {
                       distribution={dailyMoodDistribution}
                       extraRight={
                         selectedReport.stats?.moodSummary ? (
-                          <p className="text-[12px] text-gray-600 leading-relaxed font-light">
+                          <p className="text-[12px] text-gray-600 leading-relaxed font-light break-words">
                             {selectedReport.stats.moodSummary}
                           </p>
                         ) : (
-                          <p className="text-xs text-gray-600">零点后更新</p>
+                          <p className="text-xs text-gray-600 break-words">零点后更新</p>
                         )
                       }
                     />
