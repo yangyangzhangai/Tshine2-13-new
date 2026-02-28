@@ -13,8 +13,8 @@ import { computeAll, formatForDiaryAI, type ComputedResult, type ClassifiedData,
 
 const FALLBACK_SUMMARY = '今天的你是一个很棒自己。';
 function clampText100(s: string): string {
-  // 粗略按字符数截断到约50字，确保不外溢
-  const MAX = 50;
+  // 粗略按字符数截断到约30字，确保不外溢
+  const MAX = 30;
   if (!s) return s;
   const arr = Array.from(s); // 处理多字节字符
   if (arr.length <= MAX) return s;

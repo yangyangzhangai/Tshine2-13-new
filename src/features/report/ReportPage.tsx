@@ -702,7 +702,7 @@ export const ReportPage = () => {
                 <div>
                   <h3 className="font-bold mb-3 text-sm text-gray-700">今日行动分析</h3>
                   <div className="bg-white border border-gray-100 rounded-lg p-3">
-                    <div className="w-[480px] mx-auto grid grid-cols-[96px_140px_200px] items-center gap-4">
+                    <div className="w-full max-w-[520px] mx-auto grid grid-cols-[96px_minmax(120px,1fr)_minmax(140px,1fr)] items-center gap-4">
                       {(liveActionAnalysis.length > 0 ? liveActionAnalysis : (selectedReport.stats?.actionAnalysis || [])).length > 0 ? (
                         <>
                           {(() => {
@@ -760,7 +760,7 @@ export const ReportPage = () => {
                           </div>
                           <div className="self-center text-center">
                             {selectedReport.stats.actionSummary && (
-                          <p className="text-[12px] text-gray-600 leading-relaxed font-light break-words">
+                              <p className="text-[12px] text-gray-600 leading-relaxed font-light break-words max-w-full">
                                 {selectedReport.stats.actionSummary}
                               </p>
                             )}
@@ -775,7 +775,7 @@ export const ReportPage = () => {
                           </svg>
                           <div className="space-y-1" />
                           <div className="self-center text-center">
-                            <p className="text-xs text-gray-600">零点后更新</p>
+                            <p className="text-xs text-gray-600 max-w-full break-words">零点后更新</p>
                           </div>
                         </>
                       )}
@@ -793,11 +793,11 @@ export const ReportPage = () => {
                       distribution={dailyMoodDistribution}
                       extraRight={
                         selectedReport.stats?.moodSummary ? (
-                          <p className="text-[12px] text-gray-600 leading-relaxed font-light break-words">
+                          <p className="text-[12px] text-gray-600 leading-relaxed font-light break-words max-w-full">
                             {selectedReport.stats.moodSummary}
                           </p>
                         ) : (
-                          <p className="text-xs text-gray-600 break-words">零点后更新</p>
+                          <p className="text-xs text-gray-600 break-words max-w-full">零点后更新</p>
                         )
                       }
                     />
