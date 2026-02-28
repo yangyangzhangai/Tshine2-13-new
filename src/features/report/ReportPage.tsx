@@ -760,7 +760,7 @@ export const ReportPage = () => {
                           </div>
                           <div className="self-center text-center">
                             {selectedReport.stats.actionSummary && (
-                              <p className="text-[12px] text-gray-600 leading-relaxed font-light break-words">
+                          <p className="text-[12px] text-gray-600 leading-relaxed font-light break-words">
                                 {selectedReport.stats.actionSummary}
                               </p>
                             )}
