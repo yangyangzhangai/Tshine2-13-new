@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-07-24 - Plant snapshot backfill no longer crashes serverless runtime
+
+- Fixed `/api/plant-generate` `snapshot_existing` crashing on Vercel with `ERR_MODULE_NOT_FOUND` when the Report page auto-backfilled a missing root snapshot.
+- `src/lib/plantRootSnapshot.ts` now uses explicit ESM `.js` import specifiers for its server-shared `rootRenderer` and plant-type dependencies so the transpiled `plantRootSnapshot.js` resolves correctly inside serverless functions.
+- This restores the background root-snapshot backfill path without changing plant-generation business logic, trigger timing, or frontend copy.
+
+## 2026-07-24 - Magic Pen now uses the repo's DeepSeek path
+
+- Replaced Magic Pen's exhausted Qwen/Zhipu remote provider chain with the repository's existing DeepSeek OpenAI-compatible runtime, defaulting to `deepseek-chat` and reusing `DEEPSEEK_API_KEY` with optional Magic-Pen-specific overrides.
+- Preserved the existing Magic Pen JSON validation and semantic quality gate, but provider exhaustion now returns the original text for the local parser instead of attempting a second external provider.
+- Magic Pen client parsing now auto-corrects Han-script input to `lang='zh'` before both the remote API call and the local fallback, preventing English UI language from routing Chinese notes through English prompts/rules.
+- Added regression coverage for the DeepSeek provider path and Chinese-input language correction in `src/server/magic-pen-parse.test.ts` and `src/services/input/magicPenParser.remoteFallback.test.ts`.
+
 ## 2026-07-24 - English stretched mood words stay mood
 
 - Fixed the ordinary English activity/mood classifier so elongated mood phrasing like `sooo good`, `reeeally tired`, `I feel goooood`, and `happppy today` no longer miss the mood regex path and fall through to activity.

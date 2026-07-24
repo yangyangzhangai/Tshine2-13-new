@@ -51,6 +51,18 @@ describe('parseMagicPenInput remote failure recovery', () => {
     ]);
   });
 
+  it('auto-corrects requested en lang to zh for Chinese input', async () => {
+    const rawText = '我吃好饭了，然后开始写代码，现在很困';
+    mockRemoteFailure(rawText);
+
+    const result = await parseMagicPenInput(rawText, { now: fixedNow, lang: 'en' });
+
+    expect(mockedCallMagicPenParseAPI).toHaveBeenCalledWith(
+      expect.objectContaining({ lang: 'zh', rawText }),
+    );
+    expect(result.autoWriteItems.length + result.drafts.length + result.unparsedSegments.length).toBeGreaterThan(0);
+  });
+
   it('sends text beyond the former 500-character cutoff', async () => {
     const rawText = `${'review notes '.repeat(45)}tomorrow submit the final report`;
     mockRemoteFailure(rawText);

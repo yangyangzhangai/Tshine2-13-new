@@ -1,5 +1,5 @@
 // DOC-DEPS: LLM.md -> docs/CURRENT_TASK.md -> src/features/report/README.md
-import { buildRootSegments } from './rootRenderer';
+import { buildRootSegments } from './rootRenderer.js';
 import {
   DEFAULT_DIRECTION_ORDER,
   type DirectionIndex,
@@ -7,7 +7,7 @@ import {
   type PlantRootSnapshot,
   type PlantRootSnapshotActivity,
   type RootSegment,
-} from '../types/plant';
+} from '../types/plant.js';
 
 export function normalizePlantDirectionOrder(order?: PlantCategoryKey[] | null): PlantCategoryKey[] {
   const unique = (order ?? []).filter(

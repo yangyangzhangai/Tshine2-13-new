@@ -5,6 +5,10 @@ Owner: current working session
 
 Session Notes:
 
+- 2026-07-24: Fixed the Report root snapshot backfill serverless crash on `/api/plant-generate`. `src/lib/plantRootSnapshot.ts` now uses explicit ESM `.js` import specifiers for its `rootRenderer` and plant-type dependencies, matching the serverless runtime path resolution used by `api/plant-generate.ts` / `src/server/plant-shared.ts` and preventing `ERR_MODULE_NOT_FOUND` when `snapshot_existing` auto-runs on report open.
+
+- 2026-07-24: Switched Magic Pen remote parsing from the exhausted Qwen/Zhipu path to the repo's existing DeepSeek OpenAI-compatible runtime (`deepseek-chat` by default). The client parser now auto-corrects Han-script input to `lang='zh'` before both remote parse and local fallback, preventing English UI language from sending Chinese Magic Pen notes through EN prompts/rules when providers fail.
+
 - 2026-07-24: Expanded the English stretched-word mood fallback for ordinary record input. The EN mood-pattern path now normalizes a small whitelist of elongated intensifiers (`sooo/reeeally/veeery/quiiite`) and high-value mood adjectives (`goooood/greeeat/happppy/tiiiired/saaad`) before sentence-level mood matching only, so those forms stay `standalone_mood` without changing activity/history parsing or stored user text. Regression coverage was added in `src/services/input/liveInputClassifier.i18n.test.ts`.
 
 - 2026-07-24: Fixed iOS Capacitor My Diary save keyboard dismissal on the Report root plant surface. Tapping Save now completes the existing note persist path, exits edit mode, and explicitly dismisses the focused textarea / native iPhone keyboard together, while guarding the blur-triggered autosave path from double-saving during the close sequence.

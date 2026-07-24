@@ -58,7 +58,7 @@ Reminder receipts use the authenticated Supabase client directly; RLS restricts 
 - `callMagicPenParseAPI()` supports `lang` (`zh`/`en`/`it`), and server prompt routing now follows this field.
 - Magic Pen parse `segments[*].kind` now supports four kinds: `activity` / `mood` / `todo_add` / `activity_backfill` (plus `unparsed` array for unmatched content).
 - Magic Pen parse `segments[*]` now supports `timeRelation` (`realtime` / `future` / `past` / `unknown`) for parser-first direct-write gating.
-- Magic Pen defaults to `qwen-plus`, treats empty/low-coverage/missing-time/under-split output as `low_quality`, and tries Zhipu before returning a provider-exhausted response.
+- Magic Pen now defaults to DeepSeek `deepseek-chat` via the existing OpenAI-compatible DeepSeek runtime (`DEEPSEEK_API_KEY`, optional `MAGIC_PEN_DEEPSEEK_API_KEY` / `MAGIC_PEN_DEEPSEEK_BASE_URL` / `MAGIC_PEN_MODEL`), treats empty/low-coverage/missing-time/under-split output as `low_quality`, and falls back to the existing local parser instead of chaining to Qwen/Zhipu.
 - Provider exhaustion returns the complete submitted `rawText` in `unparsed`; the frontend no longer substitutes a fixed Chinese failure placeholder or silently slices requests at 500 characters.
 - Endpoint robustness includes `src/server/magic-pen-parse.test.ts`, `src/server/magic-pen-quality.test.ts`, and `src/services/input/magicPenParser.remoteFallback.test.ts`.
 - `callAnnotationAPI()` and `callDiaryAPI()` now automatically attach the current `preferences.aiMode` so annotation and diary prompts stay aligned with the selected companion persona.

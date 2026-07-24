@@ -643,11 +643,11 @@ interface MagicPenParseResponse {
   };
   traceId?: string;
   parseStrategy?: 'direct_json' | 'wrapped_object' | 'fallback_failed';
-  providerUsed?: 'zhipu' | 'qwen' | 'none';
-  fallbackFrom?: 'timeout' | 'http_error' | 'empty_content' | 'invalid_payload' | 'parse_failed' | 'exception' | 'qwen';
+  providerUsed?: 'deepseek' | 'none';
+  fallbackFrom?: 'timeout' | 'http_error' | 'empty_content' | 'invalid_payload' | 'parse_failed' | 'exception';
   failureCategory?: 'model_output_invalid' | 'provider_call_failed' | 'unknown';
   attempts?: Array<{
-    provider: 'zhipu' | 'qwen';
+    provider: 'deepseek';
     reason: 'timeout' | 'http_error' | 'empty_content' | 'invalid_payload' | 'parse_failed' | 'low_quality' | 'exception';
     status?: number;
     elapsedMs: number;

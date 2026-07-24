@@ -47,27 +47,30 @@ function createMockResponse(): MockResponse {
 }
 
 describe('api/magic-pen-parse handler', () => {
-  const originalApiKey = process.env.ZHIPU_API_KEY;
-  const originalQwenApiKey = process.env.QWEN_API_KEY;
-  const originalDashscopeBaseUrl = process.env.DASHSCOPE_BASE_URL;
+  const originalApiKey = process.env.DEEPSEEK_API_KEY;
+  const originalMagicPenApiKey = process.env.MAGIC_PEN_DEEPSEEK_API_KEY;
+  const originalDeepSeekBaseUrl = process.env.DEEPSEEK_BASE_URL;
+  const originalMagicPenBaseUrl = process.env.MAGIC_PEN_DEEPSEEK_BASE_URL;
   const originalMagicPenModel = process.env.MAGIC_PEN_MODEL;
-  const originalFallbackModel = process.env.MAGIC_PEN_FALLBACK_MODEL;
+  const originalTimeout = process.env.MAGIC_PEN_TIMEOUT_MS;
 
   beforeEach(() => {
-    process.env.ZHIPU_API_KEY = 'test-key';
-    delete process.env.QWEN_API_KEY;
-    delete process.env.DASHSCOPE_BASE_URL;
+    process.env.DEEPSEEK_API_KEY = 'test-key';
+    delete process.env.MAGIC_PEN_DEEPSEEK_API_KEY;
+    delete process.env.DEEPSEEK_BASE_URL;
+    delete process.env.MAGIC_PEN_DEEPSEEK_BASE_URL;
     delete process.env.MAGIC_PEN_MODEL;
-    delete process.env.MAGIC_PEN_FALLBACK_MODEL;
+    delete process.env.MAGIC_PEN_TIMEOUT_MS;
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
-    process.env.ZHIPU_API_KEY = originalApiKey;
-    process.env.QWEN_API_KEY = originalQwenApiKey;
-    process.env.DASHSCOPE_BASE_URL = originalDashscopeBaseUrl;
+    process.env.DEEPSEEK_API_KEY = originalApiKey;
+    process.env.MAGIC_PEN_DEEPSEEK_API_KEY = originalMagicPenApiKey;
+    process.env.DEEPSEEK_BASE_URL = originalDeepSeekBaseUrl;
+    process.env.MAGIC_PEN_DEEPSEEK_BASE_URL = originalMagicPenBaseUrl;
     process.env.MAGIC_PEN_MODEL = originalMagicPenModel;
-    process.env.MAGIC_PEN_FALLBACK_MODEL = originalFallbackModel;
+    process.env.MAGIC_PEN_TIMEOUT_MS = originalTimeout;
     vi.unstubAllGlobals();
   });
 
@@ -342,25 +345,17 @@ describe('api/magic-pen-parse handler', () => {
     expect(payload.messages[0].content).toContain('480');
   });
 
-  it('falls back to zhipu when qwen returns structurally valid but empty output', async () => {
-    process.env.QWEN_API_KEY = 'test-qwen-key';
-    process.env.DASHSCOPE_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+  it('uses DeepSeek config and surfaces low-quality failure as provider exhaustion', async () => {
+    process.env.MAGIC_PEN_DEEPSEEK_API_KEY = 'magic-pen-key';
+    process.env.MAGIC_PEN_DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
 
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          choices: [{ message: { content: '{"segments":[],"unparsed":[]}' } }],
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          choices: [{ message: { content: '{"segments":[{"text":"跑步","sourceText":"今晚跑步","kind":"todo_add","confidence":"high","timeRelation":"future"}],"unparsed":[]}' } }],
-        }),
-      });
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [{ message: { content: '{"segments":[],"unparsed":[]}' } }],
+      }),
+    });
     vi.stubGlobal('fetch', fetchMock);
 
     const req = {
@@ -378,25 +373,19 @@ describe('api/magic-pen-parse handler', () => {
     expect(res.statusCode).toBe(200);
     expect(res.payload).toMatchObject({
       success: true,
-      providerUsed: 'zhipu',
-      data: {
-        segments: [
-          {
-            text: '跑步',
-            kind: 'todo_add',
-            confidence: 'high',
-          },
-        ],
-      },
+      providerUsed: 'none',
+      parseStrategy: 'fallback_failed',
+      failureCategory: 'model_output_invalid',
+      data: { unparsed: ['今晚跑步'] },
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    const qwenCall = fetchMock.mock.calls[0];
-    expect(String(qwenCall[0])).toContain('/chat/completions');
-    const qwenPayload = JSON.parse(qwenCall[1].body as string);
-    expect(qwenPayload.model).toBe('qwen-plus');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const deepSeekCall = fetchMock.mock.calls[0];
+    expect(String(deepSeekCall[0])).toContain('https://api.deepseek.com/v1/chat/completions');
+    const deepSeekPayload = JSON.parse(deepSeekCall[1].body as string);
+    expect(deepSeekPayload.model).toBe('deepseek-chat');
     expect(res.payload).toMatchObject({
-      attempts: [{ provider: 'qwen', reason: 'low_quality' }],
+      attempts: [{ provider: 'deepseek', reason: 'low_quality' }],
     });
   });
 });

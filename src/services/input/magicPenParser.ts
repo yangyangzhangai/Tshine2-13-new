@@ -10,10 +10,15 @@ interface ParseMagicPenOptions {
   lang?: 'zh' | 'en' | 'it';
 }
 
+function detectMagicPenLang(rawText: string, requestedLang: 'zh' | 'en' | 'it'): 'zh' | 'en' | 'it' {
+  if (/[\u3400-\u9fff]/.test(rawText)) return 'zh';
+  return requestedLang;
+}
+
 
 function classifyParseOutcome(response: {
   parseStrategy?: 'direct_json' | 'wrapped_object' | 'fallback_failed';
-  providerUsed?: 'zhipu' | 'qwen' | 'none';
+  providerUsed?: 'deepseek' | 'none';
   failureCategory?: 'model_output_invalid' | 'provider_call_failed' | 'unknown';
   data: { unparsed: string[] };
 }): 'ok' | 'partial_unrecognized' | 'parse_failed' {
@@ -69,11 +74,12 @@ export async function parseMagicPenInput(
   }
 
   const now = options.now ?? new Date();
+  const effectiveLang = detectMagicPenLang(cleaned, options.lang ?? 'zh');
 
   try {
     const response = await callMagicPenParseAPI({
       rawText: cleaned,
-      lang: options.lang ?? 'zh',
+      lang: effectiveLang,
       todayDateStr: toLocalDateString(now),
       currentHour: now.getHours(),
       currentLocalDateTime: toLocalDateTimeString(now),
@@ -82,11 +88,11 @@ export async function parseMagicPenInput(
     const parseOutcome = classifyParseOutcome(response);
 
     if (parseOutcome === 'parse_failed') {
-      return recoverLocally(cleaned, now, options.lang ?? 'zh');
+      return recoverLocally(cleaned, now, effectiveLang);
     }
 
-    const built = buildDraftsFromAIResult(response.data, now, options.lang ?? 'zh');
-    const salvagedDrafts = (options.lang ?? 'zh') === 'zh'
+    const built = buildDraftsFromAIResult(response.data, now, effectiveLang);
+    const salvagedDrafts = effectiveLang === 'zh'
       ? built.unparsedSegments
         .map((segment) => salvageTodoDraftFromUnparsedSegment(segment, now))
         .filter((draft): draft is NonNullable<typeof draft> => !!draft)
@@ -101,11 +107,11 @@ export async function parseMagicPenInput(
     if (result.drafts.length === 0
       && result.unparsedSegments.length === 0
       && result.autoWriteItems.length === 0) {
-      return recoverLocally(cleaned, now, options.lang ?? 'zh');
+      return recoverLocally(cleaned, now, effectiveLang);
     }
     return result;
   } catch (error) {
     void error;
-    return recoverLocally(cleaned, now, options.lang ?? 'zh');
+    return recoverLocally(cleaned, now, effectiveLang);
   }
 }

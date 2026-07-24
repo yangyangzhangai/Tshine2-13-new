@@ -32,7 +32,7 @@
 `/api/todo-decompose` is rewritten to the `/api/classify` `todo_decompose` branch, so it follows the same auth + Plus guard and membership error contract.
 `/api/magic-pen-parse` request body includes: `rawText`, `todayDateStr`, `currentHour`, optional `lang` (`zh`/`en`/`it`), and optional local-time context (`currentLocalDateTime`, `timezoneOffsetMinutes`) for finer future/past disambiguation.
 `segments[*]` may include `timeRelation` (`realtime`/`future`/`past`/`unknown`) for parser-first runtime gating.
-`/api/magic-pen-parse` first uses DashScope OpenAI-compatible Qwen (`qwen-plus`, overridable by `MAGIC_PEN_MODEL`), then falls back to Zhipu (`glm-4.7-flash`). Parseable JSON is not sufficient for success: empty extraction, low original-text coverage, missing explicit time anchors, and severely under-split complex input are treated as `low_quality` and trigger fallback. When all providers fail, the response keeps the complete original `rawText` in `unparsed`.
+`/api/magic-pen-parse` now uses the existing DeepSeek OpenAI-compatible path (`deepseek-chat` by default via `DEEPSEEK_API_KEY`, optional `MAGIC_PEN_DEEPSEEK_API_KEY` / `MAGIC_PEN_DEEPSEEK_BASE_URL` / `MAGIC_PEN_MODEL`). Parseable JSON is not sufficient for success: empty extraction, low original-text coverage, missing explicit time anchors, and severely under-split complex input are treated as `low_quality`. When the provider fails, the response keeps the complete original `rawText` in `unparsed` so the frontend can run the existing local fallback.
 Plant endpoints require `Authorization: Bearer <supabase access token>` and validate current user before DB read/write.
 `/api/extract-profile` requires `Authorization: Bearer <supabase access token>` and accepts `recentMessages[] + lang` (`zh`/`en`/`it`) from frontend weekly-report flow.
 `/api/plant-generate` `status` supports: `too_early` / `empty_day` / `generated` / `already_generated` / `monthly_exhausted`.
@@ -67,7 +67,7 @@ Membership AI classification path observability is recorded through `/api/live-i
 - `/api/report` -> 当前未接入外部模型（占位返回）
 - `/api/diary` -> `OPENAI_API_KEY`（`gpt-4o`）
 - `/api/classify` -> `QWEN_API_KEY`（可选 `CLASSIFY_MODEL`、`DASHSCOPE_BASE_URL`）
-- `/api/magic-pen-parse` -> `QWEN_API_KEY`（默认 `qwen-plus`，可选 `MAGIC_PEN_MODEL`）主路，`ZHIPU_API_KEY` 质量/调用失败兜底
+- `/api/magic-pen-parse` -> `DEEPSEEK_API_KEY`（默认 `deepseek-chat`，可选 `MAGIC_PEN_DEEPSEEK_API_KEY`、`MAGIC_PEN_DEEPSEEK_BASE_URL`、`MAGIC_PEN_MODEL`）
 - `/api/subscription` -> Apple App Store Server API（`APPLE_IAP_ISSUER_ID`、`APPLE_IAP_KEY_ID`、`APPLE_IAP_PRIVATE_KEY`、`APPLE_IAP_BUNDLE_ID`）+ Stripe API（`STRIPE_SECRET_KEY`、`STRIPE_PRICE_MONTHLY`、`STRIPE_PRICE_ANNUAL`）
 
 ## 本地调试（Windows）

@@ -7,6 +7,7 @@ import { assessMagicPenResult } from '../src/server/magic-pen-quality.js';
 type MagicPenKind = 'activity' | 'mood' | 'todo_add' | 'activity_backfill';
 type MagicPenConfidence = 'high' | 'medium' | 'low';
 type MagicPenLang = 'zh' | 'en' | 'it';
+type MagicPenProvider = 'deepseek';
 
 interface MagicPenAISegment {
   text: string;
@@ -28,7 +29,6 @@ interface MagicPenAIResult {
 
 const STRICT_TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 type MagicPenParseStrategy = 'direct_json' | 'wrapped_object' | 'fallback_failed';
-type MagicPenProvider = 'zhipu' | 'qwen';
 
 type ProviderFailureReason =
   | 'timeout'
@@ -66,11 +66,9 @@ interface ProviderCallFailure {
 type ProviderCallResult = ProviderCallSuccess | ProviderCallFailure;
 type MagicPenFailureCategory = 'model_output_invalid' | 'provider_call_failed' | 'unknown';
 
-const ZHIPU_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-const DEFAULT_QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
-const DEFAULT_QWEN_MODEL = 'qwen-plus';
-const PRIMARY_TIMEOUT_MS = 12000;
-const FALLBACK_TIMEOUT_MS = 12000;
+const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
+const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
+const REQUEST_TIMEOUT_MS = 12000;
 
 function shouldDebugMagicPen(): boolean {
   return process.env.MAGIC_PEN_DEBUG === '1' || process.env.NODE_ENV !== 'production';
@@ -106,17 +104,13 @@ function getTimeoutMs(value: string | undefined, fallbackMs: number): number {
 }
 
 function normalizeBaseUrl(baseUrl: string | undefined): string {
-  const value = (baseUrl || DEFAULT_QWEN_BASE_URL).trim();
+  const value = (baseUrl || DEFAULT_DEEPSEEK_BASE_URL).trim();
   return value.replace(/\/+$/, '');
 }
 
-function resolveQwenModel(): string {
+function resolveDeepSeekModel(): string {
   const current = process.env.MAGIC_PEN_MODEL?.trim();
-  if (current) return current;
-
-  const legacy = process.env.MAGIC_PEN_FALLBACK_MODEL?.trim();
-  if (legacy && legacy !== 'qwen-flash') return legacy;
-  return DEFAULT_QWEN_MODEL;
+  return current || DEFAULT_DEEPSEEK_MODEL;
 }
 
 function isAbortError(error: unknown): boolean {
@@ -307,6 +301,7 @@ async function callProvider(
         ],
         temperature: 0.2,
         max_tokens: 2048,
+        response_format: { type: 'json_object' },
         stream: false,
       }),
     }, timeoutMs);
@@ -430,9 +425,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     timezoneOffsetMinutes: typeof timezoneOffsetMinutes === 'number' ? timezoneOffsetMinutes : 0,
   });
 
-  const apiKey = (process.env.ZHIPU_API_KEY || '').trim();
-  const fallbackApiKey = (process.env.QWEN_API_KEY || '').trim();
-  if (!apiKey && !fallbackApiKey) {
+  const apiKey = String(
+    process.env.MAGIC_PEN_DEEPSEEK_API_KEY
+    || process.env.DEEPSEEK_API_KEY
+    || '',
+  ).trim();
+  if (!apiKey) {
     logMagicPen(traceId, 'request.missing_api_keys');
     jsonError(res, 500, 'Server configuration error: Missing API key');
     return;
@@ -450,119 +448,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const providerAttempts: ProviderCallFailure[] = [];
+    const model = resolveDeepSeekModel();
+    const baseUrl = process.env.MAGIC_PEN_DEEPSEEK_BASE_URL
+      || process.env.DEEPSEEK_BASE_URL;
+    const apiUrl = `${normalizeBaseUrl(baseUrl)}/chat/completions`;
+    const timeoutMs = getTimeoutMs(process.env.MAGIC_PEN_TIMEOUT_MS, REQUEST_TIMEOUT_MS);
+    const result = await callProvider(
+      'deepseek',
+      apiUrl,
+      apiKey,
+      model,
+      prompt,
+      rawText,
+      timeoutMs,
+    );
 
-    const fallbackModel = resolveQwenModel();
-    const fallbackBaseUrl = process.env.QWEN_BASE_URL || process.env.DASHSCOPE_BASE_URL;
-    const fallbackApiUrl = `${normalizeBaseUrl(fallbackBaseUrl)}/chat/completions`;
-    const fallbackTimeoutMs = getTimeoutMs(process.env.MAGIC_PEN_FALLBACK_TIMEOUT_MS, FALLBACK_TIMEOUT_MS);
+    if (result.ok) {
+      const previousAttempts = providerAttempts.map((item) => ({
+        provider: item.provider,
+        reason: item.reason,
+        status: item.status,
+        elapsedMs: item.elapsedMs,
+      }));
+      logMagicPen(traceId, 'provider.success', {
+        provider: result.provider,
+        status: result.status,
+        elapsedMs: result.elapsedMs,
+        parseStrategy: result.parsed.strategy,
+        rawLength: result.raw.length,
+        segmentCount: result.parsed.data.segments.length,
+        unparsedCount: result.parsed.data.unparsed.length,
+        previousAttempts,
+      });
 
-    if (fallbackApiKey) {
-      const fallbackResult = await callProvider(
-        'qwen',
-        fallbackApiUrl,
-        fallbackApiKey,
-        fallbackModel,
-        prompt,
-        rawText,
-        fallbackTimeoutMs,
-      );
-
-      if (fallbackResult.ok) {
-        const previousAttempts = providerAttempts.map((item) => ({
-          provider: item.provider,
-          reason: item.reason,
-          status: item.status,
-          elapsedMs: item.elapsedMs,
-        }));
-        logMagicPen(traceId, 'provider.success', {
-          provider: fallbackResult.provider,
-          status: fallbackResult.status,
-          elapsedMs: fallbackResult.elapsedMs,
-          parseStrategy: fallbackResult.parsed.strategy,
-          rawLength: fallbackResult.raw.length,
-          segmentCount: fallbackResult.parsed.data.segments.length,
-          unparsedCount: fallbackResult.parsed.data.unparsed.length,
-          previousAttempts,
-        });
-
-        res.status(200).json({
-          success: true,
-          data: fallbackResult.parsed.data,
-          raw: fallbackResult.raw,
-          traceId,
-          parseStrategy: fallbackResult.parsed.strategy,
-          providerUsed: fallbackResult.provider,
-          attempts: previousAttempts,
-        });
-        return;
-      }
-
-      if (isProviderFailure(fallbackResult)) {
-        providerAttempts.push(fallbackResult);
-        logMagicPen(traceId, 'provider.failure', {
-          provider: fallbackResult.provider,
-          reason: fallbackResult.reason,
-          status: fallbackResult.status,
-          elapsedMs: fallbackResult.elapsedMs,
-          details: fallbackResult.details,
-        });
-      }
+      res.status(200).json({
+        success: true,
+        data: result.parsed.data,
+        raw: result.raw,
+        traceId,
+        parseStrategy: result.parsed.strategy,
+        providerUsed: result.provider,
+        attempts: previousAttempts,
+      });
+      return;
     }
 
-    if (apiKey) {
-      const primaryTimeoutMs = getTimeoutMs(process.env.MAGIC_PEN_PRIMARY_TIMEOUT_MS, PRIMARY_TIMEOUT_MS);
-      const primaryResult = await callProvider(
-        'zhipu',
-        ZHIPU_API_URL,
-        apiKey,
-        'glm-4.7-flash',
-        prompt,
-        rawText,
-        primaryTimeoutMs,
-      );
-
-      if (primaryResult.ok) {
-        const previousAttempts = providerAttempts.map((item) => ({
-          provider: item.provider,
-          reason: item.reason,
-          status: item.status,
-          elapsedMs: item.elapsedMs,
-        }));
-        logMagicPen(traceId, 'provider.success', {
-          provider: primaryResult.provider,
-          status: primaryResult.status,
-          elapsedMs: primaryResult.elapsedMs,
-          parseStrategy: primaryResult.parsed.strategy,
-          rawLength: primaryResult.raw.length,
-          segmentCount: primaryResult.parsed.data.segments.length,
-          unparsedCount: primaryResult.parsed.data.unparsed.length,
-          fallbackFrom: 'qwen',
-          previousAttempts,
-        });
-
-        res.status(200).json({
-          success: true,
-          data: primaryResult.parsed.data,
-          raw: primaryResult.raw,
-          traceId,
-          parseStrategy: primaryResult.parsed.strategy,
-          providerUsed: primaryResult.provider,
-          fallbackFrom: 'qwen',
-          attempts: previousAttempts,
-        });
-        return;
-      }
-
-      if (isProviderFailure(primaryResult)) {
-        providerAttempts.push(primaryResult);
-        logMagicPen(traceId, 'provider.failure', {
-          provider: primaryResult.provider,
-          reason: primaryResult.reason,
-          status: primaryResult.status,
-          elapsedMs: primaryResult.elapsedMs,
-          details: primaryResult.details,
-        });
-      }
+    if (isProviderFailure(result)) {
+      providerAttempts.push(result);
+      logMagicPen(traceId, 'provider.failure', {
+        provider: result.provider,
+        reason: result.reason,
+        status: result.status,
+        elapsedMs: result.elapsedMs,
+        details: result.details,
+      });
     }
 
     const attempts = providerAttempts.map((item) => ({
