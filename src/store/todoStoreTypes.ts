@@ -78,6 +78,7 @@ export interface TodoState {
   reorderTodosByIds: (orderedIds: string[]) => void;
   generateRecurringTodos: () => void;
   linkMessageToTodo: (messageId: string, todoId: string) => void;
+  getLinkedMessageIdForTodo: (todoId: string) => string | null;
   completeTodoByMessage: (messageId: string) => Todo | null;
   setTodoCompletionMessage: (todoId: string, messageId: string) => void;
   getTodoCompletionMessage: (todoId: string) => string | undefined;

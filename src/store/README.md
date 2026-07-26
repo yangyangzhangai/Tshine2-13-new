@@ -85,6 +85,7 @@
 - `annotation.insert` outbox 重试使用 `upsert(onConflict: id)`，因此同一批注若已在云端存在会被视为同步成功，不再因 `annotations_pkey` 重复主键进入长期失败。
 - `mood.upsert` 重试与登录上云会先核验父 `messages`：本地消息、日期缓存、待补传 `chat.upsert` 或云端消息任一存在时均不会被误删；仅在云端检查完整且本地/云端均无父消息时，才清理确认孤立的 mood map 与 outbox。独立心情的 `messages.is_mood=true` 仍属于合法父消息。
 - `useChatStore` 现为新发消息接入显式 `syncState`：本地新消息先标记 `pending` 并立即展示，首次写库失败时进入 `chat.upsert` outbox；云端回拉/flush 成功后回写为 `synced`，本地仅在 `pending/failed` 时保留“云端不存在”的条目，避免把已被删除的消息误当成离线数据复活。
+- `useChatStore.endActivity()` 现也走同一套 `chat.upsert` durable sync：本地先把活动卡结束并标记为 `pending`，成功写云后改回 `synced`，失败则进入 outbox；同 ID 合并时，若本地 `pending/failed` 卡片的持久化字段已比云端更新（例如本地已结束、云端仍 `is_active=true`），则优先保留本地版本，避免首页刷新把刚结束的活动复活。
 - `useChatStore.sendMessage()/sendMood()` 现保证 `messages` 与 `dateCache` 同步更新（包括“自动结束上一条活动”后的 `duration/isActive` 变化），避免提醒弹窗确认后因缓存口径不一致出现“新活动闪现后消失/上一条未自动结束”的竞态。
 - `useChatStore.sendMessage()` 现会在新活动创建前统一收口所有 ongoing 活动（不再只关闭最后一条 record），并且 `insertActivity()/updateActivity()` 会拦截与 ongoing 活动冲突的手动时间编辑，避免时间线被污染后出现双活动同时计时。
 - `useChatStore.updateActivity()` 现会区分 ongoing 活动的“只改开始时间”和“手动改结束时间”两种编辑：只改开始时间时保持 ongoing；一旦用户显式改了结束时间，则立即写成已结束并同步 `dateCache`/云端 `is_active=false`，避免下一条活动再次改写结束时间。

@@ -732,6 +732,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       aiMode: resolvedAiMode,
       eventType,
       eventSummary,
+      eventData,
       todayActivitiesText,
       recentMoodText,
       todayContextText,

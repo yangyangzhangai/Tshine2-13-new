@@ -700,6 +700,12 @@ export const useTodoStore = create<TodoState>()(
         }));
       },
 
+      getLinkedMessageIdForTodo: (todoId) => {
+        const entry = Object.entries(get().activeMessageMap)
+          .find(([, linkedTodoId]) => linkedTodoId === todoId);
+        return entry?.[0] ?? null;
+      },
+
       // ── Complete a todo when its linked message ends ──
       completeTodoByMessage: (messageId) => {
         const { activeMessageMap, todos } = get();

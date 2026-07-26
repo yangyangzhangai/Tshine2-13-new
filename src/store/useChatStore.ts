@@ -16,13 +16,14 @@ import { mergePersistedChatState, pruneDateCache } from './chatPersistenceHelper
 import { useTodoStore } from './useTodoStore';
 import { useGrowthStore } from './useGrowthStore';
 import { useAuthStore } from './useAuthStore';
-import { isLegacyChatActivityType, type ActivityRecordType } from '../lib/activityType';
+import { isLegacyChatActivityType } from '../lib/activityType';
+import type { ActivityRecordType } from '../lib/activityType';
 import { buildTodoCompletionAnnotationPayload } from '../lib/todoCompletionAnnotation';
 import { classifyRecordActivityType } from '../lib/activityType';
 import { queueBackfillLegacyActivityTypes } from './chatStoreLegacy';
 import { useTimingStore } from './useTimingStore';
-import type { ChatState, Message, MoodDescription, YesterdaySummary } from './useChatStore.types';
-export type { ChatState, Message, MoodDescription, YesterdaySummary } from './useChatStore.types';
+import type { ChatState, Message, MoodDescription, SendMessageOptions, YesterdaySummary } from './useChatStore.types';
+export type { ChatState, Message, MoodDescription, SendMessageOptions, YesterdaySummary } from './useChatStore.types';
 import {
   finalizeCrossDayOngoingMessages,
   reconcileConcurrentOngoingMessages,
@@ -44,20 +45,16 @@ import {
   ensureMessageClassification, keywordMatchBottleId, resolveCurrentLang, resolveLangForText,
   runAutoCloseBottleMatch,
 } from './chatClassificationHelpers';
+import {
+  clearAllPendingManualEndTimers,
+  clearPendingManualEndTimer,
+  filterLegacyChatRows,
+  MANUAL_END_UNDO_MS,
+  runChatNewDayRefresh,
+  setPendingManualEndTimer,
+} from './chatStoreRuntime';
 import { reportTelemetryEvent } from '../services/input/reportTelemetryEvent';
 import { formatUserFacingDiagnostic, logDiagnostic } from '../lib/diagnostics';
-
-const filterLegacyChatRows = <T extends { activity_type?: string | null }>(rows: T[]): T[] => rows.filter((row) => !isLegacyChatActivityType(row.activity_type));
-const MANUAL_END_UNDO_MS = 3_000;
-const pendingManualEndTimers = new Map<string, ReturnType<typeof setTimeout>>();
-
-function clearPendingManualEndTimer(id: string): void {
-  const timerId = pendingManualEndTimers.get(id);
-  if (timerId !== undefined) {
-    globalThis.clearTimeout(timerId);
-    pendingManualEndTimers.delete(id);
-  }
-}
 
 export const useChatStore = create<ChatState>()(
   persist(
@@ -262,21 +259,7 @@ export const useChatStore = create<ChatState>()(
       },
 
       checkAndRefreshForNewDay: () => {
-        const nowMs = Date.now();
-        const state = get();
-        const { messages: finalizedMessages, finalized } = finalizeCrossDayOngoingMessages(state.messages, nowMs);
-        if (finalized.length > 0) {
-          set({ messages: finalizedMessages });
-        }
-
-        const todayStr = getLocalDateString(new Date(nowMs));
-        if (!state.currentDateStr || state.currentDateStr !== todayStr) {
-          // 只在用户当前看的是今天（或尚未初始化）时才 reset 到今天
-          // 避免用户正在看历史日期时被强制跳回今天
-          const userOnHistorical = state.activeViewDateStr != null && state.activeViewDateStr !== state.currentDateStr;
-          if (userOnHistorical) return;
-          void state.fetchMessages();
-        }
+        runChatNewDayRefresh(get as () => ChatState, set as never);
       },
 
       fetchMessagesByDate: async (dateStr: string) => {
@@ -407,13 +390,7 @@ export const useChatStore = create<ChatState>()(
       sendMessage: async (
         content: string,
         customTimestamp?: number,
-        options?: {
-          skipMoodDetection?: boolean;
-          skipAnnotation?: boolean;
-          activityTypeOverride?: ActivityRecordType;
-          annotationEventType?: AnnotationEvent['type'];
-          annotationEventData?: AnnotationEvent['data'];
-        },
+        options?: SendMessageOptions,
       ) => {
         const now = customTimestamp ?? Date.now();
         const todayDateStr = getLocalDateString(new Date(now));
@@ -634,10 +611,10 @@ export const useChatStore = create<ChatState>()(
         clearPendingManualEndTimer(id);
         const expiresAt = Date.now() + MANUAL_END_UNDO_MS;
         const timerId = globalThis.setTimeout(() => {
-          pendingManualEndTimers.delete(id);
+          clearPendingManualEndTimer(id);
           void get().endActivity(id);
         }, MANUAL_END_UNDO_MS);
-        pendingManualEndTimers.set(id, timerId);
+        setPendingManualEndTimer(id, timerId);
 
         set((state) => ({
           pendingManualEnds: {
@@ -663,9 +640,16 @@ export const useChatStore = create<ChatState>()(
         if (!target || target.duration !== undefined) return;
         const duration = resolveAutoActivityDurationMinutes(target.timestamp, Date.now());
         const dateStr = getLocalDateString(new Date(target.timestamp));
+        const endedMessage: Message = {
+          ...target,
+          duration,
+          isActive: false,
+          syncState: 'pending',
+          syncError: null,
+        };
         set(state => {
           const nextMessages = state.messages.map(m =>
-            m.id === id ? { ...m, duration, isActive: false } : m
+            m.id === id ? endedMessage : m
           );
           return {
             messages: nextMessages,
@@ -679,10 +663,43 @@ export const useChatStore = create<ChatState>()(
           };
         });
 
-        void getSupabaseSession().then((session) => {
-          if (session) {
-            void supabase.from('messages').update({ duration, is_active: false }).eq('id', id).eq('user_id', session.user.id);
+        void (async () => {
+          const session = await getSupabaseSession();
+          if (!session) {
+            useOutboxStore.getState().enqueue({
+              kind: 'chat.upsert',
+              payload: { message: endedMessage },
+              consecutiveFailures: 0,
+            });
+            return;
           }
+          await persistMessageToSupabase(endedMessage, session.user.id);
+          set((currentState) => applyChatMessageSyncState(
+            currentState as ChatState,
+            id,
+            'synced',
+            null,
+          ));
+        })().catch((error) => {
+          const userFacingError = formatUserFacingDiagnostic('结束活动并同步到 Supabase', error, {
+            path: 'messages.upsert:end_activity',
+          });
+          useOutboxStore.getState().enqueue({
+            kind: 'chat.upsert',
+            payload: { message: endedMessage },
+            consecutiveFailures: 0,
+          });
+          set((currentState) => applyChatMessageSyncState(
+            currentState as ChatState,
+            id,
+            'pending',
+            userFacingError,
+          ));
+          logDiagnostic('error', 'chat.end_activity.cloud_sync_failed_queued', {
+            messageId: id,
+            error,
+            userFacing: userFacingError,
+          });
         });
 
         const moodStore = useMoodStore.getState();
@@ -943,7 +960,7 @@ export const useChatStore = create<ChatState>()(
       setHasInitialized: (value) => set({ hasInitialized: value }),
       clearHistory: async () => {
         clearMessageClassificationTasks();
-        Array.from(pendingManualEndTimers.keys()).forEach(clearPendingManualEndTimer);
+        clearAllPendingManualEndTimers();
         set({ messages: [], pendingManualEnds: {}, lastActivityTime: null });
       },
       attachStardustToMessage: (messageId, stardustId, stardustEmoji) => {

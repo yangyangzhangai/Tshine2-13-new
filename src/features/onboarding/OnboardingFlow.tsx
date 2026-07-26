@@ -9,6 +9,11 @@ import { motion } from 'framer-motion';
 import { callActivateTrialAPI } from '../../api/client';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useResendCodeCooldown } from '../auth/useResendCodeCooldown';
+import {
+  getAuthErrorMessage,
+  isDuplicateEmailError,
+  isObfuscatedDuplicateSignUp,
+} from '../auth/authSignupHelpers';
 import { useTodoStore } from '../../store/useTodoStore';
 import { useGrowthStore } from '../../store/useGrowthStore';
 import { saveLocalOnboardingCompleted } from '../../store/authProfileHelpers';
@@ -82,17 +87,6 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
 
   const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
-  const getErrorMessage = (msg: string) => {
-    if (msg.includes('email rate limit exceeded')) return t('auth_error_rate_limit');
-    if (msg.includes('Invalid login credentials')) return t('auth_error_invalid_credentials');
-    if (msg.includes('User already registered')) return t('auth_error_user_exists');
-    if (msg.includes('Password should be at least')) return t('auth_error_password_short');
-    if (msg.includes('invalid_grant')) return t('auth_error_invalid_grant');
-    if (msg.includes('Token has expired') || msg.includes('token is expired')) return t('auth_error_invalid_grant');
-    if (msg.includes('Invalid token') || msg.includes('invalid token')) return t('auth_error_invalid_grant');
-    return t('auth_error_generic') + msg;
-  };
-
   const resetSignUpCodeState = () => {
     setVerificationCode('');
     setPendingSignUpEmail(null);
@@ -108,7 +102,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
       if (resendError) throw resendError;
       resendCooldown.start();
     } catch (err: any) {
-      setError(getErrorMessage(err.message || t('auth_error_generic')));
+      setError(getAuthErrorMessage(t, err.message || t('auth_error_generic')));
     } finally {
       setResendLoading(false);
     }
@@ -133,14 +127,21 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
           resetSignUpCodeState();
           onNext();
         } else {
-          const { error: err } = await signUp(emailToUse, password, nickname || undefined);
+          const { data: signUpData, error: err } = await signUp(emailToUse, password, nickname || undefined);
+          if (isDuplicateEmailError(err) || isObfuscatedDuplicateSignUp({
+            email: emailToUse,
+            data: signUpData,
+            error: err,
+          })) {
+            throw new Error(t('auth_error_user_exists'));
+          }
           if (err) throw err;
           setPendingSignUpEmail(emailToUse);
           resendCooldown.start();
         }
       }
     } catch (err: any) {
-      setError(getErrorMessage(err.message || t('auth_error_generic')));
+      setError(getAuthErrorMessage(t, err.message || t('auth_error_generic')));
     } finally {
       setLoading(false);
     }
@@ -151,7 +152,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
     setError(null);
     const { error: err } = await signInWithApple();
     if (err) {
-      setError(getErrorMessage(err.message || t('auth_error_generic')));
+      setError(getAuthErrorMessage(t, err.message || t('auth_error_generic')));
       setAppleLoading(false);
     } else {
       onNext();
@@ -163,7 +164,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
     setError(null);
     const { error: err } = await signInWithGoogle();
     if (err) {
-      setError(getErrorMessage(err.message || t('auth_error_generic')));
+      setError(getAuthErrorMessage(t, err.message || t('auth_error_generic')));
       setGoogleLoading(false);
     }
   };

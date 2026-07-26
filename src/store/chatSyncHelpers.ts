@@ -15,7 +15,7 @@ function shouldKeepLocalOnlyMessage(message: Message): boolean {
   return message.syncState === 'pending' || message.syncState === 'failed';
 }
 
-function messagesEqual(left: Message, right: Message): boolean {
+function messagesMatchPersistedFields(left: Message, right: Message): boolean {
   return left.content === right.content
     && left.timestamp === right.timestamp
     && left.type === right.type
@@ -29,9 +29,13 @@ function messagesEqual(left: Message, right: Message): boolean {
     && left.imageUrl2 === right.imageUrl2
     && left.isActive === right.isActive
     && left.detached === right.detached
-    && left.syncState === right.syncState
-    && (left.syncError ?? null) === (right.syncError ?? null)
     && JSON.stringify(left.moodDescriptions ?? null) === JSON.stringify(right.moodDescriptions ?? null);
+}
+
+function messagesEqual(left: Message, right: Message): boolean {
+  return messagesMatchPersistedFields(left, right)
+    && left.syncState === right.syncState
+    && (left.syncError ?? null) === (right.syncError ?? null);
 }
 
 export function mergeCloudMessagesWithLocal(cloudMessages: Message[], localMessages: Message[]): {
@@ -50,6 +54,13 @@ export function mergeCloudMessagesWithLocal(cloudMessages: Message[], localMessa
       } else {
         changed = true;
       }
+      continue;
+    }
+
+    if (shouldKeepLocalOnlyMessage(local) && !messagesMatchPersistedFields(local, cloud)) {
+      merged.push(local);
+      changed = true;
+      cloudById.delete(local.id);
       continue;
     }
 

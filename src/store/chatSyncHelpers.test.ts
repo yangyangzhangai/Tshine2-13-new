@@ -31,4 +31,29 @@ describe('chatSyncHelpers', () => {
     expect(result.mergedMessages.map((message) => message.id)).toEqual(['failed']);
     expect(result.changed).toBe(true);
   });
+
+  it('keeps a locally ended pending activity when cloud still reports it active', () => {
+    const local = [buildMessage({
+      id: 'activity-1',
+      content: '写方案',
+      timestamp: 1,
+      type: 'text',
+      duration: 12,
+      isActive: false,
+      syncState: 'pending',
+    })];
+    const cloud = [buildMessage({
+      id: 'activity-1',
+      content: '写方案',
+      timestamp: 1,
+      type: 'text',
+      duration: undefined,
+      isActive: true,
+    })];
+
+    const result = mergeCloudMessagesWithLocal(cloud, local);
+
+    expect(result.mergedMessages).toEqual(local);
+    expect(result.changed).toBe(true);
+  });
 });

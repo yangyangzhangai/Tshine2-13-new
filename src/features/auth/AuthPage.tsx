@@ -8,6 +8,11 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { PrivacyPolicyPanel } from '../profile/components/PrivacyPolicyPanel';
 import { TermsPanel } from '../profile/components/TermsPanel';
 import { useResendCodeCooldown } from './useResendCodeCooldown';
+import {
+  getAuthErrorMessage,
+  isDuplicateEmailError,
+  isObfuscatedDuplicateSignUp,
+} from './authSignupHelpers';
 
 export const AuthPage: React.FC = () => {
   const authMascotSrc = '/assets/auth-login-mascot.png';
@@ -34,18 +39,6 @@ export const AuthPage: React.FC = () => {
 
   const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
-  const getErrorMessage = (msg: string) => {
-    if (msg.includes('错误类型：') || msg.includes('requestId：') || msg.startsWith('Supabase Auth')) return msg;
-    if (msg.includes('email rate limit exceeded')) return t('auth_error_rate_limit');
-    if (msg.includes('Invalid login credentials')) return t('auth_error_invalid_credentials');
-    if (msg.includes('User already registered')) return t('auth_error_user_exists');
-    if (msg.includes('Password should be at least')) return t('auth_error_password_short');
-    if (msg.includes('invalid_grant')) return t('auth_error_invalid_grant');
-    if (msg.includes('Token has expired') || msg.includes('token is expired')) return t('auth_error_invalid_grant');
-    if (msg.includes('Invalid token') || msg.includes('invalid token')) return t('auth_error_invalid_grant');
-    return t('auth_error_generic') + msg;
-  };
-
   const resetSignUpCodeState = () => {
     setVerificationCode('');
     setPendingSignUpEmail(null);
@@ -61,7 +54,7 @@ export const AuthPage: React.FC = () => {
       if (error) throw error;
       resendCooldown.start();
     } catch (err: any) {
-      setError(getErrorMessage(err.message || t('auth_error_generic')));
+      setError(getAuthErrorMessage(t, err.message || t('auth_error_generic')));
     } finally {
       setResendLoading(false);
     }
@@ -88,14 +81,21 @@ export const AuthPage: React.FC = () => {
           resetSignUpCodeState();
           navigate('/chat', { replace: true });
         } else {
-          const { error: signUpError } = await signUp(emailToUse, password, nickname || undefined);
+          const { data: signUpData, error: signUpError } = await signUp(emailToUse, password, nickname || undefined);
+          if (isDuplicateEmailError(signUpError) || isObfuscatedDuplicateSignUp({
+            email: emailToUse,
+            data: signUpData,
+            error: signUpError,
+          })) {
+            throw new Error(t('auth_error_user_exists'));
+          }
           if (signUpError) throw signUpError;
           setPendingSignUpEmail(emailToUse);
           resendCooldown.start();
         }
       }
     } catch (err: any) {
-      setError(getErrorMessage(err.message || t('auth_error_generic')));
+      setError(getAuthErrorMessage(t, err.message || t('auth_error_generic')));
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ export const AuthPage: React.FC = () => {
     setError(null);
     const { error: signInError } = await signInWithApple();
     if (signInError) {
-      setError(getErrorMessage(signInError.message || t('auth_error_generic')));
+      setError(getAuthErrorMessage(t, signInError.message || t('auth_error_generic')));
       setAppleLoading(false);
       return;
     }
@@ -118,7 +118,7 @@ export const AuthPage: React.FC = () => {
     setError(null);
     const { error: signInError } = await signInWithGoogle();
     if (signInError) {
-      setError(getErrorMessage(signInError.message || t('auth_error_generic')));
+      setError(getAuthErrorMessage(t, signInError.message || t('auth_error_generic')));
       setGoogleLoading(false);
     }
   };

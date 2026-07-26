@@ -16,6 +16,7 @@ vi.mock('./useAnnotationStore', () => ({
 import { useMoodStore } from './useMoodStore';
 import { useChatStore } from './useChatStore';
 import { useOutboxStore } from './useOutboxStore';
+import { useTodoStore } from './useTodoStore';
 import type { Message } from './useChatStore.types';
 import { getLiveInputTelemetrySnapshot, resetLiveInputTelemetry } from '../services/input/liveInputTelemetry';
 import { getLocalDateString } from './chatHelpers';
@@ -52,11 +53,30 @@ function resetChatStore(messages: Message[] = []) {
   });
 }
 
+function resetTodoStore() {
+  useTodoStore.setState({
+    todos: [],
+    activeMessageMap: {},
+    todoCompletionMessageMap: {},
+    todoBottleStarRewardMap: {},
+    messageBottleStarRewardMap: {},
+    pendingDeletedTodoIds: {},
+    suppressedTemplateDateMap: {},
+    activeTodoId: null,
+    isLoading: false,
+    hasHydrated: false,
+    lastFetchedAt: null,
+    lastSyncError: null,
+    lastGeneratedDate: '',
+  });
+}
+
 describe('useChatStore integration: auto recognition and correction flow', () => {
   beforeEach(() => {
     vi.useRealTimers();
     resetMoodStore();
     resetChatStore();
+    resetTodoStore();
     useOutboxStore.setState({ entries: [] });
     resetLiveInputTelemetry();
   });
@@ -451,6 +471,58 @@ describe('useChatStore integration: auto recognition and correction flow', () =>
     expect(message.syncState).toBe('pending');
     expect(useOutboxStore.getState().entries).toHaveLength(1);
     expect(useOutboxStore.getState().entries[0].kind).toBe('chat.upsert');
+  });
+
+  it('ends a started todo\'s linked activity and clears the todo-message link', async () => {
+    const startedAt = 1_700_000_000_000;
+    const endedAt = startedAt + 12 * 60 * 1000;
+    const dateKey = getLocalDateString(new Date(startedAt));
+    const activity: Message = {
+      id: 'linked-activity',
+      content: '写方案',
+      timestamp: startedAt,
+      type: 'text',
+      mode: 'record',
+      activityType: 'work',
+      isActive: true,
+      duration: undefined,
+      syncState: 'synced',
+      syncError: null,
+    };
+    resetChatStore([activity]);
+    useChatStore.setState({ dateCache: { [dateKey]: [activity] }, activeViewDateStr: dateKey });
+    useTodoStore.setState({
+      todos: [{
+        id: 'todo-1',
+        title: '写方案',
+        completed: false,
+        createdAt: startedAt,
+        priority: 'medium',
+        recurrence: 'once',
+        isTemplate: false,
+        sortOrder: startedAt,
+        startedAt,
+      }],
+      activeMessageMap: { 'linked-activity': 'todo-1' },
+    });
+
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(endedAt);
+
+    await useChatStore.getState().endActivity('linked-activity', { todoId: 'todo-1' });
+    nowSpy.mockRestore();
+
+    const chatState = useChatStore.getState();
+    const ended = chatState.messages[0];
+    expect(ended.isActive).toBe(false);
+    expect(ended.duration).toBe(12);
+    expect(ended.syncState).toBe('pending');
+    expect(chatState.dateCache[dateKey][0].isActive).toBe(false);
+
+    const todoState = useTodoStore.getState();
+    expect(todoState.todos[0].completed).toBe(true);
+    expect(todoState.getLinkedMessageIdForTodo('todo-1')).toBeNull();
+    expect(todoState.activeMessageMap['linked-activity']).toBeUndefined();
+    expect(useOutboxStore.getState().entries.some((entry) => entry.kind === 'chat.upsert')).toBe(true);
   });
 
   it('updates the second activity image without touching the first and keeps dateCache in sync', async () => {

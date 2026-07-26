@@ -7,6 +7,7 @@ import {
   getSystemPrompt,
 } from './annotation-prompts.js';
 import type {
+  AnnotationEvent,
   AnnotationCurrentDate,
   AnnotationHolidayContext,
   PendingTodoSummary,
@@ -38,6 +39,7 @@ interface BasePromptInput {
   weatherAlerts?: WeatherAlert[];
   associationInstruction?: string;
   narrativeEventInstruction?: string;
+  eventData?: AnnotationEvent['data'];
 }
 
 interface SuggestionPromptInput extends BasePromptInput {
@@ -98,6 +100,7 @@ function buildPromptInput(payload: BuildAnnotationPromptInput): string {
     payload.lang,
     payload.eventType,
     payload.eventSummary,
+    payload.eventData,
     payload.todayActivitiesText,
     payload.recentMoodText,
     payload.todayContextText,

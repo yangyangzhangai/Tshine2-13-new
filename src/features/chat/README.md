@@ -105,6 +105,7 @@
 - Legacy `activity_type='chat'` rows are filtered at runtime fetch boundaries and are no longer exposed as a first-class UI path.
 - `src/store/chatActions.ts`: Auto-recognition pipeline (`classify -> dispatch -> post-effects`) and reclassify timeline-repair helpers (`buildRecentReclassifyResult`, `applyReclassifyMoodSideEffects`, `persistReclassifiedMessages`).
 - `src/store/chatTimelineActions.ts` (new — 2026-03-21): Timeline write actions extracted via `createChatTimelineActions(set, get)` factory: `insertActivity`, `updateActivity`, `deleteActivity`, `updateMessageDuration`, `updateMessageImage`, `detachMoodFromEvent`, `reattachMoodToEvent`, `convertMoodToEvent`, `detachMoodMessage`.
+- `src/store/chatStoreRuntime.ts`: Small runtime-only helpers for day-rollover refresh, legacy-row filtering, and manual-end timer bookkeeping so `useChatStore` stays under the hard max-lines gate.
 - `src/store/useChatStore.ts`: State entry + persist config + orchestration layer. Uses `...createChatTimelineActions(set, get)` to compose timeline actions. Does not contain business logic directly.
 - `src/store/chatHelpers.ts`: Date helpers and DB row mappers (`getLocalDateString`, `mapDbRowToMessage`).
 

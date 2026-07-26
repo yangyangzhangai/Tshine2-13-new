@@ -55,6 +55,7 @@ GrowthPage
 - **Todo card density**: collapsed cards keep a compact row while retaining the standard title and icon visuals. Completion/start/focus controls use 44px transparent touch targets without enlarging their visible artwork; the right action cluster is a no-expand guard zone, while the title and remaining card surface still toggle details. The ambient shadow stays tight to all sides with a light gray-green tint, and expanded cards switch immediately to a fixed 22px radius so their visible corner curvature matches the compact card without a radius animation.
 - **Todo card spacing**: adjacent todo cards use a fixed `10px` vertical gap.
 - **Completion feedback**: completing a todo updates its checked state immediately but holds the current card order for `700ms` before completed-item sorting moves it, so the completion action remains visible.
+- **Started-todo completion**: if a todo was previously started from Growth and already owns an active Chat timeline card, completing it from the todo list ends that original linked activity instead of generating a second completion-only card.
 - **Focus timer**: circular SVG drag picker for duration; auto-completes countdown; awards star + creates activity card
 - **Daily goal**: synced to Supabase user_metadata (`daily_goal`, `daily_goal_date`); popup evaluation is tracked in the persisted Growth store per user/day to avoid iOS foreground/session-storage re-prompts
 

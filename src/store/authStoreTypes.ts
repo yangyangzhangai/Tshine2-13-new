@@ -46,7 +46,7 @@ export interface AuthState {
   signIn: (email: string, pass: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signInWithApple: () => Promise<{ error: any }>;
-  signUp: (email: string, pass: string, nickname?: string, avatarDataUrl?: string) => Promise<{ error: any }>;
+  signUp: (email: string, pass: string, nickname?: string, avatarDataUrl?: string) => Promise<{ data?: any; error: any }>;
   verifySignUpCode: (email: string, code: string) => Promise<{ error: any }>;
   resendSignUpCode: (email: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;

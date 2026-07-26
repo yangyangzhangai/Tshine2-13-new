@@ -52,6 +52,7 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
     reorderTodosByIds,
     generateRecurringTodos,
     linkMessageToTodo,
+    getLinkedMessageIdForTodo,
     setTodoCompletionMessage,
     getTodoCompletionMessage,
     clearTodoCompletionMessage,
@@ -150,6 +151,12 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
 
     if (todo && !wasCompleted) {
       const now = Date.now();
+      const linkedActiveMessageId = getLinkedMessageIdForTodo(todo.id);
+      if (linkedActiveMessageId) {
+        clearTodoCompletionMessage(todo.id);
+        await endActivity(linkedActiveMessageId, { todoId: todo.id });
+        return;
+      }
       const linkedBottle = todo.bottleId ? bottles.find((b) => b.id === todo.bottleId) : null;
       const payload = buildTodoCompletionAnnotationPayload({
         todo,

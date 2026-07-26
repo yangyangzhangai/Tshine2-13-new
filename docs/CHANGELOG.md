@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-07-26 - Duplicate email signup now shows the existing-account error
+
+- Fixed email-code signup so attempting to register an already registered email no longer falls through into the verification-code state with no actual code delivered.
+- `src/store/authStoreAccountActions.ts` now preserves Supabase signup `data`, and the shared auth signup helper detects both explicit `User already registered` errors and Supabase's duplicate-email obfuscation payload shape (`session=null`, matching email, empty `identities`).
+- `src/features/auth/AuthPage.tsx` and `src/features/onboarding/OnboardingFlow.tsx` now stop the flow early and show the existing localized `auth_error_user_exists` message for duplicate emails instead of pretending signup code delivery succeeded.
+- Added focused regression coverage in `src/features/auth/authSignupHelpers.test.ts` for duplicate-email error mapping and obfuscated duplicate signup detection.
+
+## 2026-07-26 - Todo completion annotations now bias positive encouragement
+
+- Kept the existing `activity_completed` trigger path, but now pass raw annotation `eventData` through the normal prompt builder so plain annotation prompts can tell when the event is specifically a todo completion.
+- When `todoCompletionContext.isTodoCompletion === true`, the normal annotation prompt now injects one extra short localized instruction (ZH/EN/IT) telling the companion to answer around the just-finished todo itself and lean more positive/encouraging.
+- No annotation event types, trigger timing, or frontend completion flows changed.
+
+## 2026-07-26 - Stardust memory cards always expose expand
+
+- Fixed the Stardust memory viewer so saved annotation cards no longer hide the rest of a clamped note without offering a way to expand it on narrow mobile layouts.
+- `src/components/feedback/StardustCard.tsx` still defaults message text to `line-clamp-4`, but the expand/collapse control is now always rendered instead of being incorrectly gated by `message.length > 200`.
+
+## 2026-07-26 - Chat store max-lines split
+
+- Split runtime-only helpers out of `src/store/useChatStore.ts` into new `src/store/chatStoreRuntime.ts` to satisfy the hard pre-commit max-lines gate again.
+- Moved legacy-row filtering, manual-end timer bookkeeping, and day-rollover refresh orchestration without changing chat state shape, persistence, or user-visible behavior.
+
+## 2026-07-26 - Growth todo completion now closes the original timeline card
+
+- Fixed the Growth todo alarm/timer completion path so checking off a started todo now ends its originally linked Chat activity card instead of creating and closing a second synthetic completion record while the first card stays ongoing.
+- `useChatStore.endActivity()` now writes the fully ended message through the existing `chat.upsert` sync path, marks the local card `pending` until cloud persistence settles, and falls back to the outbox on end-sync failure instead of silently leaving a stale cloud row behind.
+- Chat cloud/local merge now keeps a locally ended pending activity over an older cloud copy that still says `is_active=true`, preventing date refreshes or home-page navigation from reviving a just-ended card.
+- Added focused regression coverage in `src/store/useChatStore.integration.test.ts` and `src/store/chatSyncHelpers.test.ts`.
+
 ## 2026-07-24 - Plant snapshot backfill no longer crashes serverless runtime
 
 - Fixed `/api/plant-generate` `snapshot_existing` crashing on Vercel with `ERR_MODULE_NOT_FOUND` when the Report page auto-backfilled a missing root snapshot.

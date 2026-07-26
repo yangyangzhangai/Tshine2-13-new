@@ -184,14 +184,12 @@ export const StardustCard: React.FC<StardustCardProps> = ({
                   <p className={`text-sm text-gray-800 leading-relaxed ${isExpanded ? '' : 'line-clamp-4'}`}>
                     {data.message}
                   </p>
-                  {data.message.length > 200 && (
-                    <button
-                      className="text-xs text-purple-600 hover:text-purple-700 mt-1"
-                      onClick={() => setIsExpanded((prev) => !prev)}
-                    >
-                      {isExpanded ? t('report_section_collapse') : t('expand')}
-                    </button>
-                  )}
+                  <button
+                    className="mt-1 text-xs text-purple-600 hover:text-purple-700"
+                    onClick={() => setIsExpanded((prev) => !prev)}
+                  >
+                    {isExpanded ? t('report_section_collapse') : t('expand')}
+                  </button>
                 </div>
               </div>
             )}

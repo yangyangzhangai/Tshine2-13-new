@@ -177,7 +177,7 @@ export function createAuthAccountActions(set: AuthSet, get: AuthGet): Pick<AuthS
     },
 
     signUp: async (email, password, nickname, avatarDataUrl) => {
-      const { error } = await runAuthAction('signUp', () => supabase.auth.signUp({
+      const { data, error } = await runAuthAction('signUp', () => supabase.auth.signUp({
         email,
         password,
         options: {
@@ -187,7 +187,7 @@ export function createAuthAccountActions(set: AuthSet, get: AuthGet): Pick<AuthS
           },
         },
       }));
-      return { error };
+      return { data, error };
     },
 
     verifySignUpCode: async (email, code) => {

@@ -1,9 +1,19 @@
 # CURRENT TASK (Session Resume Anchor)
 
-Last Updated: 2026-07-24
+Last Updated: 2026-07-26
 Owner: current working session
 
 Session Notes:
+
+- 2026-07-26: Fixed email-signup duplicate-account feedback across both `AuthPage` and onboarding `StepAuth`. The signup action now preserves Supabase `data` so the UI can detect the provider's duplicate-email obfuscation response (existing confirmed user comes back as a no-error signup payload with empty `identities`), duplicate signup attempts now show the existing localized `auth_error_user_exists` message instead of entering the OTP state, and shared auth-signup helper tests lock both the obfuscated-response detector and duplicate-message mapping order.
+
+- 2026-07-26: Tightened todo-completion annotation prompting without changing trigger timing or event types. The normal `/annotation` prompt path now receives raw `eventData`, and when `todoCompletionContext.isTodoCompletion === true` it injects one extra localized instruction (ZH/EN/IT) telling the companion to answer around the just-finished todo with more positive, encouraging feedback.
+
+- 2026-07-26: Fixed Stardust memory-card expand affordance mismatch. `src/components/feedback/StardustCard.tsx` no longer gates the expand/collapse control on `message.length > 200`; the card still defaults to `line-clamp-4`, but now always shows the manual expand toggle so narrow mobile layouts or long wrapped words do not hide the rest of a stored annotation with no way to open it.
+
+- 2026-07-26: Split `useChatStore` runtime-only helpers into new `src/store/chatStoreRuntime.ts`, moving legacy-row filtering, manual-end timer bookkeeping, and day-rollover refresh orchestration out of `src/store/useChatStore.ts` so the chat store is back under the hard max-lines pre-commit limit without changing chat behavior or contracts.
+
+- 2026-07-26: Fixed Growth todo timer completion desync across Growth -> Chat. Completing a started todo from the Growth list now ends the original linked timeline activity instead of creating and ending a second synthetic completion card, `useChatStore.endActivity()` now persists the full ended message through the existing `chat.upsert` durability path with pending/synced state updates, and chat cloud/local merge now preserves a locally ended pending card over a stale cloud `is_active=true` row until sync catches up. Regression coverage was added in `src/store/useChatStore.integration.test.ts` and `src/store/chatSyncHelpers.test.ts`.
 
 - 2026-07-24: Fixed the Report root snapshot backfill serverless crash on `/api/plant-generate`. `src/lib/plantRootSnapshot.ts` now uses explicit ESM `.js` import specifiers for its `rootRenderer` and plant-type dependencies, matching the serverless runtime path resolution used by `api/plant-generate.ts` / `src/server/plant-shared.ts` and preventing `ERR_MODULE_NOT_FOUND` when `snapshot_existing` auto-runs on report open.
 

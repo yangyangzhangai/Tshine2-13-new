@@ -1,5 +1,6 @@
 // DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> api/README.md
 import type {
+  AnnotationEvent,
   AnnotationCurrentDate,
   AnnotationHolidayContext,
   RecoveryNudgeContext,
@@ -561,6 +562,7 @@ export function buildUserPrompt(
   lang: string,
   eventType: string,
   eventSummary: string,
+  eventData: AnnotationEvent['data'] | undefined,
   todayActivitiesText: string,
   recentMoodText: string,
   todayContextText?: string,
@@ -582,6 +584,14 @@ export function buildUserPrompt(
     const ampm = currentHour < 12 ? 'AM' : 'PM';
     return `${hour12}:${minuteStr} ${ampm}`;
   })() : null;
+  const isTodoCompletion = eventData?.todoCompletionContext?.isTodoCompletion === true;
+  const todoCompletionHint = isTodoCompletion
+    ? (lang === 'en'
+      ? 'The user has just completed a todo. Please respond in your own voice around this specific thing, with more positive and encouraging feedback.'
+      : lang === 'it'
+        ? 'L\'utente ha appena completato un todo. Rispondi con la tua voce intorno a questa cosa specifica, con un feedback piu positivo e incoraggiante.'
+        : '用户刚刚完成了一件待办，请围绕这件具体的事情用你的口吻来回应，多给出积极、鼓励式的反馈。')
+    : null;
 
   if (lang === 'en') {
     return [
@@ -597,6 +607,7 @@ export function buildUserPrompt(
       associationInstruction || null,
       narrativeEventInstruction || null,
       `Just happened: [${eventType}] ${eventSummary}`,
+      todoCompletionHint,
       'Please write one annotation about the activity or mood that just happened, in your current voice.',
       'Use exactly one emoji at the end.',
     ]
@@ -618,6 +629,7 @@ export function buildUserPrompt(
       associationInstruction || null,
       narrativeEventInstruction || null,
       `Appena successo: [${eventType}] ${eventSummary}`,
+      todoCompletionHint,
       "Per favore, scrivi una sola annotazione sull'attivita o l'umore appena accaduto, con la tua voce attuale.",
       'Usa esattamente una emoji alla fine.',
     ]
@@ -638,6 +650,7 @@ export function buildUserPrompt(
     associationInstruction || null,
     narrativeEventInstruction || null,
     `刚刚发生：[${eventType}] ${eventSummary}`,
+    todoCompletionHint,
     '请针对刚刚的活动或心情，用你当前的人设语气写一句批注。',
     '句末必须只有一个 emoji。',
   ]
