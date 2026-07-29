@@ -18,6 +18,8 @@
 ## Onboarding Gate
 
 - Onboarding route: `/onboarding`
+- Local development can preview the real trial-intro step at `/onboarding?preview=trial`; preview mode skips account-state writes and trial activation and is unavailable in production builds
+- Welcome trial-intro feature rows use seven locally cropped transparent illustrations from `src/assets/onboarding/trial-features/`, mapped in feature order and rendered in a fixed `48px` contain box
 - Trigger rule (in `src/App.tsx`): user is signed in and `useAuthStore.accountState.onboardingStatus` is `required` or `in_progress`
 - Signed-out users always enter `/auth`; onboarding is reserved for newly registered users that still need first-time setup
 - Session/profile refreshes preserve the in-memory profile only when the authenticated user ID is unchanged; switching accounts never inherits the previous account's onboarding profile

@@ -28,6 +28,13 @@ import profileVanAvatar from '../../assets/profile-ai-companions/van.png';
 import profileAgnesAvatar from '../../assets/profile-ai-companions/agnes.png';
 import profileZepAvatar from '../../assets/profile-ai-companions/zep.png';
 import profileMomoAvatar from '../../assets/profile-ai-companions/momo.png';
+import dailyJournalIllustration from '../../assets/onboarding/trial-features/daily-journal.png';
+import magicPenIllustration from '../../assets/onboarding/trial-features/magic-pen.png';
+import taskBreakdownIllustration from '../../assets/onboarding/trial-features/task-breakdown.png';
+import moodRecognitionIllustration from '../../assets/onboarding/trial-features/mood-recognition.png';
+import goalTrackingIllustration from '../../assets/onboarding/trial-features/goal-tracking.png';
+import personalMemoryIllustration from '../../assets/onboarding/trial-features/personal-memory.png';
+import greenhouseCompanionsIllustration from '../../assets/onboarding/trial-features/greenhouse-companions.png';
 import { StepTodo, type OnboardingTodoDraft } from './components/StepTodo';
 import { StepBottle, type OnboardingBottleDraft } from './components/StepBottle';
 import { PrivacyPolicyPanel } from '../profile/components/PrivacyPolicyPanel';
@@ -390,21 +397,21 @@ function AuthButton({ icon, text, className = '', onClick, disabled = false }: {
 
 // ── StepTrialIntro ────────────────────────────────────────────
 const TRIAL_FEATURES = [
-  { emoji: '🌸', titleKey: 'onboarding_trial_feat1_title', descKey: 'onboarding_trial_feat1_desc' },
-  { emoji: '🪄', titleKey: 'onboarding_trial_feat2_title', descKey: 'onboarding_trial_feat2_desc' },
-  { emoji: '✅', titleKey: 'onboarding_trial_feat3_title', descKey: 'onboarding_trial_feat3_desc' },
-  { emoji: '🌊', titleKey: 'onboarding_trial_feat4_title', descKey: 'onboarding_trial_feat4_desc' },
-  { emoji: '🎯', titleKey: 'onboarding_trial_feat5_title', descKey: 'onboarding_trial_feat5_desc' },
-  { emoji: '✨', titleKey: 'onboarding_trial_feat6_title', descKey: 'onboarding_trial_feat6_desc' },
-  { emoji: '🌿', titleKey: 'onboarding_trial_feat7_title', descKey: 'onboarding_trial_feat7_desc' },
+  { imageSrc: dailyJournalIllustration, titleKey: 'onboarding_trial_feat1_title', descKey: 'onboarding_trial_feat1_desc' },
+  { imageSrc: magicPenIllustration, titleKey: 'onboarding_trial_feat2_title', descKey: 'onboarding_trial_feat2_desc' },
+  { imageSrc: taskBreakdownIllustration, titleKey: 'onboarding_trial_feat3_title', descKey: 'onboarding_trial_feat3_desc' },
+  { imageSrc: moodRecognitionIllustration, titleKey: 'onboarding_trial_feat4_title', descKey: 'onboarding_trial_feat4_desc' },
+  { imageSrc: goalTrackingIllustration, titleKey: 'onboarding_trial_feat5_title', descKey: 'onboarding_trial_feat5_desc' },
+  { imageSrc: personalMemoryIllustration, titleKey: 'onboarding_trial_feat6_title', descKey: 'onboarding_trial_feat6_desc' },
+  { imageSrc: greenhouseCompanionsIllustration, titleKey: 'onboarding_trial_feat7_title', descKey: 'onboarding_trial_feat7_desc' },
 ] as const;
 
-const StepTrialIntro: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+const StepTrialIntro: React.FC<{ onNext: () => void; preview?: boolean }> = ({ onNext, preview }) => {
   const { t } = useTranslation();
   const [activating, setActivating] = React.useState(false);
 
   const handleStartExperience = async () => {
-    if (activating) return;
+    if (activating || preview) return;
     setActivating(true);
     try {
       await callActivateTrialAPI();
@@ -425,8 +432,17 @@ const StepTrialIntro: React.FC<{ onNext: () => void }> = ({ onNext }) => {
       <div className="flex-1 overflow-y-auto px-8 space-y-3 pb-2">
         {TRIAL_FEATURES.map((feat) => (
           <div key={feat.titleKey} className="flex items-start gap-3 bg-white/60 backdrop-blur-xl border border-white rounded-[20px] p-4">
-            <span className="text-xl shrink-0 mt-0.5">{feat.emoji}</span>
-            <div>
+            <img
+              src={feat.imageSrc}
+              alt=""
+              aria-hidden="true"
+              className={`w-12 h-12 shrink-0 object-contain ${
+                feat.titleKey === 'onboarding_trial_feat6_title'
+                  ? '-translate-x-1 translate-y-2'
+                  : ''
+              }`}
+            />
+            <div className="min-w-0">
               <p className="text-sm font-bold text-[#4a5d4c]">{t(feat.titleKey)}</p>
               <p className="text-xs text-[#4a5d4c]/55 mt-0.5 leading-relaxed">{t(feat.descKey)}</p>
             </div>
@@ -523,20 +539,30 @@ const StepAI: React.FC<{ onNext: () => void }> = ({ onNext }) => {
 };
 
 // ── Main OnboardingFlow ───────────────────────────────────────
-export const OnboardingFlow: React.FC = () => {
+interface OnboardingFlowProps {
+  initialStep?: number;
+  preview?: boolean;
+}
+
+export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
+  initialStep = 1,
+  preview = false,
+}) => {
   const { user, updateUserProfile, updateAccountState, userProfileV2 } = useAuthStore();
   const addTodo = useTodoStore((state) => state.addTodo);
   const addBottle = useGrowthStore((state) => state.addBottle);
   const navigate = useNavigate();
 
-  const [step, setStep] = React.useState(1);
+  const [step, setStep] = React.useState(initialStep);
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
+    if (preview) return;
     if (user && step === 1) setStep(2);
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [preview, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
+    if (preview) return;
     if (!user?.id || step < 2) return;
     const nowIso = new Date().toISOString();
     void updateAccountState((prev) => ({
@@ -557,7 +583,7 @@ export const OnboardingFlow: React.FC = () => {
       onboardingUpdatedAt: nowIso,
       updatedAt: nowIso,
     }));
-  }, [step, updateAccountState, user?.id]);
+  }, [preview, step, updateAccountState, user?.id]);
 
   const [routine, setRoutine] = React.useState<RoutineState>({
     region: '',
@@ -665,7 +691,7 @@ export const OnboardingFlow: React.FC = () => {
         <ProgressBar step={step} />
       <div className="flex-1 overflow-hidden flex flex-col">
         {step === 1 && <StepAuth onNext={next} />}
-        {step === 2 && <StepTrialIntro onNext={next} />}
+        {step === 2 && <StepTrialIntro onNext={next} preview={preview} />}
         {step === 3 && <StepAI onNext={next} />}
         {step === 4 && <StepJournal onNext={next} />}
         {step === 5 && <StepTodo onNext={handleTodoNext} />}

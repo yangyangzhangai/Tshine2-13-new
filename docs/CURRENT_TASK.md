@@ -5,6 +5,10 @@ Owner: current working session
 
 Session Notes:
 
+- 2026-07-29: Replaced the seven system Emoji leading the Welcome trial-intro feature rows with seven user-provided transparent hand-drawn PNG crops. Assets are stored under `src/assets/onboarding/trial-features/`, mapped in the established diary / magic pen / task breakdown / mood / goal / memory / companions order, and rendered in fixed `48px` contain boxes without changing onboarding copy or trial behavior. The personal-memory crop was vertically recentered and its rendered image alone is shifted left `4px` and down `8px` to compensate for its transparent-canvas balance and the card's top-aligned content.
+
+- 2026-07-29: Added a local-development-only preview for the real Welcome trial-intro page at `#/onboarding?preview=trial`. It starts directly on step 2 while suppressing onboarding account-state writes and trial activation, allowing the current feature-leading emoji artwork to be reviewed safely without changing the signed-in account.
+
 - 2026-07-29: Updated Chat activity-card photo picking so an empty card can select two images in one native picker action. The existing crop flow processes the selected files sequentially and preserves the independent `imageUrl` / `imageUrl2` storage, retry, and timeline-update paths; cards with one existing image continue to offer only the remaining slot.
 
 - 2026-07-26: Fixed email-signup duplicate-account feedback across both `AuthPage` and onboarding `StepAuth`. The signup action now preserves Supabase `data` so the UI can detect the provider's duplicate-email obfuscation response (existing confirmed user comes back as a no-error signup payload with empty `identities`), duplicate signup attempts now show the existing localized `auth_error_user_exists` message instead of entering the OTP state, and shared auth-signup helper tests lock both the obfuscated-response detector and duplicate-message mapping order.
