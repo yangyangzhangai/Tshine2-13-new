@@ -3,6 +3,15 @@ import type { Message } from '../../../store/useChatStore';
 
 export type EventCardImageSlot = 'imageUrl' | 'imageUrl2';
 
+export function getAvailableEventCardImageSlots(
+  message: Pick<Message, 'imageUrl' | 'imageUrl2'>,
+): EventCardImageSlot[] {
+  const slots: EventCardImageSlot[] = [];
+  if (!message.imageUrl) slots.push('imageUrl');
+  if (!message.imageUrl2) slots.push('imageUrl2');
+  return slots;
+}
+
 export function getVisibleEventCardImageSlots(
   message: Pick<Message, 'imageUrl' | 'imageUrl2'>,
 ): EventCardImageSlot[] {

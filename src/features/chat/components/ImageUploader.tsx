@@ -7,11 +7,21 @@ import { useImageUpload } from '../../../hooks/useImageUpload';
 import type { ChatImageSlot } from '../../../lib/chatImageStorage';
 import { ImageCropModal } from './ImageCropModal';
 
+interface AdditionalImageUploadTarget {
+  slot: ChatImageSlot;
+  onUploaded: (url: string) => void;
+}
+
+interface PendingImageUpload extends AdditionalImageUploadTarget {
+  file: File;
+}
+
 export interface ImageUploaderProps {
   messageId: string;
   slot?: ChatImageSlot;
   imageUrl?: string | null;
   onUploaded: (url: string) => void;
+  additionalUploadTarget?: AdditionalImageUploadTarget;
   onRemoved:  () => void;
   compact?: boolean;
   hideUploadWhen?: boolean;
@@ -26,14 +36,16 @@ export interface ImageUploaderHandle {
 }
 
 export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploaderProps>(({ 
-  messageId, slot = 'imageUrl', imageUrl, onUploaded, onRemoved, compact, hideUploadWhen, hideUploadButton, openSignal, readonly, hidden,
+  messageId, slot = 'imageUrl', imageUrl, onUploaded, additionalUploadTarget,
+  onRemoved, compact, hideUploadWhen, hideUploadButton, openSignal, readonly, hidden,
 }, ref) => {
   const { t } = useTranslation();
   const { upload, remove, uploading } = useImageUpload();
   const inputRef  = useRef<HTMLInputElement>(null);
   const imageRef  = useRef<HTMLDivElement>(null);
   const [error, setError]             = useState(false);
-  const [cropFile, setCropFile]       = useState<File | null>(null);
+  const [pendingUploads, setPendingUploads] = useState<PendingImageUpload[]>([]);
+  const [processingCrop, setProcessingCrop] = useState(false);
   const [imageTapped, setImageTapped] = useState(false);
   const [lightbox, setLightbox]       = useState(false);
   const [isClient, setIsClient]       = useState(false);
@@ -61,11 +73,13 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
 
 
   const openFilePicker = () => {
-    if (readonly || imageUrl || uploading) return;
+    if (readonly || imageUrl || uploading || pendingUploads.length > 0) return;
     inputRef.current?.click();
   };
 
-  useImperativeHandle(ref, () => ({ openFilePicker }), [readonly, imageUrl, uploading]);
+  useImperativeHandle(ref, () => ({ openFilePicker }), [
+    readonly, imageUrl, uploading, pendingUploads.length,
+  ]);
 
   useEffect(() => {
     if (!openSignal) return;
@@ -73,21 +87,37 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
   }, [openSignal, imageUrl, uploading, readonly]);
 
   const handleCropConfirm = async (blob: Blob) => {
-    setCropFile(null);
+    const currentUpload = pendingUploads[0];
+    if (!currentUpload || processingCrop) return;
+    setProcessingCrop(true);
     setError(false);
     try {
-      const url = await upload(blob, messageId, slot);
-      onUploaded(url);
+      const url = await upload(blob, messageId, currentUpload.slot);
+      currentUpload.onUploaded(url);
     } catch {
       setError(true);
+    } finally {
+      setPendingUploads(current => current.slice(1));
+      setProcessingCrop(false);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
     e.target.value = '';
-    setCropFile(file);
+    if (files.length === 0) return;
+    const targets: AdditionalImageUploadTarget[] = [
+      { slot, onUploaded },
+      ...(additionalUploadTarget ? [additionalUploadTarget] : []),
+    ];
+    setPendingUploads(files.slice(0, targets.length).map((file, index) => ({
+      file,
+      ...targets[index],
+    })));
+  };
+
+  const handleCropCancel = () => {
+    setPendingUploads(current => current.slice(1));
   };
 
   const handleRemove = async () => {
@@ -102,6 +132,7 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
       ref={inputRef}
       type="file"
       accept="image/*"
+      multiple={Boolean(additionalUploadTarget)}
       className="hidden"
       onChange={handleFileChange}
     />
@@ -110,11 +141,11 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
   if (hidden) return (
     <>
       {fileInput}
-      {cropFile && inBodyPortal(
+      {pendingUploads[0] && !processingCrop && inBodyPortal(
         <ImageCropModal
-          file={cropFile}
+          file={pendingUploads[0].file}
           onConfirm={handleCropConfirm}
-          onCancel={() => setCropFile(null)}
+          onCancel={handleCropCancel}
         />,
       )}
     </>
@@ -182,11 +213,11 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
         )}
 
         {/* Crop modal — only for new uploads */}
-        {cropFile && inBodyPortal(
+        {pendingUploads[0] && !processingCrop && inBodyPortal(
           <ImageCropModal
-            file={cropFile}
+            file={pendingUploads[0].file}
             onConfirm={handleCropConfirm}
-            onCancel={() => setCropFile(null)}
+            onCancel={handleCropCancel}
           />,
         )}
       </>
@@ -196,11 +227,11 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
   if (hideUploadWhen || hideUploadButton) return (
     <>
       {fileInput}
-      {cropFile && inBodyPortal(
+      {pendingUploads[0] && !processingCrop && inBodyPortal(
         <ImageCropModal
-          file={cropFile}
+          file={pendingUploads[0].file}
           onConfirm={handleCropConfirm}
-          onCancel={() => setCropFile(null)}
+          onCancel={handleCropCancel}
         />,
       )}
     </>
@@ -234,11 +265,11 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
         )}
       </div>
 
-      {cropFile && inBodyPortal(
+      {pendingUploads[0] && !processingCrop && inBodyPortal(
         <ImageCropModal
-          file={cropFile}
+          file={pendingUploads[0].file}
           onConfirm={handleCropConfirm}
-          onCancel={() => setCropFile(null)}
+          onCancel={handleCropCancel}
         />,
       )}
     </>

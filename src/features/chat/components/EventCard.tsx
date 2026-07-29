@@ -8,7 +8,10 @@ import { formatDuration } from '../../../lib/time';
 import { cn } from '../../../lib/utils';
 import { playSound } from '../../../services/sound/soundService';
 import { ImageUploader, type ImageUploaderHandle } from './ImageUploader';
-import { getVisibleEventCardImageSlots } from './eventCardImages';
+import {
+  getAvailableEventCardImageSlots,
+  getVisibleEventCardImageSlots,
+} from './eventCardImages';
 import type { Message, MoodDescription } from '../../../store/useChatStore';
 import { useMoodStore } from '../../../store/useMoodStore';
 import { useChatStore } from '../../../store/useChatStore';
@@ -102,9 +105,8 @@ export const EventCard: React.FC<EventCardProps> = ({
   const mood      = getMood(message.id);
   const hasMoodChip = Boolean(displayLabel || mood);
   const isOngoing = message.isActive && message.duration == null;
-  const hasImage1 = !!message.imageUrl;
-  const hasImage2 = !!message.imageUrl2;
-  const canUploadImage = !hasImage1 || !hasImage2;
+  const availableImageSlots = getAvailableEventCardImageSlots(message);
+  const canUploadImage = availableImageSlots.length > 0;
   const visibleImageSlots = getVisibleEventCardImageSlots(message);
   const image1UploaderRef = useRef<ImageUploaderHandle | null>(null);
   const image2UploaderRef = useRef<ImageUploaderHandle | null>(null);
@@ -135,11 +137,11 @@ export const EventCard: React.FC<EventCardProps> = ({
   };
 
   const handleOpenImageUpload = () => {
-    if (!hasImage1) {
+    if (availableImageSlots[0] === 'imageUrl') {
       image1UploaderRef.current?.openFilePicker();
       return;
     }
-    if (!hasImage2) {
+    if (availableImageSlots[0] === 'imageUrl2') {
       image2UploaderRef.current?.openFilePicker();
     }
   };
@@ -288,6 +290,10 @@ export const EventCard: React.FC<EventCardProps> = ({
             slot="imageUrl"
             imageUrl={message.imageUrl}
             onUploaded={url => handleImageUploaded('imageUrl', url)}
+            additionalUploadTarget={availableImageSlots.length === 2 ? {
+              slot: 'imageUrl2',
+              onUploaded: url => handleImageUploaded('imageUrl2', url),
+            } : undefined}
             onRemoved={() => handleImageRemoved('imageUrl')}
             compact hidden readonly={readonly} />
           <ImageUploader ref={image2UploaderRef} messageId={message.id}

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-29 - Activity cards can select two photos at once
+
+- Empty Chat activity cards now open the native photo picker in multi-select mode and accept up to two selected images in one action.
+- The selected images run through the existing crop flow sequentially and upload to the independent `imageUrl` / `imageUrl2` slots, preserving current storage and offline retry behavior.
+- Cards that already contain one photo continue to target only the remaining slot.
+- Added focused slot-availability regression coverage in `src/features/chat/components/eventCardImages.test.ts`.
+
 ## 2026-07-26 - Duplicate email signup now shows the existing-account error
 
 - Fixed email-code signup so attempting to register an already registered email no longer falls through into the verification-code state with no actual code delivered.

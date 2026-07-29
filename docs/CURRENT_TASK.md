@@ -1,9 +1,11 @@
 # CURRENT TASK (Session Resume Anchor)
 
-Last Updated: 2026-07-26
+Last Updated: 2026-07-29
 Owner: current working session
 
 Session Notes:
+
+- 2026-07-29: Updated Chat activity-card photo picking so an empty card can select two images in one native picker action. The existing crop flow processes the selected files sequentially and preserves the independent `imageUrl` / `imageUrl2` storage, retry, and timeline-update paths; cards with one existing image continue to offer only the remaining slot.
 
 - 2026-07-26: Fixed email-signup duplicate-account feedback across both `AuthPage` and onboarding `StepAuth`. The signup action now preserves Supabase `data` so the UI can detect the provider's duplicate-email obfuscation response (existing confirmed user comes back as a no-error signup payload with empty `identities`), duplicate signup attempts now show the existing localized `auth_error_user_exists` message instead of entering the OTP state, and shared auth-signup helper tests lock both the obfuscated-response detector and duplicate-message mapping order.
 
