@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-29 - Welcome feature illustrations
+
+- Cropped seven user-provided transparent PNG illustrations into individually named Welcome assets for diary, Magic Pen, task breakdown, mood recognition, goal tracking, personal memory, and greenhouse companions; the personal-memory frame is vertically recentered within its transparent canvas.
+- Replaced the trial-intro feature-row Emoji with the matching illustrations in fixed `48px` contain boxes; the personal-memory illustration alone is shifted left `4px` and down `8px` to compensate for its transparent-canvas balance and top-aligned card content, preserving the existing copy and trial behavior.
+
+## 2026-07-29 - Welcome trial-intro local preview
+
+- Added a development-only `#/onboarding?preview=trial` entry that renders the real Welcome step 2 for visual review.
+- Preview mode suppresses onboarding account-state writes and trial activation, and the bypass is unavailable in production builds.
+
 ## 2026-07-29 - Activity cards can select two photos at once
 
 - Empty Chat activity cards now open the native photo picker in multi-select mode and accept up to two selected images in one action.

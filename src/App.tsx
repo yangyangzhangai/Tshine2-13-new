@@ -105,8 +105,14 @@ const OnboardingRoute: React.FC = () => {
   const loading = useAuthStore(state => state.loading);
   const initializationStage = useAuthStore(state => state.initializationStage);
   const accountState = useAuthStore(state => state.accountState);
+  const isTrialPreview = import.meta.env.DEV
+    && new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('preview') === 'trial';
 
   if (loading) return <BlankScreen stage={initializationStage ?? 'OnboardingRoute:auth.loading'} />;
+
+  if (isTrialPreview) {
+    return <OnboardingFlow initialStep={2} preview />;
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;
