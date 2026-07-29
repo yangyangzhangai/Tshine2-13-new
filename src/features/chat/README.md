@@ -16,7 +16,7 @@
   - Latest-message correction: message row supports quick reclassify between `activity` and `mood` through `reclassifyRecentInput(messageId, nextKind)`
   - Primary record input path uses local rule classification by default (no unconditional classifier API call)
 - Mood quick record (`isMood` message path) remains as the message semantic output, not a separate chat-mode toggle
-- Activity cards support two independent cloud image slots (`imageUrl` / `imageUrl2`); upload/retry paths must preserve the slot identity instead of synthesizing a fake second message id
+- Activity cards support two independent cloud image slots (`imageUrl` / `imageUrl2`); when both are empty, the photo picker accepts up to two files in one selection and runs the existing crop/upload flow once per slot. Upload/retry paths must preserve the slot identity instead of synthesizing a fake second message id
 
 ## Upstream Dependencies
 
