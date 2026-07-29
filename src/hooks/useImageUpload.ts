@@ -1,7 +1,12 @@
 // DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> src/features/chat/README.md
 import { useState } from 'react';
 import { supabase } from '../api/supabase';
-import { resolveChatImageStoragePath, type ChatImageSlot } from '../lib/chatImageStorage';
+import {
+  extractChatImageStoragePathFromUrl,
+  resolveChatImageStoragePath,
+  resolveLegacyChatImageStoragePath,
+  type ChatImageSlot,
+} from '../lib/chatImageStorage';
 import { getSupabaseSession } from '../lib/supabase-utils';
 import { useOutboxStore } from '../store/useOutboxStore';
 
@@ -70,6 +75,8 @@ export function useImageUpload() {
   async function upload(file: File | Blob, messageId: string, slot: ChatImageSlot = 'imageUrl'): Promise<string> {
     setUploading(true);
     try {
+      const storagePath = resolveChatImageStoragePath(messageId, slot);
+
       // Compress first (even for Supabase path — faster upload + cheaper storage)
       let compressed: Blob;
       try {
@@ -82,7 +89,7 @@ export function useImageUpload() {
       try {
         const session = await getSupabaseSession();
         if (session) {
-          const path = `${session.user.id}/${resolveChatImageStoragePath(messageId, slot)}`;
+          const path = `${session.user.id}/${storagePath}`;
           const { error } = await supabase.storage
             .from(BUCKET)
             .upload(path, compressed, { upsert: true, contentType: 'image/jpeg' });
@@ -104,7 +111,7 @@ export function useImageUpload() {
       } catch { /* use the already-compressed blob */ }
       useOutboxStore.getState().enqueue({
         kind: 'image.reupload',
-        payload: { messageId, slot },
+        payload: { messageId, slot, storagePath },
         consecutiveFailures: 0,
       });
       return await blobToDataUrl(fallbackBlob);
@@ -117,12 +124,12 @@ export function useImageUpload() {
    * Remove an uploaded image.
    * Skips Supabase removal if the URL is a local data URL.
    */
-  async function remove(messageId: string, currentUrl?: string): Promise<void> {
+  async function remove(messageId: string, slot: ChatImageSlot, currentUrl?: string): Promise<void> {
     if (currentUrl?.startsWith('data:')) return; // local-only, nothing to remove
     const session = await getSupabaseSession();
     if (!session) return;
-    const slot: ChatImageSlot = currentUrl?.includes(`/${messageId}-2.jpg`) ? 'imageUrl2' : 'imageUrl';
-    const path = `${session.user.id}/${resolveChatImageStoragePath(messageId, slot)}`;
+    const extractedPath = extractChatImageStoragePathFromUrl(currentUrl);
+    const path = extractedPath ?? `${session.user.id}/${resolveLegacyChatImageStoragePath(messageId, slot)}`;
     await supabase.storage.from(BUCKET).remove([path]);
   }
 

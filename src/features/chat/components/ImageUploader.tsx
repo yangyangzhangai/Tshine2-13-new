@@ -122,7 +122,7 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
 
   const handleRemove = async () => {
     setImageTapped(false);
-    await remove(messageId, imageUrl ?? undefined);
+    await remove(messageId, slot, imageUrl ?? undefined);
     onRemoved();
   };
 

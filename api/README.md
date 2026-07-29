@@ -63,7 +63,7 @@ Membership AI classification path observability is recorded through `/api/live-i
 
 - `/api/annotation` -> `DEEPSEEK_API_KEY`（zh, model `deepseek-chat`）+ `OPENAI_API_KEY`（en/it, model `gpt-4.1-mini`）；可选 `ANNOTATION_DEEPSEEK_BASE_URL`、`OPENAI_BASE_URL`
 - `/api/extract-profile` -> `OPENAI_API_KEY`（可选 `PROFILE_EXTRACT_MODEL`，默认 `gpt-4o-mini`；按 `lang` 路由中/英/意 prompt）
-- `/api/todo-decompose` -> 中文默认走 DashScope `QWEN_API_KEY`（`TODO_DECOMPOSE_MODEL_ZH`，默认 `qwen-plus`），其余语言走 Gemini 原生 `GEMINI_API_KEY`（`TODO_DECOMPOSE_MODEL`，默认 `gemini-2.5-flash`）；可选 `TODO_DECOMPOSE_GEMINI_BASE_URL`、`TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL` 与 `TODO_DECOMPOSE_VERBOSE_LOGS=true`
+- `/api/todo-decompose` -> 中文默认走 DeepSeek `DEEPSEEK_API_KEY`（`TODO_DECOMPOSE_MODEL_ZH`，默认 `deepseek-chat`），其余语言走 Gemini 原生 `GEMINI_API_KEY`（`TODO_DECOMPOSE_MODEL`，默认 `gemini-2.5-flash`）；可选 `DEEPSEEK_BASE_URL`、`TODO_DECOMPOSE_GEMINI_BASE_URL`、`TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL` 与 `TODO_DECOMPOSE_VERBOSE_LOGS=true`
 - `/api/report` -> 当前未接入外部模型（占位返回）
 - `/api/diary` -> `OPENAI_API_KEY`（`gpt-4o`）
 - `/api/classify` -> `QWEN_API_KEY`（可选 `CLASSIFY_MODEL`、`DASHSCOPE_BASE_URL`）

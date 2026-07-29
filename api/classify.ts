@@ -398,7 +398,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const result = await decomposeTodoWithAIDiagnostics({
         title,
         lang: lang === 'en' || lang === 'it' ? lang : 'zh',
-        qwenApiKey: process.env.QWEN_API_KEY,
         geminiApiKey: process.env.GEMINI_API_KEY,
       });
 
@@ -414,11 +413,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error('[Todo Decompose API] request.failed', {
         lang,
         titleLength: typeof title === 'string' ? title.trim().length : 0,
-        modelZh: process.env.TODO_DECOMPOSE_MODEL_ZH || 'qwen-plus',
+        modelZh: process.env.TODO_DECOMPOSE_MODEL_ZH || 'deepseek-chat',
         modelDefault: process.env.TODO_DECOMPOSE_MODEL || 'gemini-2.5-flash',
+        hasDeepSeekKey: Boolean(process.env.DEEPSEEK_API_KEY),
         hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
-        hasQwenKey: Boolean(process.env.QWEN_API_KEY),
-        qwenBase: process.env.QWEN_BASE_URL || process.env.DASHSCOPE_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+        deepseekBase: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
         geminiBase: process.env.TODO_DECOMPOSE_GEMINI_BASE_URL || process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
         error: error instanceof Error ? error.message : String(error),
       });

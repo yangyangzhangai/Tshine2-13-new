@@ -10,12 +10,13 @@ export interface TodoDecomposeResult {
   steps: TodoDecomposeStep[];
   parseStatus: 'ok' | 'parse_failed';
   model: string;
-  provider: 'gemini' | 'dashscope';
+  provider: 'gemini' | 'deepseek';
 }
 
-const DEFAULT_DASHSCOPE_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
 const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_TODO_DECOMPOSE_GEMINI_MODEL = 'gemini-2.5-flash';
+const DEFAULT_TODO_DECOMPOSE_DEEPSEEK_MODEL = 'deepseek-chat';
 const ENABLE_VERBOSE_TODO_DECOMPOSE_LOGS = process.env.TODO_DECOMPOSE_VERBOSE_LOGS === 'true';
 
 function previewText(raw: string, maxLen: number = 220): string {
@@ -27,7 +28,7 @@ function previewText(raw: string, maxLen: number = 220): string {
 
 const DECOMPOSE_PROMPT_ZH = `你是一个“低摩擦任务拆解助手”。
 你的唯一目标：把用户的待办拆成一组“立即可执行、操作非常具体、执行阻力很低”的小步骤。
-将用户待办拆解为3到6个子步骤，并严格输出JSON。
+将用户待办拆解为3到5个子步骤，并严格输出JSON。
 不要输出任何解释、前缀、后缀或Markdown代码块，只输出JSON本身。
 
 【核心原则】
@@ -53,7 +54,7 @@ const DECOMPOSE_PROMPT_ZH = `你是一个“低摩擦任务拆解助手”。
 
 const DECOMPOSE_PROMPT_EN = `You are a low-friction task breakdown assistant.
 Your only goal is to turn the user's todo into a sequence of tiny steps that are immediately actionable, highly specific, and easy to execute.
-Break the todo into 3 to 6 sub-steps and output strict JSON.
+Break the todo into 3 to 5 sub-steps and output strict JSON.
 Do NOT output explanations, prefixes, suffixes, or Markdown code blocks. Output JSON only.
 
 [Core Principles]
@@ -79,7 +80,7 @@ Do NOT output explanations, prefixes, suffixes, or Markdown code blocks. Output 
 
 const DECOMPOSE_PROMPT_IT = `Sei un assistente di scomposizione task a basso attrito.
 Il tuo unico obiettivo e trasformare il todo dell'utente in una sequenza di micro-passi immediatamente eseguibili, molto specifici e facili da portare a termine.
-Scomponi il todo in 3-6 sotto-passi e restituisci JSON rigoroso.
+Scomponi il todo in 3-5 sotto-passi e restituisci JSON rigoroso.
 NON produrre spiegazioni, prefissi, suffissi o blocchi Markdown. Solo JSON.
 
 [Principi chiave]
@@ -136,7 +137,7 @@ function normalizeSteps(steps: unknown): TodoDecomposeStep[] {
       (item): item is { title: string; durationMinutes: unknown } =>
         typeof item.title === 'string' && item.title.trim().length > 0,
     )
-    .slice(0, 6)
+    .slice(0, 5)
     .map((item) => ({
       title: item.title.trim(),
       durationMinutes: Math.min(90, Math.max(5, Number(item.durationMinutes) || 15)),
@@ -146,7 +147,7 @@ function normalizeSteps(steps: unknown): TodoDecomposeStep[] {
 function resolveDecomposeModel(lang: DecomposeLang, model?: string): string {
   if (typeof model === 'string' && model.trim()) return model.trim();
   if (lang === 'zh') {
-    return (process.env.TODO_DECOMPOSE_MODEL_ZH || 'qwen-plus').trim() || 'qwen-plus';
+    return (process.env.TODO_DECOMPOSE_MODEL_ZH || DEFAULT_TODO_DECOMPOSE_DEEPSEEK_MODEL).trim() || DEFAULT_TODO_DECOMPOSE_DEEPSEEK_MODEL;
   }
   return (
     process.env.TODO_DECOMPOSE_MODEL
@@ -177,7 +178,6 @@ export async function decomposeTodoWithAI(params: {
   title: string;
   lang: DecomposeLang;
   model?: string;
-  qwenApiKey?: string;
   geminiApiKey?: string;
 }): Promise<TodoDecomposeStep[]> {
   const result = await decomposeTodoWithAIDiagnostics(params);
@@ -188,30 +188,27 @@ export async function decomposeTodoWithAIDiagnostics(params: {
   title: string;
   lang: DecomposeLang;
   model?: string;
-  qwenApiKey?: string;
   geminiApiKey?: string;
 }): Promise<TodoDecomposeResult> {
   const model = resolveDecomposeModel(params.lang, params.model);
-  const preferDashscope = /^qwen/i.test(model);
-  let provider: 'gemini' | 'dashscope' = preferDashscope ? 'dashscope' : 'gemini';
+  const preferDeepSeek = params.lang === 'zh' || /^deepseek/i.test(model);
+  let provider: 'gemini' | 'deepseek' = preferDeepSeek ? 'deepseek' : 'gemini';
   let modelUsed = model;
   let rawContent = '';
 
-  if (preferDashscope) {
-    const qwenApiKey = (params.qwenApiKey || process.env.QWEN_API_KEY || '').trim();
-    if (!qwenApiKey) {
-      throw new Error('Server configuration error: Missing QWEN_API_KEY for todo decompose');
+  if (preferDeepSeek) {
+    const deepseekApiKey = String(process.env.DEEPSEEK_API_KEY || '').trim();
+    if (!deepseekApiKey) {
+      throw new Error('Server configuration error: Missing DEEPSEEK_API_KEY for todo decompose');
     }
-    const dashscopeBase = (
-      process.env.QWEN_BASE_URL
-      || process.env.DASHSCOPE_BASE_URL
-      || DEFAULT_DASHSCOPE_BASE_URL
-    ).replace(/\/$/, '');
-    const response = await fetch(`${dashscopeBase}/chat/completions`, {
+    const deepseekBase = String(
+      process.env.DEEPSEEK_BASE_URL || DEFAULT_DEEPSEEK_BASE_URL,
+    ).trim().replace(/\/$/, '');
+    const response = await fetch(`${deepseekBase}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${qwenApiKey}`,
+        Authorization: `Bearer ${deepseekApiKey}`,
       },
       body: JSON.stringify({
         model,
@@ -228,7 +225,7 @@ export async function decomposeTodoWithAIDiagnostics(params: {
     if (!response.ok) {
       const errorText = await response.text();
       if (ENABLE_VERBOSE_TODO_DECOMPOSE_LOGS) {
-        console.error('[Todo Decompose] provider.dashscope.error', {
+        console.error('[Todo Decompose] provider.deepseek.error', {
           model,
           status: response.status,
           statusText: response.statusText,
@@ -236,7 +233,7 @@ export async function decomposeTodoWithAIDiagnostics(params: {
           responseRaw: errorText,
         });
       }
-      throw new Error(`DashScope todo decompose failed: ${response.status} ${errorText}`);
+      throw new Error(`DeepSeek todo decompose failed: ${response.status} ${errorText}`);
     }
     const payload = (await response.json()) as {
       usage?: unknown;
@@ -246,7 +243,7 @@ export async function decomposeTodoWithAIDiagnostics(params: {
       }>;
     };
     rawContent = payload.choices?.[0]?.message?.content || '';
-    provider = 'dashscope';
+    provider = 'deepseek';
   } else {
     const geminiApiKey = (params.geminiApiKey || process.env.GEMINI_API_KEY || '').trim();
     if (!geminiApiKey) {

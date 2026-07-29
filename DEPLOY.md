@@ -30,10 +30,11 @@ VITE_SUPABASE_ANON_KEY=...
 
 说明：
 - `DEEPSEEK_API_KEY` + `OPENAI_API_KEY` 用于 `annotation`（`zh -> deepseek-chat`，`en/it -> gpt-4.1-mini`）
-- `QWEN_API_KEY` 用于 `classify`、`todo-decompose(zh)`，也可作为 `magic-pen-parse` 的 fallback provider
+- `QWEN_API_KEY` 用于 `classify`，也可作为 `magic-pen-parse` 的 fallback provider
+- `DEEPSEEK_API_KEY` 用于 `annotation(zh)`、`todo-decompose(zh)`
 - `GEMINI_API_KEY` 用于 `todo-decompose(en/it)`（Gemini 原生接口）
 - `ZHIPU_API_KEY` 用于 `magic-pen-parse` 主路
-- 可选：`ANNOTATION_DEEPSEEK_BASE_URL`、`OPENAI_BASE_URL`、`CLASSIFY_MODEL`、`DASHSCOPE_BASE_URL`、`MAGIC_PEN_FALLBACK_MODEL`、`TODO_DECOMPOSE_MODEL`、`TODO_DECOMPOSE_MODEL_ZH`、`TODO_DECOMPOSE_GEMINI_BASE_URL`、`TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`、`TODO_DECOMPOSE_VERBOSE_LOGS`
+- 可选：`ANNOTATION_DEEPSEEK_BASE_URL`、`DEEPSEEK_BASE_URL`、`OPENAI_BASE_URL`、`CLASSIFY_MODEL`、`DASHSCOPE_BASE_URL`、`MAGIC_PEN_FALLBACK_MODEL`、`TODO_DECOMPOSE_MODEL`、`TODO_DECOMPOSE_MODEL_ZH`、`TODO_DECOMPOSE_GEMINI_BASE_URL`、`TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`、`TODO_DECOMPOSE_VERBOSE_LOGS`
 
 ## 本地开发
 
@@ -95,7 +96,7 @@ To enable the new live input telemetry dashboard in production:
 - `/api/report`: `NousResearch/Hermes-4-405B-FP8-TEE`
 - `/api/diary`: `action=insight -> gpt-4o-mini`；默认日记正文 `gpt-4o`
 - `/api/annotation`: `zh=deepseek-chat`，`en/it=gpt-4.1-mini`
-- `/api/todo-decompose`: `zh=qwen-plus`（可由 `TODO_DECOMPOSE_MODEL_ZH` 覆盖），`en/it=gemini-2.5-flash`（可由 `TODO_DECOMPOSE_MODEL` 覆盖；404 模型下线时自动降级到 `TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`）
+- `/api/todo-decompose`: `zh=deepseek-chat`（可由 `TODO_DECOMPOSE_MODEL_ZH` 覆盖），`en/it=gemini-2.5-flash`（可由 `TODO_DECOMPOSE_MODEL` 覆盖；404 模型下线时自动降级到 `TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`）
 - `/api/classify`: `qwen-plus`（可由 `CLASSIFY_MODEL` 覆盖）
 - `/api/magic-pen-parse`: `glm-4.7-flash`（失败时可回退 `qwen-flash`）
 - `/api/plant-generate`（内部 `src/server/plant-diary-service.ts`）: `gpt-4.1-mini`

@@ -5,6 +5,14 @@ Owner: current working session
 
 Session Notes:
 
+- 2026-07-29: Split the oversized chat-store integration regression file into shared helpers plus four focused Vitest files (`useChatStore.autoRecognition/sync/timeline/reclassify.integration.test.ts`) so chat-store regression coverage stays intact while every individual test file is back under the max-lines pre-commit limit.
+
+- 2026-07-29: Tightened Growth todo card status density. `src/features/growth/GrowthTodoCard.tsx` now renders `today / tomorrow / overdue` as smaller inline pills beside the todo title instead of below it, and pinned todos show a matching compact pin pill in the same title-side status group so collapsed cards stay denser without mixing state chips into the right-side action cluster.
+
+- 2026-07-29: Switched Growth todo manual decompose to `DeepSeek` for Chinese only while keeping English/Italian on Gemini. `src/server/todo-decompose-service.ts` now defaults `zh` to `deepseek-chat`, keeps `en/it` on `gemini-2.5-flash`, caps normalized output to at most 5 sub-steps, and all API/docs/env notes were updated to reflect the new provider split.
+
+- 2026-07-29: Fixed chat activity-card image replacement resurrecting deleted photos after a delete-then-reupload flow. Chat image uploads now write each slot to a fresh storage object path instead of reusing one fixed public URL, hidden uploader deletes can still remove legacy fixed-path objects, and `updateMessageImage()` now uses the durable `chat.upsert` sync contract for public URLs/null clears while keeping local data-URL fallbacks pending until `image.reupload` finishes, preventing silent cloud refresh from restoring stale image fields.
+
 - 2026-07-29: Replaced the seven system Emoji leading the Welcome trial-intro feature rows with seven user-provided transparent hand-drawn PNG crops. Assets are stored under `src/assets/onboarding/trial-features/`, mapped in the established diary / magic pen / task breakdown / mood / goal / memory / companions order, and rendered in fixed `48px` contain boxes without changing onboarding copy or trial behavior. The personal-memory crop was vertically recentered and its rendered image alone is shifted left `4px` and down `8px` to compensate for its transparent-canvas balance and the card's top-aligned content.
 
 - 2026-07-29: Added a local-development-only preview for the real Welcome trial-intro page at `#/onboarding?preview=trial`. It starts directly on step 2 while suppressing onboarding account-state writes and trial activation, allowing the current feature-leading emoji artwork to be reviewed safely without changing the signed-in account.

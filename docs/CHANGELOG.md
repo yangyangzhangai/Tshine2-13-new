@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-07-29 - Chat store integration tests split under max-lines gate
+
+- Replaced the single oversized `src/store/useChatStore.integration.test.ts` with one shared helper file plus four focused suites: auto-recognition, timeline/manual-end edits, sync/images, and reclassify/mood stability.
+- Preserved the same chat-store regression scenarios while bringing every individual test file back under the repository's max-lines threshold, so pre-commit no longer fails on that test coverage bundle.
+
+## 2026-07-29 - Growth todo status pills moved inline with the title
+
+- Moved the compact `today / tomorrow / overdue` todo status pills from the second line below the title into the title row itself, shrinking the pill height so collapsed cards stay visually tighter.
+- Pinned todos now show a matching compact pin pill beside the title, keeping pin state in the same visual language as due-state pills instead of hiding it only inside the expanded editor.
+- The right-side priority/start/focus action cluster is unchanged; title text still truncates first so the state pills remain readable on narrow mobile widths.
+
+## 2026-07-29 - Todo decompose zh now uses DeepSeek and caps at five steps
+
+- Switched Growth todo manual decompose so Chinese requests now call DeepSeek `deepseek-chat`, while English and Italian stay on Gemini.
+- Tightened the decompose prompt and normalization to return 3-5 sub-steps instead of allowing six, preserving the existing title + duration response contract.
+- Updated the todo-decompose client/provider typing, server logging, deployment notes, and AI inventory/docs to match the new `zh=DeepSeek / en,it=Gemini` split.
+
 ## 2026-07-29 - Welcome feature illustrations
 
 - Cropped seven user-provided transparent PNG illustrations into individually named Welcome assets for diary, Magic Pen, task breakdown, mood recognition, goal tracking, personal memory, and greenhouse companions; the personal-memory frame is vertically recentered within its transparent canvas.
@@ -397,6 +414,12 @@ Validation:
 - `src/lib/authMetadataSanitizer.ts`, `src/lib/authMetadataSanitizer.test.ts`, and `src/store/authProfileCloudStore.test.ts` now allow normal avatar URLs to stay in JWT-safe metadata while still stripping data URLs, and add focused regression coverage for cached-avatar reuse.
 
 ## 2026-07-19
+
+### Fix: Chat image replacement no longer revives deleted photos
+
+- `src/hooks/useImageUpload.ts`, `src/lib/chatImageStorage.ts`, and `src/store/useOutboxStore.ts` now give every new chat-card image upload its own storage object path instead of reusing one fixed slot URL, while still recognizing legacy fixed-path URLs during deletion and reupload fallback.
+- `src/store/chatTimelineActions.ts` now treats chat image field changes like other durable chat edits: public-URL writes and null clears mark the message pending, sync through `chat.upsert`, and only flip back to `synced` after cloud success; local data-URL fallbacks stay local-pending until the existing `image.reupload` path replaces them with a storage URL.
+- `src/store/useChatStore.integration.test.ts`, `src/lib/chatImageStorage.test.ts`, and `src/store/README.md` add regression/documentation coverage for unique storage paths, offline image-field durability, and the delete-then-reupload cache-resurrection fix.
 
 ### Fix: Growth parent todo deletes now cascade through subtasks
 
