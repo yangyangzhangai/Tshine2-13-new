@@ -5,36 +5,29 @@
 ```text
 Browser (Vite/React)
   -> /api/* (Vercel Serverless)
-  -> External AI Providers
-     - DeepSeek + OpenAI: annotation（按语言路由）
-     - Report: currently disabled (no external model call)
-     - DashScope/Qwen: classify
-     - Zhipu + Qwen fallback: magic-pen-parse
+  -> DeepSeek / OpenAI / Gemini
 ```
 
 ## 必要环境变量
 
 ```bash
+DEEPSEEK_API_KEY=...
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 OPENAI_API_KEY=...
 OPENAI_BASE_URL=https://api.openai.com/v1
-QWEN_API_KEY=...
-QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 GEMINI_API_KEY=...
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
-DEEPSEEK_API_KEY=...
-ZHIPU_API_KEY=...
-ANNOTATION_DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
 ```
 
 说明：
-- `DEEPSEEK_API_KEY` + `OPENAI_API_KEY` 用于 `annotation`（`zh -> deepseek-chat`，`en/it -> gpt-4.1-mini`）
-- `QWEN_API_KEY` 用于 `classify`，也可作为 `magic-pen-parse` 的 fallback provider
-- `DEEPSEEK_API_KEY` 用于 `annotation(zh)`、`todo-decompose(zh)`
-- `GEMINI_API_KEY` 用于 `todo-decompose(en/it)`（Gemini 原生接口）
-- `ZHIPU_API_KEY` 用于 `magic-pen-parse` 主路
-- 可选：`ANNOTATION_DEEPSEEK_BASE_URL`、`DEEPSEEK_BASE_URL`、`OPENAI_BASE_URL`、`CLASSIFY_MODEL`、`DASHSCOPE_BASE_URL`、`MAGIC_PEN_FALLBACK_MODEL`、`TODO_DECOMPOSE_MODEL`、`TODO_DECOMPOSE_MODEL_ZH`、`TODO_DECOMPOSE_GEMINI_BASE_URL`、`TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`、`TODO_DECOMPOSE_VERBOSE_LOGS`
+- `DEEPSEEK_API_KEY` 用于中文批注、输入分类、中文待办拆解和魔法笔。
+- `OPENAI_API_KEY` 用于英/意批注、完整日记、短洞察、画像提取和植物观察日记。
+- `GEMINI_API_KEY` 用于英/意待办拆解。
+- Qwen、智谱与 Chutes 不再有运行时调用。
+- 功能级模型覆盖包括 `CLASSIFY_MODEL`、`TODO_DECOMPOSE_MODEL_ZH`、`TODO_DECOMPOSE_MODEL`、`PROFILE_EXTRACT_MODEL`、`MAGIC_PEN_MODEL`。
+- 完整供应商与数据范围口径只在 `docs/AI_USAGE_INVENTORY.md` 维护。
 
 ## 本地开发
 
@@ -72,7 +65,6 @@ npx vercel --prod
 
 ## API 端点（当前实现）
 
-- `POST /api/report`
 - `POST /api/annotation`
 - `POST /api/classify`
 - `POST /api/diary`
@@ -93,13 +85,15 @@ To enable the new live input telemetry dashboard in production:
 
 ## 运行时模型（当前实现）
 
-- `/api/report`: `NousResearch/Hermes-4-405B-FP8-TEE`
-- `/api/diary`: `action=insight -> gpt-4o-mini`；默认日记正文 `gpt-4o`
-- `/api/annotation`: `zh=deepseek-chat`，`en/it=gpt-4.1-mini`
-- `/api/todo-decompose`: `zh=deepseek-chat`（可由 `TODO_DECOMPOSE_MODEL_ZH` 覆盖），`en/it=gemini-2.5-flash`（可由 `TODO_DECOMPOSE_MODEL` 覆盖；404 模型下线时自动降级到 `TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`）
-- `/api/classify`: `qwen-plus`（可由 `CLASSIFY_MODEL` 覆盖）
-- `/api/magic-pen-parse`: `glm-4.7-flash`（失败时可回退 `qwen-flash`）
-- `/api/plant-generate`（内部 `src/server/plant-diary-service.ts`）: `gpt-4.1-mini`
+- `/api/annotation`: 中文 DeepSeek `deepseek-chat`；英/意 OpenAI `gpt-4.1-mini`。
+- `/api/classify`: DeepSeek `deepseek-chat`。
+- `/api/todo-decompose`: 中文 DeepSeek `deepseek-chat`；英/意 Gemini `gemini-2.5-flash`。
+- `/api/diary`: OpenAI `gpt-4o`；短洞察使用 `gpt-4o-mini`。
+- `/api/extract-profile`: OpenAI `gpt-4o-mini`。
+- `/api/magic-pen-parse`: DeepSeek `deepseek-chat`。
+- `/api/plant-generate` 内部植物观察日记：OpenAI `gpt-4.1-mini`。
+- `/api/report` 已删除；报告 AI 文本统一由 `/api/diary` 承担。
+- 端点级模型覆盖与发送数据范围见 `docs/AI_USAGE_INVENTORY.md`。
 
 ## 安全注意事项
 

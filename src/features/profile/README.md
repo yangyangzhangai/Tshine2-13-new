@@ -67,7 +67,7 @@ UpgradePage
 
 ## Downstream Impact
 
-- AI mode preference affects annotation prompts (`/api/annotation`), diary prompts (`/api/diary`), and plant diary prompts (`/api/plant-diary`)
+- AI mode preference affects annotation prompts (`/api/annotation`), diary prompts (`/api/diary`), and plant diary prompts inside `/api/plant-generate`
 - Daily goal toggle controls popup visibility in `/growth` GrowthPage
 - Direction settings affect plant root rendering in `/report` PlantRootSection
 - Avatar and display name changes reflect across all features via `useAuthStore.user`

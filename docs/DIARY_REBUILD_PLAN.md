@@ -1,5 +1,8 @@
 # 日记功能重建任务清单
 
+> [!WARNING]
+> 本文是 2026-03-24 的历史重建计划；当前 API 端点以 `api/README.md` 为准。
+
 > 创建时间：2026-03-24
 > 目标：梳理旧日报功能现状，对齐当前数据结构，规划新日记的可视化呈现与 AI 日记数据管线
 
@@ -17,7 +20,7 @@
 | Report Calculator | ✅ 完整 | `src/lib/report-calculator/` | computeSpectrum / computeLightQuality / detectGravityMismatch / formatForDiaryAI 均在 |
 | Classifier API | ✅ 完整 | `api/classify.ts` | AI 分类器端点 |
 | Diary API | ✅ 完整 | `api/diary.ts` | Seeday 观察手记生成端点，含中英文系统 prompt |
-| Report API | ✅ 完整 | `api/report.ts` | 旧版 AI 分析端点 |
+| Report API | ❌ 已移除 | `api/report.ts` | 旧版端点已删除；当前报告 AI 文本统一由 `api/diary.ts` 承担 |
 | DB Sync | ✅ 完整 | `syncReportToSupabase` | reports 表同步逻辑在 |
 
 ### 1.2 前端 UI 层：保留但已过时

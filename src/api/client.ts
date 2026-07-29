@@ -644,7 +644,6 @@ interface MagicPenParseResponse {
   traceId?: string;
   parseStrategy?: 'direct_json' | 'wrapped_object' | 'fallback_failed';
   providerUsed?: 'deepseek' | 'none';
-  fallbackFrom?: 'timeout' | 'http_error' | 'empty_content' | 'invalid_payload' | 'parse_failed' | 'exception';
   failureCategory?: 'model_output_invalid' | 'provider_call_failed' | 'unknown';
   attempts?: Array<{
     provider: 'deepseek';

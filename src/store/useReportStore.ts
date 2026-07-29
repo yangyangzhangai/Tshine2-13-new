@@ -5,6 +5,7 @@ import { supabase } from '../api/supabase';
 import { getSupabaseSession } from '../lib/supabase-utils';
 import { fromDbReport } from '../lib/dbMappers';
 import i18n from '../i18n';
+import { canEditDailyMyDiary } from '../lib/reportDiaryEditPolicy';
 import { useTodoStore } from './useTodoStore';
 import { useChatStore } from './useChatStore';
 import { useMoodStore } from './useMoodStore';
@@ -174,6 +175,19 @@ export const useReportStore = create<ReportState>()(
       },
 
       updateReport: async (id, updates) => {
+        const existingReport = get().reports.find((report) => report.id === id);
+        if (!existingReport) {
+          return;
+        }
+
+        if (
+          updates.userNote !== undefined
+          && existingReport.type === 'daily'
+          && !canEditDailyMyDiary(existingReport.date)
+        ) {
+          return;
+        }
+
         let nextReport: Report | null = null;
         set(state => {
           const nextReports = state.reports.map((report) => {

@@ -4,6 +4,10 @@ import { applyCors, handlePreflight, jsonError, requireMethod } from '../src/ser
 import { requireSupabaseRequestAuth } from '../src/server/supabase-request-auth.js';
 import { decomposeTodoWithAIDiagnostics } from '../src/server/todo-decompose-service.js';
 import { matchBottleByKeywords } from '../src/lib/bottleMatcher.js';
+import {
+  getDeepSeekChatCompletionsUrl,
+  resolveDeepSeekRuntime,
+} from '../src/server/deepseek-runtime.js';
 
 const CLASSIFIER_PROMPT = `你是 Seeday 的单条输入分类器。
 任务：对一条用户输入做一次分类，并严格输出 JSON。
@@ -418,7 +422,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         hasDeepSeekKey: Boolean(process.env.DEEPSEEK_API_KEY),
         hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
         deepseekBase: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-        geminiBase: process.env.TODO_DECOMPOSE_GEMINI_BASE_URL || process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
+        geminiBase: process.env.TODO_DECOMPOSE_GEMINI_BASE_URL
+          || process.env.GEMINI_BASE_URL
+          || 'https://generativelanguage.googleapis.com/v1beta',
         error: error instanceof Error ? error.message : String(error),
       });
       jsonError(res, 500, 'AI请求失败，请稍后重试', undefined, error instanceof Error ? error.message : 'Unknown error');
@@ -433,17 +439,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const dashscopeBase = (
-    process.env.QWEN_BASE_URL
-    || process.env.DASHSCOPE_BASE_URL
-    || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
-  ).replace(/\/$/, '');
-  const apiUrl = `${dashscopeBase}/chat/completions`;
-  const model = (process.env.CLASSIFY_MODEL || 'qwen-plus').trim() || 'qwen-plus';
-  const qwenApiKey = process.env.QWEN_API_KEY;
+  const runtime = resolveDeepSeekRuntime({ model: process.env.CLASSIFY_MODEL });
+  const apiUrl = getDeepSeekChatCompletionsUrl(runtime.baseURL);
 
-  if (!qwenApiKey) {
-    jsonError(res, 500, 'Server configuration error: Missing QWEN_API_KEY');
+  if (!runtime.apiKey) {
+    jsonError(res, 500, 'Server configuration error: Missing DEEPSEEK_API_KEY');
     return;
   }
 
@@ -458,10 +458,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${qwenApiKey}`,
+        'Authorization': `Bearer ${runtime.apiKey}`,
       },
       body: JSON.stringify({
-        model,
+        model: runtime.model,
         messages: [
           {
             role: 'system',

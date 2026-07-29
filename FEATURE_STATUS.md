@@ -122,7 +122,7 @@
 - 服务端入口: `api/*.ts` + `src/server/*`
 - 说明:
   - 主要 AI 能力均通过 serverless 中转。
-  - `annotation` 当前走 `OPENAI_API_KEY`，`classify` 走 `QWEN_API_KEY`，`magic-pen-parse` 走 `ZHIPU_API_KEY` 并可回退 `QWEN_API_KEY`。
+  - 运行时 AI 服务商为 DeepSeek、OpenAI、Gemini；Qwen、智谱与 Chutes 已退出运行时，端点和语言映射见 `docs/AI_USAGE_INVENTORY.md`。
   - 安全清理阶段已移除已审计的前端明文密钥直连实现。
 
 ## 11. Magic Pen（聊天侧流）

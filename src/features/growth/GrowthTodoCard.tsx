@@ -347,8 +347,8 @@ export const GrowthTodoCard = ({
               className="w-full bg-transparent text-sm text-[#334155] focus:outline-none"
             />
           ) : (
-            <div className="flex min-w-0 items-center gap-1.5">
-              <span className={cn("min-w-0 flex-1 truncate text-sm", todo.completed && "line-through text-gray-400")}>
+            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+              <span className={cn("min-w-0 max-w-full truncate text-sm", todo.completed && "line-through text-gray-400")}>
                 {todo.title}
               </span>
               {dueBadge ? (

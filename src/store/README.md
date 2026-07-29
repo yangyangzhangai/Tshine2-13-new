@@ -100,6 +100,7 @@
 - `useTodoStore.deleteTodo()` 现对一次性/重复待办删除补上 durable fallback：本地仍先移除并记录 `pendingDeletedTodoIds`，但若云端软删除因无 session、网络抖动或 0-row 未命中而未真正落库，会自动写入 `todo.delete` outbox；`fetchTodos()` 在拉云前会先 flush 队列，并在最终合并云端结果时再次读取最新 tombstone，避免 in-flight refresh 把刚删掉的待办写回本地。删除父待办时会级联删除全部子待办，避免刷新后把孤儿子待办扶正成顶层任务；`fetchTodos()` 也会把历史遗留的 orphan subtrees 识别为删除对象并入队 durable cloud delete，而不是清空 `parentId`。`useRealtimeSync` 对 tombstoned todo 的晚到 `INSERT/UPDATE` 也会直接忽略，避免删除后立即/切后台刷新后被 realtime 重新显示。
 - `useTodoStore.deleteTodo()` 不再触发 annotation 事件；AI 批注当前仅由记录/完成/心情/闲置/过劳等保留事件驱动，删除待办只执行本地移除与 durable cloud delete。
 - `useReportStore.updateReport()` 现也接入 durable fallback：本地仍先乐观更新；若当前无 session 或 `reports.update(...)` 失败，则将完整 report 作为 `report.upsert` 入队，确保 title/content/stats/userNote/AI 结果类二次编辑不会因为瞬时网络问题丢失。
+- `useReportStore.updateReport()` 现在也会拦截已过期的 `daily.userNote` 修改：`My Diary` 只允许编辑到报告对应日期次日当地 `06:00`，逾期后即便页面误触发更新也不会再写入本地或 outbox。
 - `useAnnotationStore.recordSuggestionOutcome()` 现也接入 durable fallback：用户点“接受/拒绝建议”时本地状态先更新；若当前无 session 或 `suggestion_accepted` 更新失败，则把结果写入 `annotation.outcome` outbox，避免建议反馈丢失。
 - `useAuthStore` 的长期画像开关与语言切换也改成 local-first：先更新本地 UI，再后台写云端；画像开关写 `user_profiles`，语言仍写 Auth metadata。Profile 面板不再因为后台同步而闪出“Saving...”。
 - `useAuthStore` 的 onboarding 守卫现改为 `user_account_state` 优先：主判断读取 `accountState.onboardingStatus`；`userProfileV2.onboardingCompleted` 与旧 `seeday_onboarded_*` 本地标记只作为迁移/冷启动 fallback，避免 Google/Apple OAuth 新账号绕过 onboarding 或云端写失败后反复被送回引导。

@@ -1,3 +1,5 @@
+<!-- DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> api/README.md -> docs/AI_USAGE_INVENTORY.md -->
+
 # Frontend API Module
 
 ## Entry
@@ -8,18 +10,22 @@
 
 ## Public Interface
 
-- `callReportAPI()`
 - `callAnnotationAPI()`
 - `callClassifierAPI()`
 - `callDiaryAPI()`
+- `callShortInsightAPI()` (reuses `/api/diary`)
 - `callMagicPenParseAPI()`
 - `callTodoDecomposeAPI()`
 - `callPlantGenerateAPI()`
-- `callPlantDiaryAPI()`
 - `callPlantHistoryAPI()` (`GET` with auth headers + query params)
 - `callPlantAssetTelemetryAPI()` (records resolved plant image fallback level)
+- `callLiveInputTelemetryIngestAPI()` / `callLiveInputTelemetryDashboardAPI()`
+- `callUserAnalyticsDashboardAPI()` / `callUserAnalyticsLookupAPI()`
+- `callProfileSettingsTelemetryDashboardAPI()`
 - `callExtractProfileAPI()` (weekly report trigger; extracts `observed/dynamic/memory` profile patch, supports `lang` routing)
+- `callDeleteAccountAPI()`
 - `callSubscriptionAPI()` (membership activate/restore/cancel bridge for payment adapters)
+- `callActivateTrialAPI()`
 - `callStripeCheckoutAPI()` (web stripe adapter: create checkout session URL via `/api/subscription`)
 - `callStripeFinalizeAPI()` (web stripe adapter: finalize returned checkout session and persist plus metadata)
 - `upsertReminderResponse()` / `fetchReminderResponses()` (idempotent current-day cross-device reminder receipts)
@@ -39,7 +45,7 @@ Reminder receipts use the authenticated Supabase client directly; RLS restricts 
 - Error-shape changes can break store fallback handling
 - Any new endpoint must be reflected in both `src/api/client.ts` and `api/*`
 - `/api/annotation` internals are split as entry + handler + prompt templates (`api/annotation.ts`, `src/server/annotation-handler.ts`, `src/server/annotation-prompts.ts`)
-- Plant endpoints (`/api/plant-generate`, `/api/plant-diary`, `/api/plant-history`) require Supabase Bearer token from current session；其中 `plant-history` 是当前 GET 型端点。
+- Plant endpoints (`/api/plant-generate`, `/api/plant-history`) require Supabase Bearer token from current session；其中 `plant-history` 是当前 GET 型端点。
 - Plant generate response status includes `monthly_exhausted` when the current month has no unused candidate plant IDs left for the computed root type.
 - `callPlantGenerateAPI()` accepts optional `action: 'snapshot_existing'` to backfill an existing legacy plant's root snapshot without creating a new endpoint or bypassing user/date ownership checks.
 - Plant response records may include `rootSnapshot` (saved root segments, direction order, and generation-time activity details); clients should prefer it over rebuilding card backs from mutable messages.
@@ -58,7 +64,7 @@ Reminder receipts use the authenticated Supabase client directly; RLS restricts 
 - `callMagicPenParseAPI()` supports `lang` (`zh`/`en`/`it`), and server prompt routing now follows this field.
 - Magic Pen parse `segments[*].kind` now supports four kinds: `activity` / `mood` / `todo_add` / `activity_backfill` (plus `unparsed` array for unmatched content).
 - Magic Pen parse `segments[*]` now supports `timeRelation` (`realtime` / `future` / `past` / `unknown`) for parser-first direct-write gating.
-- Magic Pen now defaults to DeepSeek `deepseek-chat` via the existing OpenAI-compatible DeepSeek runtime (`DEEPSEEK_API_KEY`, optional `MAGIC_PEN_DEEPSEEK_API_KEY` / `MAGIC_PEN_DEEPSEEK_BASE_URL` / `MAGIC_PEN_MODEL`), treats empty/low-coverage/missing-time/under-split output as `low_quality`, and falls back to the existing local parser instead of chaining to Qwen/Zhipu.
+- Magic Pen treats empty/low-coverage/missing-time/under-split remote output as `low_quality` and falls back to the existing local parser. Current AI provider and model configuration are maintained only in `docs/AI_USAGE_INVENTORY.md`.
 - Provider exhaustion returns the complete submitted `rawText` in `unparsed`; the frontend no longer substitutes a fixed Chinese failure placeholder or silently slices requests at 500 characters.
 - Endpoint robustness includes `src/server/magic-pen-parse.test.ts`, `src/server/magic-pen-quality.test.ts`, and `src/services/input/magicPenParser.remoteFallback.test.ts`.
 - `callAnnotationAPI()` and `callDiaryAPI()` now automatically attach the current `preferences.aiMode` so annotation and diary prompts stay aligned with the selected companion persona.
@@ -77,9 +83,9 @@ Reminder receipts use the authenticated Supabase client directly; RLS restricts 
 - Annotation suggestion mode now uses a dedicated companion system prompt instead of the plain annotation system prompt. Todo targeting uses `todoId` as the only hard locator, rewrites `todoTitle` from the canonical pending-todo row, and only forced suggestion mode may whole-payload-fallback to another todo; allow-suggestion mode now drops the button instead of swapping in a different fallback todo.
 - `callAnnotationAPI()` response may include `narrativeEvent` (`eventType/eventId/instruction/isTriggeredReply`) so store layer can correlate low-density-triggered replies with `event_condensed` telemetry.
 - Annotation prompt assembly now goes through `src/server/annotation-prompt-builder.ts`, which centralizes prompt packaging for both annotation/suggestion paths and returns a unified `{ model, instructions, input }` payload to the LLM call.
-- Annotation model/provider 路由：`zh` 使用 `deepseek-chat`（`DEEPSEEK_API_KEY` + 可选 `ANNOTATION_DEEPSEEK_BASE_URL`，走 `chat.completions`），`en/it` 使用 `gpt-4.1-mini`（`OPENAI_API_KEY` + 可选 `OPENAI_BASE_URL`）。
+- Annotation provider 路由：中文使用 DeepSeek，英/意使用 OpenAI GPT；具体模型和环境变量以 `docs/AI_USAGE_INVENTORY.md` 为准。
 - Annotation 事件层新增待办完成透传：完成待办时会发送 `activity_completed`，并在 `eventData` 附带 `todoCompletionContext`（important/recurrence/createdAt/threeMonth）与按条件附加的紧凑 `summary`，普通输入继续走 `activity_recorded`。
-- `callTodoDecomposeAPI()` routes to `/api/todo-decompose`（由 `vercel.json` rewrite 到 `/api/classify` 的 `todo_decompose` 分支）；zh defaults to DeepSeek `deepseek-chat` (`DEEPSEEK_API_KEY`, override via `TODO_DECOMPOSE_MODEL_ZH`, optional `DEEPSEEK_BASE_URL`), en/it default to Gemini `gemini-2.5-flash` (`GEMINI_API_KEY`, override via `TODO_DECOMPOSE_MODEL`, auto-fallback via `TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`).
+- `callTodoDecomposeAPI()` routes to `/api/todo-decompose`（由 `vercel.json` rewrite 到 `/api/classify` 的 `todo_decompose` 分支）；中文使用 DeepSeek，英/意使用 Gemini，具体配置以 `docs/AI_USAGE_INVENTORY.md` 为准。
 - `callTodoDecomposeAPI()` now forwards Supabase `Authorization` header as a member-only path guard, aligned with `/api/classify` auth + Plus enforcement.
 - Plant diary generation now reads the authenticated user's `user_metadata.ai_mode` on the server side before building diary prompts.
 - The legacy `/api/chat` companion-response endpoint has been retired. `/chat` now runs as a record timeline plus Magic Pen surface, and all remaining AI calls still route through `/api/*`.
@@ -89,5 +95,6 @@ Reminder receipts use the authenticated Supabase client directly; RLS restricts 
 - `LLM.md`
 - `docs/PROJECT_MAP.md`
 - `api/README.md`
+- `docs/AI_USAGE_INVENTORY.md`
 - `docs/ARCHITECTURE.md`
 - `docs/CURRENT_TASK.md`

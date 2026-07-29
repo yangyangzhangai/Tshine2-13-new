@@ -40,7 +40,8 @@
   - AI diary generation and display (`DiaryBookShelf` + `DiaryBookViewer`)
   - Free-tier diary teaser blur-lock + upgrade CTA (`/upgrade`) in observation area
   - Diary detail modal and viewer path continue to be report-domain scoped (`ReportDetailModal` + `DiaryBookViewer`)
-  - Root-section "My Diary" textarea edits directly on focus and persists on blur/autosave (iOS WebView keyboard-safe path)
+- Root-section "My Diary" textarea edits directly on focus and persists on blur/autosave (iOS WebView keyboard-safe path)
+- Once today's AI diary is generated, the observation copy and first-page snapshot remain frozen, but the same day's `My Diary` note stays editable on the detail page until the next local-day `06:00`; after that cutoff it becomes read-only everywhere
 - Root canvas keeps its original `360 x 520` proportions across screen widths, anchors the root origin to the soil surface, and uses the same 16px horizontal gutter as the page title.
 - Root-page soil image starts at `106px` below the eco-sphere area, making the visible soil taller while preserving the root origin anchoring logic.
 - The two floating activity and mood donut charts above the soil render at `140px`. Their empty transparent bubbles and motion/collision bounds use the same shared `140px` size, preserving consistent occupied space when data appears or disappears.

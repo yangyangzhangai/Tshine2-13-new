@@ -388,9 +388,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const annotationClient = runtime.provider === 'gemini' && !/\/openai\/?$/i.test(String(runtime.baseURL || ''))
-    ? undefined
-    : createAnnotationClient(runtime);
+  const annotationClient = createAnnotationClient(runtime);
 
   // ==================== 建议模式（客户端门控透传） ====================
   const forceSuggestion = userContext?.forceSuggestion === true;
@@ -561,7 +559,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               const steps = await decomposeTodoWithAI({
                 title: targetTodo.title,
                 lang: resolvedLang,
-                qwenApiKey: process.env.QWEN_API_KEY,
                 geminiApiKey: process.env.GEMINI_API_KEY,
               });
               if (steps.length > 0) {

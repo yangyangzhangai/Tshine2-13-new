@@ -1,7 +1,7 @@
 # Seeday 全局地图（唯一版本）
 
-- 版本：v2.4
-- 更新：2026-07-16
+- 版本：v2.5
+- 更新：2026-07-29
 - 说明：本文件是当前仓库目录、架构边界与文档职责的唯一地图来源，只描述 as-is。
 - 权威顺序：`LLM.md / AGENTS.md` > `docs/CURRENT_TASK.md` > 本文件 > 模块 README / DOC-DEPS > `docs/CHANGELOG.md`。
 
@@ -50,13 +50,13 @@ src/
 
 ## 3. Serverless 端点
 
-- `api/report.ts`：报告生成。
 - `api/annotation.ts`：AI 批注与建议。
 - `api/classify.ts`：会员 AI 分类，并承载 todo decompose 兼容分支。
 - `api/diary.ts`：AI 日记。
+- `api/extract-profile.ts`：用户画像提取。
 - `api/magic-pen-parse.ts`：魔法笔结构化解析。
+- `api/delete-account.ts`：账号与用户业务数据删除。
 - `api/plant-generate.ts`：植物生成。
-- `api/plant-diary.ts`：植物日记。
 - `api/plant-history.ts`：植物历史。
 - `api/plant-asset-telemetry.ts`：植物资产遥测。
 - `api/live-input-telemetry.ts`：实时输入与用户分析遥测。
@@ -67,6 +67,7 @@ src/
 ## 4. 共享 server 模块
 
 - `src/server/http.ts`：CORS、method 和错误包装。
+- `src/server/deepseek-runtime.ts`：DeepSeek 路径共用的密钥、base URL、默认模型和兼容客户端。
 - `src/server/annotation-*.ts`：批注 handler、prompt、suggestion 和相似度。
 - `src/server/country-resolver.ts`、`holiday-resolver.ts`：国家与节日上下文。
 - `src/server/weather-*.ts`、`air-quality-provider.ts`：天气、空气质量和预警。
@@ -129,8 +130,8 @@ src/
 
 | 文档 | 状态 | 负责什么 |
 |---|---|---|
-| `docs/AI_USAGE_INVENTORY.md` | 现状审计 | AI 调用清单 |
-| `docs/AI_AUDIT_CLAUDE.md` | 审计材料 | 外部 AI 审计记录 |
+| `docs/AI_USAGE_INVENTORY.md` | 当前规范 / 唯一事实源 | AI 服务商、模型、调用入口、发送数据与日志边界 |
+| `docs/AI_AUDIT_CLAUDE.md` | 历史审计材料 | 旧版外部 AI 审计记录；不得作为现行 provider 口径 |
 | `docs/AI_USER_PROFILE_完整业务与技术说明.md` | 规范/说明 | AI 用户画像完整链路 |
 | `docs/用户画像模块_需求与技术文档_v1.md` | PRD/技术 | 用户画像模块 |
 | `docs/AI_SUGGESTION_OPTIMIZATION（用户画像）.md` | 计划 | 基于画像的建议优化 |

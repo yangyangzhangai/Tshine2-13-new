@@ -17,6 +17,7 @@ import { getDailyActivityDistribution, getDailyMoodDistribution, getMessagesForR
 import { callPlantGenerateAPI } from '../../api/client';
 import { getMoodDisplayLabel } from '../../lib/moodOptions';
 import { getPlantDisplayName } from '../../lib/plantDisplayName';
+import { canEditDailyMyDiary } from '../../lib/reportDiaryEditPolicy';
 import { APP_GREEN_GLASS_BUTTON_STYLE } from '../../lib/modalTheme';
 import { computeDailyTodoStats, generateActionSummary, generateMoodSummary } from '../../store/reportHelpers';
 import { buildDiaryPageSnapshot, type DiarySnapshotLang } from '../../store/reportDiarySnapshot';
@@ -219,11 +220,15 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
   const loadPlantHistory = usePlantStore((state) => state.loadPlantHistory);
   const cachePlantRecord = usePlantStore((state) => state.cachePlantRecord);
   const ensureDiaryPageSnapshot = useReportStore((state) => state.ensureDiaryPageSnapshot);
+  const updateReport = useReportStore((state) => state.updateReport);
   const currentDay = format(new Date(), 'yyyy-MM-dd');
   const pagesRef = useRef<HTMLDivElement | null>(null);
   const [activePage, setActivePage] = useState(initialPage ?? 0);
   const [diaryActionHint, setDiaryActionHint] = useState<string | null>(null);
   const [isDiaryGenerating, setIsDiaryGenerating] = useState(false);
+  const [editableMyDiaryText, setEditableMyDiaryText] = useState('');
+  const [isMyDiaryEditing, setIsMyDiaryEditing] = useState(false);
+  const [isMyDiarySaving, setIsMyDiarySaving] = useState(false);
   const plantAutoAttemptedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -303,6 +308,16 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
     if (isDiaryGenerating || selectedReport?.analysisStatus === 'generating') return false;
     return true;
   }, [diaryAlreadyGenerated, isDiaryGenerating, isTodayReport, selectedReport?.analysisStatus]);
+  const isMyDiaryEditable = useMemo(() => {
+    if (!selectedReport || _readOnly) return false;
+    return selectedReport.type === 'daily' && canEditDailyMyDiary(selectedReport.date);
+  }, [_readOnly, selectedReport]);
+
+  useEffect(() => {
+    setEditableMyDiaryText(selectedReport?.userNote ?? '');
+    setIsMyDiaryEditing(false);
+    setIsMyDiarySaving(false);
+  }, [selectedReport?.id, selectedReport?.userNote]);
 
   const liveTodayTodoStats = useMemo(() => {
     if (diaryPageSnapshot || !isTodayReport || !selectedReport?.date) return null;
@@ -376,6 +391,23 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
       setIsDiaryGenerating(false);
     }
   }, [_generateAIDiary, diaryAlreadyGenerated, selectedReport, t]);
+
+  const persistMyDiaryNote = useCallback(async () => {
+    if (!selectedReport || !isMyDiaryEditable) return;
+    if ((selectedReport.userNote ?? '') === editableMyDiaryText) return;
+    await updateReport(selectedReport.id, { userNote: editableMyDiaryText });
+  }, [editableMyDiaryText, isMyDiaryEditable, selectedReport, updateReport]);
+
+  const handleMyDiarySave = useCallback(async () => {
+    if (!isMyDiaryEditable) return;
+    setIsMyDiarySaving(true);
+    try {
+      await persistMyDiaryNote();
+    } finally {
+      setIsMyDiarySaving(false);
+      setIsMyDiaryEditing(false);
+    }
+  }, [isMyDiaryEditable, persistMyDiaryNote]);
 
   useEffect(() => {
     let cancelled = false;
@@ -490,9 +522,9 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
   const shouldShowUpgradeMask = !isPlus && selectedReport?.analysisStatus !== 'generating';
 
   const myDiaryText = useMemo(() => {
-    const raw = selectedReport?.userNote?.trim();
+    const raw = editableMyDiaryText.trim();
     return raw && raw.length > 0 ? raw : copy.diaryPlaceholder;
-  }, [selectedReport?.userNote, copy.diaryPlaceholder]);
+  }, [editableMyDiaryText, copy.diaryPlaceholder]);
 
   const activityChartData = useMemo<DataItem[]>(() => {
     if (activityDistribution.length === 0) return [{ name: t('no_data'), value: 100, color: '#E5E7EB' }];
@@ -783,8 +815,21 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                   <div className="text-sm font-bold" style={{ flexShrink: 0, padding: '1px 0' }}>{copy.sectionMyDiary}</div>
                   <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
                     <textarea
-                      readOnly
-                      value={myDiaryText}
+                      readOnly={!isMyDiaryEditable}
+                      value={isMyDiaryEditable ? editableMyDiaryText : myDiaryText}
+                      onChange={(event) => {
+                        if (!isMyDiaryEditable) return;
+                        setEditableMyDiaryText(event.target.value);
+                      }}
+                      onFocus={() => {
+                        if (!isMyDiaryEditable) return;
+                        setIsMyDiaryEditing(true);
+                      }}
+                      onBlur={() => {
+                        if (!isMyDiaryEditable || !isMyDiaryEditing) return;
+                        void persistMyDiaryNote();
+                        setIsMyDiaryEditing(false);
+                      }}
                       className="text-xs"
                       style={{
                         position: 'absolute',
@@ -796,13 +841,27 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                         resize: 'none',
                         background: 'transparent',
                         lineHeight: '18px',
-                        color: selectedReport.userNote?.trim() ? '#1A1A1A' : '#C8C8C0',
+                        color: myDiaryText === copy.diaryPlaceholder ? '#C8C8C0' : '#1A1A1A',
                         padding: '0 4px 0 2px',
                         margin: 0,
                         fontFamily: 'inherit',
                         boxSizing: 'border-box',
                       }}
                     />
+                    {isMyDiaryEditable && isMyDiaryEditing ? (
+                      <div style={{ position: 'absolute', right: 0, bottom: 0, paddingBottom: 2 }}>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => { void handleMyDiarySave(); }}
+                          disabled={isMyDiarySaving}
+                          className="rounded-full px-3 py-1 text-[11px] font-semibold disabled:opacity-70"
+                          style={APP_GREEN_GLASS_BUTTON_STYLE}
+                        >
+                          {isMyDiarySaving ? `${t('report_save')}...` : t('report_save')}
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>

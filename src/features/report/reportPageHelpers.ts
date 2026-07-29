@@ -6,6 +6,10 @@ import type { ActivityRecordType } from '../../lib/activityType';
 import { normalizeActivityType } from '../../lib/activityType';
 import { normalizeMoodKey } from '../../lib/moodOptions';
 import {
+  canEditDailyMyDiary,
+  getMyDiaryLockAt as getMyDiaryLockAtMs,
+} from '../../lib/reportDiaryEditPolicy';
+import {
   findPreferredReportForWindow,
   hasStoredDiaryText,
 } from '../../store/reportRecordResolver';
@@ -80,6 +84,15 @@ export function resolveDiaryBookInitialTarget(reports: Report[], now = new Date(
 
 export function isFutureDiaryDate(value: Date, now = new Date()): boolean {
   return startOfDay(value).getTime() > startOfDay(now).getTime();
+}
+
+export function getMyDiaryLockAt(reportDate: number | Date): number {
+  return getMyDiaryLockAtMs(reportDate);
+}
+
+export function canEditMyDiary(report: Report | null | undefined, now = new Date()): boolean {
+  if (!report || report.type !== 'daily') return false;
+  return canEditDailyMyDiary(report.date, now);
 }
 
 /** Return the best message source for a given report: cached date-specific messages if available, otherwise global messages. */

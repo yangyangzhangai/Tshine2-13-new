@@ -1,4 +1,9 @@
+<!-- DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> docs/AI_USAGE_INVENTORY.md -->
+
 # AI 代码审核记录 (Claude 独立审核)
+
+> [!WARNING]
+> 本文件是 2026-05-01 的历史代码审核快照，不维护当前 AI 服务商、模型或环境变量。现行口径只以 `docs/AI_USAGE_INVENTORY.md` 为准；下文出现的旧 provider 示例不得用于部署或 App Store 填写。
 
 **生成时间:** 2026-05-01  
 **审核人:** Claude (AI / Haiku 4.5)  

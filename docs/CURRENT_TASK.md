@@ -5,9 +5,13 @@ Owner: current working session
 
 Session Notes:
 
+- 2026-07-29: Updated the daily diary lock contract so generating today's AI diary after 20:00 still freezes the AI observation copy and snapshot immediately, but `My Diary` (`reports.userNote`) stays editable until the next local-day 06:00. Report detail page 2 now exposes that conditional edit window, and `useReportStore.updateReport()` rejects expired user-note writes so late UI or sync paths cannot reopen the note after lock time.
+
+- 2026-07-29: Retired Qwen, Zhipu, and Chutes without changing the existing GPT/OpenAI or Gemini routes. Classification and Magic Pen now use DeepSeek; annotation remains `zh=DeepSeek / en,it=OpenAI`; todo decomposition remains `zh=DeepSeek / en,it=Gemini`; diary/insight/profile/plant diary remain OpenAI. The orphaned Chutes `/api/report` endpoint was deleted, and `docs/AI_USAGE_INVENTORY.md` is now the sole provider/model/data-scope SSOT.
+
 - 2026-07-29: Split the oversized chat-store integration regression file into shared helpers plus four focused Vitest files (`useChatStore.autoRecognition/sync/timeline/reclassify.integration.test.ts`) so chat-store regression coverage stays intact while every individual test file is back under the max-lines pre-commit limit.
 
-- 2026-07-29: Tightened Growth todo card status density. `src/features/growth/GrowthTodoCard.tsx` now renders `today / tomorrow / overdue` as smaller inline pills beside the todo title instead of below it, and pinned todos show a matching compact pin pill in the same title-side status group so collapsed cards stay denser without mixing state chips into the right-side action cluster.
+- 2026-07-29: Tightened Growth todo card status density. `src/features/growth/GrowthTodoCard.tsx` now renders `today / tomorrow / overdue` as smaller inline pills immediately after the todo title text instead of below it, and pinned todos show a matching compact pin pill in the same left-attached title flow so collapsed cards stay denser without creating a right-aligned status block.
 
 - 2026-07-29: Switched Growth todo manual decompose to `DeepSeek` for Chinese only while keeping English/Italian on Gemini. `src/server/todo-decompose-service.ts` now defaults `zh` to `deepseek-chat`, keeps `en/it` on `gemini-2.5-flash`, caps normalized output to at most 5 sub-steps, and all API/docs/env notes were updated to reflect the new provider split.
 

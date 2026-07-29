@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-07-29 - My Diary stays editable until next-day 06:00
+
+- Kept the existing 20:00 AI diary generation gate and same-moment freeze for generated observation copy plus `stats.diaryPageSnapshot`, but changed the user-authored `My Diary` note (`reports.userNote`) to remain editable until the next local-day `06:00`.
+- `src/features/report/ReportDetailModal.tsx` now allows conditional editing on page 2 during that grace window instead of rendering `My Diary` as permanently read-only immediately after generation, while `src/features/report/plant/PlantRootSection.tsx` closes the root-surface editor once the same cutoff passes.
+- `src/store/useReportStore.ts` now rejects expired `daily.userNote` writes before local state/outbox changes, preventing late UI events from reopening a locked note after the grace window ends.
+
+## 2026-07-29 - Qwen/Zhipu/Chutes retired; GPT and Gemini preserved
+
+- Migrated the remaining Qwen classification path and Qwen/Zhipu Magic Pen chain to the shared DeepSeek `deepseek-chat` runtime, while preserving all existing OpenAI GPT and Gemini routes.
+- Kept annotation split as `zh=DeepSeek / en,it=OpenAI`, todo decomposition as `zh=DeepSeek / en,it=Gemini`, and diary/insight/profile/plant diary on OpenAI.
+- Deleted the orphaned Chutes-backed `/api/report` function and removed obsolete Qwen/Zhipu configuration plus the Magic Pen `fallbackFrom` client field.
+- Made `docs/AI_USAGE_INVENTORY.md` the sole current provider/model/data-scope SSOT and updated deployment, API, architecture, compliance, profile, project-map, and App Store submission docs to reference the three-provider runtime.
+
 ## 2026-07-29 - Chat store integration tests split under max-lines gate
 
 - Replaced the single oversized `src/store/useChatStore.integration.test.ts` with one shared helper file plus four focused suites: auto-recognition, timeline/manual-end edits, sync/images, and reclassify/mood stability.
@@ -7,7 +20,7 @@
 
 ## 2026-07-29 - Growth todo status pills moved inline with the title
 
-- Moved the compact `today / tomorrow / overdue` todo status pills from the second line below the title into the title row itself, shrinking the pill height so collapsed cards stay visually tighter.
+- Moved the compact `today / tomorrow / overdue` todo status pills from the second line below the title into the title row itself, attached directly after the title text instead of forming a right-aligned status area, while shrinking the pill height so collapsed cards stay visually tighter.
 - Pinned todos now show a matching compact pin pill beside the title, keeping pin state in the same visual language as due-state pills instead of hiding it only inside the expanded editor.
 - The right-side priority/start/focus action cluster is unchanged; title text still truncates first so the state pills remain readable on narrow mobile widths.
 
