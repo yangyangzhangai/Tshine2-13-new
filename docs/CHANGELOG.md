@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-30 - Account deletion now fails closed and clears storage
+
+- Reworked `api/delete-account.ts` to use the service-role client for explicit deletion of all currently known user-scoped tables before auth deletion, adding `telemetry_events`, `user_feedback`, `reminder_responses`, `user_profiles`, `user_account_state`, `user_login_days`, and `timing_sessions` to the hard-delete path.
+- Account deletion now recursively removes all `seeday-images/<userId>/**` objects, covering avatar uploads, current chat-image folders, and legacy top-level chat image files, before deleting the Supabase Auth user.
+- Apple-linked account deletion now attempts Sign in with Apple token revocation first when the current Supabase session exposes a provider token or provider refresh token and the server has Apple credentials; any revoke/delete/auth failure now aborts the flow instead of silently continuing with partial deletion.
+
+## 2026-07-30 - In-app privacy provider disclosure matches runtime
+
+- Updated the existing ZH/EN/IT privacy-policy i18n keys to list only the current AI providers: DeepSeek, OpenAI, and Google Gemini, with the actual language and feature routing.
+- Removed the unverified claims that AI providers retain content only for the session and never use it for model training; the policy now states that provider-side retention and training depend on applicable terms and the active account configuration.
+- Updated third-party disclosures to identify Supabase as Free and explain that Open-Meteo receives the configured region coordinates for weather and air-quality lookup, not journal text.
+
 ## 2026-07-29 - My Diary stays editable until next-day 06:00
 
 - Kept the existing 20:00 AI diary generation gate and same-moment freeze for generated observation copy plus `stats.diaryPageSnapshot`, but changed the user-authored `My Diary` note (`reports.userNote`) to remain editable until the next local-day `06:00`.

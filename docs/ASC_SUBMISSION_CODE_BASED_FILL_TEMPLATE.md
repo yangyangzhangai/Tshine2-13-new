@@ -81,7 +81,7 @@ Source: codebase snapshot only (no ASC backend state)
 
 ### 3.4 是否用于模型训练
 
-- App 内隐私文案当前口径：不用于训练 AI 模型
+- App 内隐私文案当前口径：不承诺第三方服务商“零留存”或“绝不训练”；服务商侧处理以适用条款和实际账号设置为准
 - 代码没有配置或证明 DeepSeek、OpenAI、Gemini 账号侧的训练/留存设置
 - 提审填写前必须分别用三家控制台截图或合同条款核实；不能只凭 App 文案作答
 

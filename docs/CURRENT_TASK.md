@@ -1,9 +1,13 @@
 # CURRENT TASK (Session Resume Anchor)
 
-Last Updated: 2026-07-29
+Last Updated: 2026-07-30
 Owner: current working session
 
 Session Notes:
+
+- 2026-07-30: Hardened `/api/delete-account` so account deletion now fails closed instead of silently best-effort deleting partial data. The handler uses the service-role client to explicitly delete all known user-scoped tables (including `telemetry_events`, `user_feedback`, `reminder_responses`, `user_profiles`, `user_account_state`, `user_login_days`, and `timing_sessions`), recursively removes all `seeday-images/<userId>/**` storage objects before auth deletion, and attempts Apple Sign in token revocation first when the current session exposes a provider token/refresh token plus the server has Apple credentials. Missing service-role config or any delete/revoke failure now aborts the flow with an API error instead of continuing to delete the auth user.
+
+- 2026-07-30: Updated the in-app ZH/EN/IT privacy-policy i18n copy to match the current DeepSeek/OpenAI/Gemini runtime, identify Supabase as Free, and disclose Open-Meteo coordinate use. Removed unverified AI-provider “session-only retention” and “never trains” promises; provider retention and training now defer to applicable terms and actual account settings pending submission evidence.
 
 - 2026-07-29: Updated the daily diary lock contract so generating today's AI diary after 20:00 still freezes the AI observation copy and snapshot immediately, but `My Diary` (`reports.userNote`) stays editable until the next local-day 06:00. Report detail page 2 now exposes that conditional edit window, and `useReportStore.updateReport()` rejects expired user-note writes so late UI or sync paths cannot reopen the note after lock time.
 

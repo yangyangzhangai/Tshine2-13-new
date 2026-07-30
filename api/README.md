@@ -37,6 +37,7 @@
 `/api/magic-pen-parse` 对可解析 JSON 仍执行语义质量门槛：空提取、低原文覆盖、漏掉明确时间锚点或复杂句拆分严重不足均视为 `low_quality`。远端失败时，响应会把完整 `rawText` 保留在 `unparsed`，供前端运行既有本地兜底。服务商与模型配置统一见 `docs/AI_USAGE_INVENTORY.md`。
 Plant endpoints require `Authorization: Bearer <supabase access token>` and validate current user before DB read/write.
 `/api/extract-profile` requires `Authorization: Bearer <supabase access token>` and accepts `recentMessages[] + lang` (`zh`/`en`/`it`) from frontend weekly-report flow.
+`/api/delete-account` requires `Authorization: Bearer <supabase access token>` plus `SUPABASE_SERVICE_ROLE_KEY`. It fails closed: for Apple-linked accounts it first attempts token revocation with the current session's provider token/refresh token plus server-side Apple credentials, then deletes known user-scoped tables with the service-role client, deletes all `seeday-images/<userId>/**` storage objects, and only then deletes the Supabase Auth user. Any step failure aborts the flow instead of silently continuing with partial deletion.
 `/api/plant-generate` `status` supports: `too_early` / `empty_day` / `generated` / `already_generated` / `monthly_exhausted`.
 `/api/plant-generate` accepts optional `action: 'snapshot_existing'`. This action is allowed before 20:00 only for an already-existing user/date record and stores its current cloud-derived root/activity/direction snapshot inside `root_metrics`; it never creates a new plant.
 Newly generated records include the same root snapshot, and Plus observation text is rejected/retried when it exceeds the card budget before falling back to the existing localized static line.
@@ -65,6 +66,7 @@ Membership AI classification path observability is recorded through `/api/live-i
 
 - AI 服务商、模型、发送数据范围和 AI 日志边界只在 `docs/AI_USAGE_INVENTORY.md` 维护；本文件不再复制 provider 映射。
 - `/api/subscription` 使用 Apple App Store Server API（`APPLE_IAP_ISSUER_ID`、`APPLE_IAP_KEY_ID`、`APPLE_IAP_PRIVATE_KEY`、`APPLE_IAP_BUNDLE_ID`）和 Stripe API（`STRIPE_SECRET_KEY`、`STRIPE_PRICE_MONTHLY`、`STRIPE_PRICE_ANNUAL`）。
+- `/api/delete-account` 复用 `APPLE_IAP_ISSUER_ID`、`APPLE_IAP_KEY_ID`、`APPLE_IAP_PRIVATE_KEY`，并可选读取 `APPLE_SIGN_IN_CLIENT_ID`（未设置时回退 `APPLE_IAP_BUNDLE_ID`）来生成 Apple Sign in token revoke 的 client secret。
 
 ## 本地调试（Windows）
 

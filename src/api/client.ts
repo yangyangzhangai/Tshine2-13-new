@@ -772,10 +772,23 @@ export async function callProfileSettingsTelemetryDashboardAPI(days = 7): Promis
 
 // ── Delete Account API ────────────────────────────────────────────────────────
 
+interface DeleteAccountRequest {
+  providerToken?: string;
+  providerRefreshToken?: string;
+}
+
 export async function callDeleteAccountAPI(): Promise<void> {
   const headers = await getAuthHeaders();
   if (!headers.Authorization) throw createUnauthorizedApiError('/delete-account');
-  await postJson<Record<string, never>, { ok: boolean }>('/delete-account', {}, { headers });
+  const session = await getSupabaseSession('callDeleteAccountAPI');
+  const body: DeleteAccountRequest = {};
+  if (typeof session?.provider_token === 'string' && session.provider_token.trim()) {
+    body.providerToken = session.provider_token;
+  }
+  if (typeof session?.provider_refresh_token === 'string' && session.provider_refresh_token.trim()) {
+    body.providerRefreshToken = session.provider_refresh_token;
+  }
+  await postJson<DeleteAccountRequest, { ok: boolean }>('/delete-account', body, { headers });
 }
 
 // ── Todo Decompose API ────────────────────────────────────────────────────────

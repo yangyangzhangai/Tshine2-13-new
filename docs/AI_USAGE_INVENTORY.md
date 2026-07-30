@@ -63,7 +63,7 @@ DeepSeek 共用解析逻辑位于 `src/server/deepseek-runtime.ts`。新增或�
 - Vercel 函数日志与 AI 服务商侧留存是两件不同的事，真实期限应在独立的数据留存文档中分别记录。
 - `ANNOTATION_VERBOSE_LOGS=true` 会记录事件上下文、完整 prompt、原始模型输出和最终响应，可能包含用户日记信息；生产环境应保持关闭。
 - `ANNOTATION_PROMPT_DEBUG` 和 `MAGIC_PEN_DEBUG` 只应用于受控调试，不能作为生产常开设置。
-- 当前三语隐私政策仍含迁移前的供应商列表和未经账号证据确认的留存表述，不能作为现行技术事实；提审前必须按 `AGENTS.md` 的用户可见文案确认流程更新。
+- App 内三语隐私政策已于 2026-07-30 更新为 DeepSeek、OpenAI、Google Gemini 三家现行服务商，并明确代码不设置服务商侧留存期限；训练与留存结论仍须由服务商条款及实际账号设置佐证。
 
 ## 5. 变更规则
 

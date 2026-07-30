@@ -23,7 +23,7 @@
 - `callUserAnalyticsDashboardAPI()` / `callUserAnalyticsLookupAPI()`
 - `callProfileSettingsTelemetryDashboardAPI()`
 - `callExtractProfileAPI()` (weekly report trigger; extracts `observed/dynamic/memory` profile patch, supports `lang` routing)
-- `callDeleteAccountAPI()`
+- `callDeleteAccountAPI()` (forwards the current Supabase provider token / provider refresh token when present so server-side Apple revoke can run before auth deletion)
 - `callSubscriptionAPI()` (membership activate/restore/cancel bridge for payment adapters)
 - `callActivateTrialAPI()`
 - `callStripeCheckoutAPI()` (web stripe adapter: create checkout session URL via `/api/subscription`)
