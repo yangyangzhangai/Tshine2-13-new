@@ -77,7 +77,7 @@
 
 ### 架构边界（红线）
 
-- 前端 `src/**` **禁止直连第三方 AI 密钥或 SDK**（OPENAI_API_KEY、QWEN_API_KEY、ZHIPU_API_KEY 均只能在 `api/*.ts` 中读取）
+- 浏览器端 `src/**`（不含 serverless 共用代码 `src/server/**`）**禁止直连第三方 AI 密钥或 SDK**；`DEEPSEEK_API_KEY`、`OPENAI_API_KEY`、`GEMINI_API_KEY` 只能由 `api/*.ts` / `src/server/*.ts` 在服务端读取
 - AI 请求统一走 `src/api/client.ts` → `api/*` serverless handler
 - 密钥只从 `process.env` 读取，任何形式的硬编码都是违规
 - 新页面只能放在 `src/features/*`，禁止在其他位置新建

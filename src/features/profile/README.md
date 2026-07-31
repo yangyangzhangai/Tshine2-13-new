@@ -64,10 +64,11 @@ UpgradePage
 - **Weekly streak**: calculated from `user_login_days` plus activity fallback for older accounts
 - **Account lifecycle state**: onboarding progress/completion, normalized FREE/PLUS snapshot, and future deletion intent are being centralized in `user_account_state`; profile surfaces should continue to treat `user_profiles` as memory/routine storage, not as the source of truth for onboarding status
 - **Direction settings**: maps 5 `PlantCategoryKey` values (work_study, exercise, social, entertainment, life) to plant root positions; saved via `usePlantStore.setDirectionOrder()` with local-first restore, and emits telemetry for open/change/reset/save outcomes
+- **Privacy disclosure**: the existing ZH/EN/IT i18n policy keys list DeepSeek, OpenAI, and Google Gemini with their current language/feature routing, identify Supabase as Free, disclose Open-Meteo coordinate use, and avoid unverified provider retention/training promises
 
 ## Downstream Impact
 
-- AI mode preference affects annotation prompts (`/api/annotation`), diary prompts (`/api/diary`), and plant diary prompts (`/api/plant-diary`)
+- AI mode preference affects annotation prompts (`/api/annotation`), diary prompts (`/api/diary`), and plant diary prompts inside `/api/plant-generate`
 - Daily goal toggle controls popup visibility in `/growth` GrowthPage
 - Direction settings affect plant root rendering in `/report` PlantRootSection
 - Avatar and display name changes reflect across all features via `useAuthStore.user`

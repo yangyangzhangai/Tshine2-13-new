@@ -17,7 +17,7 @@ import {
 } from './chatActions';
 import { getLocalDateString } from './chatHelpers';
 import { pruneDateCache } from './chatPersistenceHelpers';
-import { projectMessagesForDate } from './chatSyncHelpers';
+import { applyChatMessageSyncState, projectMessagesForDate } from './chatSyncHelpers';
 import i18n from '../i18n';
 import type { SupportedLang } from '../services/input/lexicon/getLexicon';
 import { resolveAutoActivityEndMs, resolveAutoActivityDurationMinutes } from './chatDayBoundary';
@@ -365,28 +365,65 @@ export function createChatTimelineActions(
   };
 
   const updateMessageImage = async (id: string, slot: 'imageUrl' | 'imageUrl2', url: string | null) => {
-    const dbCol = slot === 'imageUrl' ? 'image_url' : 'image_url_2';
+    const target = get().messages.find((message) => message.id === id);
+    if (!target) return;
+
+    const updatedMessage: Message = {
+      ...target,
+      [slot]: url,
+      syncState: 'pending',
+      syncError: null,
+    };
+    const dateStr = getLocalDateString(new Date(updatedMessage.timestamp));
+
     set(state => {
-      const updateMessage = (message: Message): Message => (
-        message.id === id ? { ...message, [slot]: url } : message
-      );
+      const nextMessages = state.messages.map((message) => (
+        message.id === id ? updatedMessage : message
+      ));
 
       return {
-        messages: state.messages.map(updateMessage),
-        dateCache: pruneDateCache(
-          Object.fromEntries(
-            Object.entries(state.dateCache).map(([dateStr, messages]) => [dateStr, messages.map(updateMessage)]),
-          ),
-        ),
+        messages: nextMessages,
+        dateCache: pruneDateCache({
+          ...state.dateCache,
+          [dateStr]: projectMessagesForDate(nextMessages, dateStr),
+        }),
       };
     });
-    const session = await getSupabaseSession();
-    if (session) {
-      await supabase
-        .from('messages')
-        .update({ [dbCol]: url })
-        .eq('id', id)
-        .eq('user_id', session.user.id);
+
+    if (url?.startsWith('data:')) {
+      return;
+    }
+
+    try {
+      const session = await getSupabaseSession();
+      if (!session) {
+        useOutboxStore.getState().enqueue({
+          kind: 'chat.upsert',
+          payload: { message: updatedMessage },
+          consecutiveFailures: 0,
+        });
+        return;
+      }
+      await persistMessageToSupabase(updatedMessage, session.user.id);
+      set((currentState) => applyChatMessageSyncState(
+        currentState as any,
+        id,
+        'synced',
+        null,
+      ));
+    } catch (error) {
+      useOutboxStore.getState().enqueue({
+        kind: 'chat.upsert',
+        payload: { message: updatedMessage },
+        consecutiveFailures: 0,
+      });
+      const syncError = error instanceof Error ? error.message : 'image_sync_failed';
+      set((currentState) => applyChatMessageSyncState(
+        currentState as any,
+        id,
+        'pending',
+        syncError,
+      ));
     }
   };
 

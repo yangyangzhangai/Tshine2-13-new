@@ -47,13 +47,13 @@ Seeday 是一个围绕时间记录的应用，核心闭环是：
 1. 页面触发 store action。
 2. store 读写 Supabase（`src/api/supabase.ts`）和本地持久化状态。
 3. AI 相关能力统一由 `src/api/client.ts` 调用 `api/*` serverless。
-4. serverless 在服务端读取 `OPENAI_API_KEY`、`QWEN_API_KEY`、`ZHIPU_API_KEY` 等环境变量并请求外部模型。
+4. serverless 在服务端读取 DeepSeek、OpenAI、Gemini 的对应密钥；端点和语言映射统一见 `docs/AI_USAGE_INVENTORY.md`。
 
 约束: 前端 `src/**` 不应直连带密钥的第三方 AI 服务。
 
 ## 5. 目录分工（当前）
 
-- `api/`: Vercel serverless（报告、批注、分类、日记、stardust、Magic Pen、植物）
+- `api/`: Vercel serverless（批注、分类、日记、画像、Magic Pen、植物、订阅、删除账号与遥测）
 - `src/features/`: 业务模块（auth/chat/growth/report/profile）
 - `src/store/`: Zustand store 与 actions/helpers
 - `src/api/`: 前端 API client 与 Supabase 实例
@@ -81,9 +81,9 @@ Seeday 是一个围绕时间记录的应用，核心闭环是：
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `DEEPSEEK_API_KEY`
 - `OPENAI_API_KEY`
-- `QWEN_API_KEY`
-- `ZHIPU_API_KEY`
+- `GEMINI_API_KEY`
 
 ## 8. 当前已知风险
 

@@ -1,4 +1,9 @@
 // DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> api/README.md
+import {
+  getDeepSeekChatCompletionsUrl,
+  resolveDeepSeekRuntime,
+} from './deepseek-runtime.js';
+
 type DecomposeLang = 'zh' | 'en' | 'it';
 
 export interface TodoDecomposeStep {
@@ -10,12 +15,11 @@ export interface TodoDecomposeResult {
   steps: TodoDecomposeStep[];
   parseStatus: 'ok' | 'parse_failed';
   model: string;
-  provider: 'gemini' | 'dashscope';
+  provider: 'gemini' | 'deepseek';
 }
 
-const DEFAULT_DASHSCOPE_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
-const DEFAULT_TODO_DECOMPOSE_GEMINI_MODEL = 'gemini-2.5-flash';
+const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 const ENABLE_VERBOSE_TODO_DECOMPOSE_LOGS = process.env.TODO_DECOMPOSE_VERBOSE_LOGS === 'true';
 
 function previewText(raw: string, maxLen: number = 220): string {
@@ -27,7 +31,7 @@ function previewText(raw: string, maxLen: number = 220): string {
 
 const DECOMPOSE_PROMPT_ZH = `你是一个“低摩擦任务拆解助手”。
 你的唯一目标：把用户的待办拆成一组“立即可执行、操作非常具体、执行阻力很低”的小步骤。
-将用户待办拆解为3到6个子步骤，并严格输出JSON。
+将用户待办拆解为3到5个子步骤，并严格输出JSON。
 不要输出任何解释、前缀、后缀或Markdown代码块，只输出JSON本身。
 
 【核心原则】
@@ -53,7 +57,7 @@ const DECOMPOSE_PROMPT_ZH = `你是一个“低摩擦任务拆解助手”。
 
 const DECOMPOSE_PROMPT_EN = `You are a low-friction task breakdown assistant.
 Your only goal is to turn the user's todo into a sequence of tiny steps that are immediately actionable, highly specific, and easy to execute.
-Break the todo into 3 to 6 sub-steps and output strict JSON.
+Break the todo into 3 to 5 sub-steps and output strict JSON.
 Do NOT output explanations, prefixes, suffixes, or Markdown code blocks. Output JSON only.
 
 [Core Principles]
@@ -79,7 +83,7 @@ Do NOT output explanations, prefixes, suffixes, or Markdown code blocks. Output 
 
 const DECOMPOSE_PROMPT_IT = `Sei un assistente di scomposizione task a basso attrito.
 Il tuo unico obiettivo e trasformare il todo dell'utente in una sequenza di micro-passi immediatamente eseguibili, molto specifici e facili da portare a termine.
-Scomponi il todo in 3-6 sotto-passi e restituisci JSON rigoroso.
+Scomponi il todo in 3-5 sotto-passi e restituisci JSON rigoroso.
 NON produrre spiegazioni, prefissi, suffissi o blocchi Markdown. Solo JSON.
 
 [Principi chiave]
@@ -136,7 +140,7 @@ function normalizeSteps(steps: unknown): TodoDecomposeStep[] {
       (item): item is { title: string; durationMinutes: unknown } =>
         typeof item.title === 'string' && item.title.trim().length > 0,
     )
-    .slice(0, 6)
+    .slice(0, 5)
     .map((item) => ({
       title: item.title.trim(),
       durationMinutes: Math.min(90, Math.max(5, Number(item.durationMinutes) || 15)),
@@ -145,205 +149,159 @@ function normalizeSteps(steps: unknown): TodoDecomposeStep[] {
 
 function resolveDecomposeModel(lang: DecomposeLang, model?: string): string {
   if (typeof model === 'string' && model.trim()) return model.trim();
-  if (lang === 'zh') {
-    return (process.env.TODO_DECOMPOSE_MODEL_ZH || 'qwen-plus').trim() || 'qwen-plus';
+  if (lang === 'zh') return process.env.TODO_DECOMPOSE_MODEL_ZH?.trim() || 'deepseek-chat';
+  return process.env.TODO_DECOMPOSE_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+}
+
+type TodoDecomposeParams = {
+  title: string;
+  lang: DecomposeLang;
+  model?: string;
+  geminiApiKey?: string;
+};
+
+function logDeepSeekError(model: string, response: Response, errorText: string): void {
+  if (!ENABLE_VERBOSE_TODO_DECOMPOSE_LOGS) return;
+  console.error('[Todo Decompose] provider.deepseek.error', {
+    model,
+    status: response.status,
+    statusText: response.statusText,
+    responsePreview: previewText(errorText),
+    responseRaw: errorText,
+  });
+}
+
+async function requestDeepSeekDecomposition(params: TodoDecomposeParams, model: string): Promise<string> {
+  const runtime = resolveDeepSeekRuntime({ model });
+  if (!runtime.apiKey) throw new Error('Server configuration error: Missing DEEPSEEK_API_KEY for todo decompose');
+  const response = await fetch(getDeepSeekChatCompletionsUrl(runtime.baseURL), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${runtime.apiKey}` },
+    body: JSON.stringify({
+      model: runtime.model,
+      messages: [
+        { role: 'system', content: resolvePrompt(params.lang) },
+        { role: 'user', content: params.title.trim() },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.5,
+      max_tokens: 512,
+      stream: false,
+    }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    logDeepSeekError(runtime.model, response, errorText);
+    throw new Error(`DeepSeek todo decompose failed: ${response.status} ${errorText}`);
   }
-  return (
-    process.env.TODO_DECOMPOSE_MODEL
-    || DEFAULT_TODO_DECOMPOSE_GEMINI_MODEL
-  ).trim() || DEFAULT_TODO_DECOMPOSE_GEMINI_MODEL;
+  const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+  return payload.choices?.[0]?.message?.content || '';
 }
 
 function normalizeGeminiModel(model: string): string {
-  const trimmed = String(model || '').trim();
-  if (!trimmed) return DEFAULT_TODO_DECOMPOSE_GEMINI_MODEL;
-  if (trimmed === 'gemini2.0-flash') return 'gemini-2.0-flash';
-  if (trimmed === 'gemini2.5-flash') return 'gemini-2.5-flash';
-  if (trimmed.startsWith('models/')) return trimmed.slice(7);
-  return trimmed;
+  const normalized = model.trim().replace(/^models\//, '');
+  if (normalized === 'gemini2.0-flash') return 'gemini-2.0-flash';
+  if (normalized === 'gemini2.5-flash') return 'gemini-2.5-flash';
+  return normalized || DEFAULT_GEMINI_MODEL;
 }
 
-function shouldRetryGeminiModelNotFound(status: number, errorText: string): boolean {
-  if (status !== 404) return false;
-  const normalizedError = String(errorText || '').toLowerCase();
-  return (
-    normalizedError.includes('not_found')
-    || normalizedError.includes('not found')
-    || normalizedError.includes('no longer available')
+function isGeminiModelMissing(status: number, details: string): boolean {
+  const normalized = details.toLowerCase();
+  return status === 404 && (
+    normalized.includes('not_found')
+    || normalized.includes('not found')
+    || normalized.includes('no longer available')
   );
 }
 
-export async function decomposeTodoWithAI(params: {
-  title: string;
-  lang: DecomposeLang;
-  model?: string;
-  qwenApiKey?: string;
-  geminiApiKey?: string;
-}): Promise<TodoDecomposeStep[]> {
-  const result = await decomposeTodoWithAIDiagnostics(params);
-  return result.steps;
+async function requestGeminiOnce(
+  params: TodoDecomposeParams,
+  baseURL: string,
+  apiKey: string,
+  model: string,
+): Promise<Response> {
+  const url = `${baseURL}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: resolvePrompt(params.lang) }] },
+      contents: [{ role: 'user', parts: [{ text: params.title.trim() }] }],
+      generationConfig: {
+        temperature: 0.5,
+        maxOutputTokens: 512,
+        responseMimeType: 'application/json',
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    }),
+  });
 }
 
-export async function decomposeTodoWithAIDiagnostics(params: {
-  title: string;
-  lang: DecomposeLang;
-  model?: string;
-  qwenApiKey?: string;
-  geminiApiKey?: string;
-}): Promise<TodoDecomposeResult> {
-  const model = resolveDecomposeModel(params.lang, params.model);
-  const preferDashscope = /^qwen/i.test(model);
-  let provider: 'gemini' | 'dashscope' = preferDashscope ? 'dashscope' : 'gemini';
-  let modelUsed = model;
-  let rawContent = '';
+function logGeminiError(model: string, response: Response, details: string): void {
+  if (!ENABLE_VERBOSE_TODO_DECOMPOSE_LOGS) return;
+  console.error('[Todo Decompose] provider.gemini.error', {
+    model,
+    status: response.status,
+    statusText: response.statusText,
+    responsePreview: previewText(details),
+    responseRaw: details,
+  });
+}
 
-  if (preferDashscope) {
-    const qwenApiKey = (params.qwenApiKey || process.env.QWEN_API_KEY || '').trim();
-    if (!qwenApiKey) {
-      throw new Error('Server configuration error: Missing QWEN_API_KEY for todo decompose');
-    }
-    const dashscopeBase = (
-      process.env.QWEN_BASE_URL
-      || process.env.DASHSCOPE_BASE_URL
-      || DEFAULT_DASHSCOPE_BASE_URL
-    ).replace(/\/$/, '');
-    const response = await fetch(`${dashscopeBase}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${qwenApiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: resolvePrompt(params.lang) },
-          { role: 'user', content: params.title.trim() },
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.5,
-        max_tokens: 512,
-        stream: false,
-      }),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      if (ENABLE_VERBOSE_TODO_DECOMPOSE_LOGS) {
-        console.error('[Todo Decompose] provider.dashscope.error', {
-          model,
-          status: response.status,
-          statusText: response.statusText,
-          responsePreview: previewText(errorText),
-          responseRaw: errorText,
-        });
-      }
-      throw new Error(`DashScope todo decompose failed: ${response.status} ${errorText}`);
-    }
-    const payload = (await response.json()) as {
-      usage?: unknown;
-      choices?: Array<{
-        finish_reason?: string;
-        message?: { content?: string };
-      }>;
-    };
-    rawContent = payload.choices?.[0]?.message?.content || '';
-    provider = 'dashscope';
-  } else {
-    const geminiApiKey = (params.geminiApiKey || process.env.GEMINI_API_KEY || '').trim();
-    if (!geminiApiKey) {
-      throw new Error('Server configuration error: Missing GEMINI_API_KEY for todo decompose');
-    }
-    const geminiBase = (
-      process.env.TODO_DECOMPOSE_GEMINI_BASE_URL
-      || process.env.GEMINI_BASE_URL
-      || DEFAULT_GEMINI_BASE_URL
-    ).replace(/\/$/, '');
-    const geminiModel = normalizeGeminiModel(model);
-    const fallbackGeminiModel = normalizeGeminiModel(
-      process.env.TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL || DEFAULT_TODO_DECOMPOSE_GEMINI_MODEL,
+async function requestGeminiDecomposition(
+  params: TodoDecomposeParams,
+  model: string,
+): Promise<{ rawContent: string; model: string }> {
+  const apiKey = (params.geminiApiKey || process.env.GEMINI_API_KEY || '').trim();
+  if (!apiKey) throw new Error('Server configuration error: Missing GEMINI_API_KEY for todo decompose');
+  const baseURL = (
+    process.env.TODO_DECOMPOSE_GEMINI_BASE_URL
+    || process.env.GEMINI_BASE_URL
+    || DEFAULT_GEMINI_BASE_URL
+  ).replace(/\/+$/, '');
+  let modelUsed = normalizeGeminiModel(model);
+  let response = await requestGeminiOnce(params, baseURL, apiKey, modelUsed);
+  if (!response.ok) {
+    const details = await response.text();
+    const fallback = normalizeGeminiModel(
+      process.env.TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL || DEFAULT_GEMINI_MODEL,
     );
-    const requestGemini = async (targetModel: string) => fetch(
-      `${geminiBase}/models/${targetModel}:generateContent?key=${encodeURIComponent(geminiApiKey)}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: resolvePrompt(params.lang) }],
-          },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: params.title.trim() }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.5,
-            maxOutputTokens: 512,
-            responseMimeType: 'application/json',
-            thinkingConfig: {
-              thinkingBudget: 0,
-            },
-          },
-        }),
-      },
-    );
-    let response = await requestGemini(geminiModel);
-    modelUsed = geminiModel;
-    if (!response.ok) {
-      const firstErrorText = await response.text();
-      const shouldRetry = (
-        geminiModel !== fallbackGeminiModel
-        && shouldRetryGeminiModelNotFound(response.status, firstErrorText)
-      );
-      if (shouldRetry) {
-        if (ENABLE_VERBOSE_TODO_DECOMPOSE_LOGS) {
-          console.warn('[Todo Decompose] provider.gemini.retry', {
-            reason: 'model_not_found',
-            fromModel: geminiModel,
-            toModel: fallbackGeminiModel,
-            status: response.status,
-            responsePreview: previewText(firstErrorText),
-            responseRaw: firstErrorText,
-          });
-        }
-        response = await requestGemini(fallbackGeminiModel);
-        modelUsed = fallbackGeminiModel;
-      }
-      if (!response.ok) {
-        const secondErrorText = await response.text();
-        if (ENABLE_VERBOSE_TODO_DECOMPOSE_LOGS) {
-          console.error('[Todo Decompose] provider.gemini.error', {
-            model: modelUsed,
-            status: response.status,
-            statusText: response.statusText,
-            responsePreview: previewText(secondErrorText),
-            responseRaw: secondErrorText,
-          });
-        }
-        throw new Error(`Gemini todo decompose failed: ${response.status} ${secondErrorText}`);
-      }
+    if (modelUsed !== fallback && isGeminiModelMissing(response.status, details)) {
+      modelUsed = fallback;
+      response = await requestGeminiOnce(params, baseURL, apiKey, modelUsed);
+    } else {
+      logGeminiError(modelUsed, response, details);
+      throw new Error(`Gemini todo decompose failed: ${response.status} ${details}`);
     }
-    const payload = (await response.json()) as {
-      usageMetadata?: unknown;
-      candidates?: Array<{
-        finishReason?: string;
-        content?: {
-          parts?: Array<{ text?: string }>;
-        };
-      }>;
-    };
-    rawContent = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
-    provider = 'gemini';
   }
+  if (!response.ok) {
+    const details = await response.text();
+    logGeminiError(modelUsed, response, details);
+    throw new Error(`Gemini todo decompose failed: ${response.status} ${details}`);
+  }
+  const payload = await response.json() as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  const rawContent = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
+  return { rawContent, model: modelUsed };
+}
 
+export async function decomposeTodoWithAI(params: TodoDecomposeParams): Promise<TodoDecomposeStep[]> {
+  return (await decomposeTodoWithAIDiagnostics(params)).steps;
+}
+
+export async function decomposeTodoWithAIDiagnostics(params: TodoDecomposeParams): Promise<TodoDecomposeResult> {
+  const model = resolveDecomposeModel(params.lang, params.model);
+  const provider = params.lang === 'zh' ? 'deepseek' : 'gemini';
+  const result = provider === 'deepseek'
+    ? { rawContent: await requestDeepSeekDecomposition(params, model), model }
+    : await requestGeminiDecomposition(params, model);
+  const rawContent = result.rawContent;
   const parsed = parseResponse(rawContent);
-  const normalizedSteps = normalizeSteps(parsed.steps);
   return {
-    steps: normalizedSteps,
+    steps: normalizeSteps(parsed.steps),
     parseStatus: parsed.parseStatus,
-    model: modelUsed,
+    model: result.model,
     provider,
   };
 }

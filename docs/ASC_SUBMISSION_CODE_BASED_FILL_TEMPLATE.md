@@ -1,8 +1,8 @@
-# DOC-DEPS: CLAUDE.md -> docs/PROJECT_MAP.md -> docs/APP_REVIEW_ASR_NR_AUDIT_TRACKER.md
+# DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> docs/AI_USAGE_INVENTORY.md -> docs/APP_REVIEW_ASR_NR_AUDIT_TRACKER.md
 
 # App Store Connect 提审填写模板（基于当前代码）
 
-Last Updated: 2026-05-01
+Last Updated: 2026-07-29
 Source: codebase snapshot only (no ASC backend state)
 
 ## 1) 应用信息（可直接对照填写）
@@ -22,24 +22,27 @@ Source: codebase snapshot only (no ASC backend state)
 
 ### 2.1 AI 相关供应商
 
-- OpenAI（日报/日记/画像提取/植物日记等）
-- DeepSeek（annotation provider 分支）
-- Alibaba DashScope / Qwen（分类、待办拆解、Magic Pen fallback）
-- Zhipu AI（Magic Pen 主路）
-- Google Gemini（待办拆解、annotation provider 分支）
+- DeepSeek（中文批注、输入分类、中文待办拆解、魔法笔）
+- OpenAI（英/意批注、完整日记、短洞察、画像提取、植物观察日记）
+- Google Gemini（英/意待办拆解）
+- Qwen、智谱与 Chutes 已退出运行时；当前没有跨供应商自动兜底
+- 现行模型、调用入口、发送数据范围与留存证据边界统一见 `docs/AI_USAGE_INVENTORY.md`
 
 代码证据：
+- `docs/AI_USAGE_INVENTORY.md`
+- `src/server/deepseek-runtime.ts`
+- `src/server/annotation-provider-runtime.ts`
 - `api/diary.ts`
 - `api/extract-profile.ts`
 - `src/server/plant-diary-service.ts`
-- `src/server/annotation-provider-runtime.ts`
+- `src/server/annotation-handler.ts`
 - `api/classify.ts`
 - `src/server/todo-decompose-service.ts`
 - `api/magic-pen-parse.ts`
 
 ### 2.2 非 AI 第三方服务（iOS 提审口径）
 
-- Supabase（身份认证 + 数据库）
+- Supabase Free（身份认证 + 数据库）
 - Apple App Store Server API（IAP 验证）
 - Open-Meteo（天气/空气质量上下文）
 
@@ -78,8 +81,9 @@ Source: codebase snapshot only (no ASC backend state)
 
 ### 3.4 是否用于模型训练
 
-- App 内隐私文案当前口径：不用于训练 AI 模型
-- 提审填写需确保与供应商合同条款一致
+- App 内隐私文案当前口径：不承诺第三方服务商“零留存”或“绝不训练”；服务商侧处理以适用条款和实际账号设置为准
+- 代码没有配置或证明 DeepSeek、OpenAI、Gemini 账号侧的训练/留存设置
+- 提审填写前必须分别用三家控制台截图或合同条款核实；不能只凭 App 文案作答
 
 代码证据：
 - `src/i18n/locales/en.ts`

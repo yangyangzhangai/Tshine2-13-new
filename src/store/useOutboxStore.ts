@@ -15,7 +15,6 @@ import { upsertReminderResponse } from '../api/reminderResponses';
 import { createScopedJSONStorage } from './scopedPersistStorage';
 import { isMultiAccountIsolationV2Enabled, readActiveStorageScope } from './storageScope';
 import { formatUserFacingDiagnostic, logDiagnostic } from '../lib/diagnostics';
-import { resolveChatImageStoragePath } from '../lib/chatImageStorage';
 import {
   collectUniqueMessages,
   fetchExistingCloudMessageIds,
@@ -132,7 +131,7 @@ type PlantDirectionOutboxEntry = {
 type ImageReuploadOutboxEntry = {
   id: string;
   kind: 'image.reupload';
-  payload: { messageId: string; slot: 'imageUrl' | 'imageUrl2' };
+  payload: { messageId: string; slot: 'imageUrl' | 'imageUrl2'; storagePath: string };
   attempts: number;
   consecutiveFailures: number;
   status: 'pending' | 'cooldown' | 'failed';
@@ -262,7 +261,7 @@ async function executeImageReuploadEntry(entry: ImageReuploadOutboxEntry, userId
   const dataUrl = entry.payload.slot === 'imageUrl' ? message?.imageUrl : message?.imageUrl2;
   if (!dataUrl?.startsWith('data:')) return; // already uploaded or evicted
   const blob = dataUrlToBlob(dataUrl);
-  const path = `${userId}/${resolveChatImageStoragePath(entry.payload.messageId, entry.payload.slot)}`;
+  const path = `${userId}/${entry.payload.storagePath}`;
   const { error } = await supabase.storage
     .from('seeday-images')
     .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
@@ -429,11 +428,14 @@ export const useOutboxStore = create<OutboxState>()(
               entry.kind === 'preference.upsert'
                 ? state.entries.filter((item) => item.kind !== 'preference.upsert')
                 : entry.kind === 'reminder.response'
-                  ? state.entries.filter((item) => (
-                    item.kind !== 'reminder.response'
-                    || item.payload.response.occurrenceKey !== entry.payload.response.occurrenceKey
-                  ))
-                : state.entries
+                  ? (() => {
+                    const reminderEntry = entry as ReminderResponseOutboxEntry;
+                    return state.entries.filter((item) => (
+                      item.kind !== 'reminder.response'
+                      || (item as ReminderResponseOutboxEntry).payload.response.occurrenceKey !== reminderEntry.payload.response.occurrenceKey
+                    ));
+                  })()
+                  : state.entries
             ),
             {
               ...entry,

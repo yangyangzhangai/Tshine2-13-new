@@ -98,7 +98,7 @@
 | R-ASR-004 | `forceOnboarding=1` 在非 DEV 环境可触发强制引导 | 已修复 | 已移除该覆盖逻辑（不再支持 query/env 强制 onboarding） |
 | R-ASR-005 | iOS 原生层无条件开启 `webView.isInspectable` | 已修复 | 已改为仅 `#if DEBUG` 开启，发布包默认关闭 |
 | R-ASR-006 | 未检索到 `PrivacyInfo.xcprivacy` | 已修复 | 已新增 `ios/App/App/PrivacyInfo.xcprivacy` 并加入 iOS Target Resources，后续持续对齐访问 API 分类与 reason code |
-| R-ASR-007 | 生产路径存在未受 DEV 保护的 `console.log` | 修复中 | 已完成前端与 `src/server/**` 非必要 `console.log` 收口（当前 `src/**` 已无 `console.log`）；`/api/subscription` 详细日志仅在 `SUBSCRIPTION_VERBOSE_LOGS=true` 开启，默认关闭；已将 `useChatStore/useTodoStore/reportActions/authStoreRuntimeHelpers/useReportStore/useAnnotationStore/useStardustStore/authDataSyncHelpers/authPreferenceHelpers` 生产路径错误输出改为 DEV-only，并将 `api/report.ts`、`api/classify.ts`、`api/diary.ts`、`api/magic-pen-parse.ts` 错误日志收敛为状态码/长度摘要，避免原文泄露 |
+| R-ASR-007 | 生产路径存在未受 DEV 保护的 `console.log` | 修复中 | 已完成前端与 `src/server/**` 非必要 `console.log` 收口（当前 `src/**` 已无 `console.log`）；`/api/subscription` 详细日志仅在 `SUBSCRIPTION_VERBOSE_LOGS=true` 开启，默认关闭；已将 `useChatStore/useTodoStore/reportActions/authStoreRuntimeHelpers/useReportStore/useAnnotationStore/useStardustStore/authDataSyncHelpers/authPreferenceHelpers` 生产路径错误输出改为 DEV-only，并将现存 AI API 的错误日志收敛为状态码/长度摘要，避免原文泄露 |
 
 ## ASR/NR 全量条款清单（待持续打勾）
 

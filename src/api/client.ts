@@ -644,7 +644,6 @@ interface MagicPenParseResponse {
   traceId?: string;
   parseStrategy?: 'direct_json' | 'wrapped_object' | 'fallback_failed';
   providerUsed?: 'deepseek' | 'none';
-  fallbackFrom?: 'timeout' | 'http_error' | 'empty_content' | 'invalid_payload' | 'parse_failed' | 'exception';
   failureCategory?: 'model_output_invalid' | 'provider_call_failed' | 'unknown';
   attempts?: Array<{
     provider: 'deepseek';
@@ -773,10 +772,23 @@ export async function callProfileSettingsTelemetryDashboardAPI(days = 7): Promis
 
 // ── Delete Account API ────────────────────────────────────────────────────────
 
+interface DeleteAccountRequest {
+  providerToken?: string;
+  providerRefreshToken?: string;
+}
+
 export async function callDeleteAccountAPI(): Promise<void> {
   const headers = await getAuthHeaders();
   if (!headers.Authorization) throw createUnauthorizedApiError('/delete-account');
-  await postJson<Record<string, never>, { ok: boolean }>('/delete-account', {}, { headers });
+  const session = await getSupabaseSession('callDeleteAccountAPI');
+  const body: DeleteAccountRequest = {};
+  if (typeof session?.provider_token === 'string' && session.provider_token.trim()) {
+    body.providerToken = session.provider_token;
+  }
+  if (typeof session?.provider_refresh_token === 'string' && session.provider_refresh_token.trim()) {
+    body.providerRefreshToken = session.provider_refresh_token;
+  }
+  await postJson<DeleteAccountRequest, { ok: boolean }>('/delete-account', body, { headers });
 }
 
 // ── Todo Decompose API ────────────────────────────────────────────────────────
@@ -796,14 +808,14 @@ interface TodoDecomposeResponse {
   steps: DecomposeStep[];
   parseStatus?: 'ok' | 'parse_failed';
   model?: string;
-  provider?: 'gemini' | 'dashscope';
+  provider?: 'gemini' | 'deepseek';
 }
 
 export interface TodoDecomposeResult {
   steps: DecomposeStep[];
   parseStatus: 'ok' | 'parse_failed';
   model: string;
-  provider: 'gemini' | 'dashscope';
+  provider: 'gemini' | 'deepseek';
 }
 
 /**
@@ -819,6 +831,6 @@ export async function callTodoDecomposeAPI(title: string, lang: 'zh' | 'en' | 'i
     steps: data.steps ?? [],
     parseStatus: data.parseStatus === 'parse_failed' ? 'parse_failed' : 'ok',
     model: (data.model || 'unknown').trim() || 'unknown',
-    provider: data.provider === 'dashscope' ? 'dashscope' : 'gemini',
+    provider: data.provider === 'deepseek' ? 'deepseek' : 'gemini',
   };
 }

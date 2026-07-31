@@ -1,3 +1,5 @@
+<!-- DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> docs/AI_USAGE_INVENTORY.md -> src/api/README.md -->
+
 # API Serverless Guide
 
 `api/*` 是 Vercel Serverless Functions，负责在服务端持有密钥并调用第三方模型。
@@ -7,7 +9,7 @@
 1. 仅处理服务端逻辑，不依赖 `window`、`localStorage` 等浏览器对象。
 2. 前端统一通过 `src/api/client.ts` 调用，不在 `src/**` 直连第三方 AI。
 3. 所有函数统一设置 CORS，并只接受各自的预期方法（含 `OPTIONS` 预检）；当前绝大多数为 `POST`，`/api/plant-history` 为 `GET`。
-4. 密钥统一从 `process.env` 读取（如 `OPENAI_API_KEY`、`QWEN_API_KEY`、`GEMINI_API_KEY`、`ZHIPU_API_KEY`）。
+4. 密钥统一从 `process.env` 读取；DeepSeek、OpenAI、Gemini 的现行端点与语言映射详见 `docs/AI_USAGE_INVENTORY.md`。
 
 ## 端点清单（与当前实现一致）
 
@@ -19,8 +21,8 @@
 | `POST` | `/api/magic-pen-parse` | `magic-pen-parse.ts` | `{ success: true, data: { segments, unparsed }, raw, traceId, parseStrategy, providerUsed }` |
 | `POST` | `/api/todo-decompose` | `classify.ts`（`module=todo_decompose` 分支；`vercel.json` 重写兼容旧路径） | `{ success: true, steps, parseStatus, model, provider }` |
 | `POST` | `/api/extract-profile` | `extract-profile.ts` | `{ success: true, profile, skipped?, reason? }` |
+| `POST` | `/api/delete-account` | `delete-account.ts` | `{ ok: true }` |
 | `POST` | `/api/plant-generate` | `plant-generate.ts` | `{ success, status, plant, diaryStatus?, message? }` |
-| `POST` | `/api/plant-diary` | `plant-diary.ts` | `{ success, diaryText, diaryStatus }` |
 | `GET` | `/api/plant-history` | `plant-history.ts` | `{ success, records }` |
 | `POST` | `/api/plant-asset-telemetry` | `plant-asset-telemetry.ts` | `{ success, id }` (`{ success: false, skipped: true }` when table not provisioned) |
 | `POST` | `/api/live-input-telemetry` | `live-input-telemetry.ts` | `{ success, id }` |
@@ -32,9 +34,10 @@
 `/api/todo-decompose` is rewritten to the `/api/classify` `todo_decompose` branch, so it follows the same auth + Plus guard and membership error contract.
 `/api/magic-pen-parse` request body includes: `rawText`, `todayDateStr`, `currentHour`, optional `lang` (`zh`/`en`/`it`), and optional local-time context (`currentLocalDateTime`, `timezoneOffsetMinutes`) for finer future/past disambiguation.
 `segments[*]` may include `timeRelation` (`realtime`/`future`/`past`/`unknown`) for parser-first runtime gating.
-`/api/magic-pen-parse` now uses the existing DeepSeek OpenAI-compatible path (`deepseek-chat` by default via `DEEPSEEK_API_KEY`, optional `MAGIC_PEN_DEEPSEEK_API_KEY` / `MAGIC_PEN_DEEPSEEK_BASE_URL` / `MAGIC_PEN_MODEL`). Parseable JSON is not sufficient for success: empty extraction, low original-text coverage, missing explicit time anchors, and severely under-split complex input are treated as `low_quality`. When the provider fails, the response keeps the complete original `rawText` in `unparsed` so the frontend can run the existing local fallback.
+`/api/magic-pen-parse` 对可解析 JSON 仍执行语义质量门槛：空提取、低原文覆盖、漏掉明确时间锚点或复杂句拆分严重不足均视为 `low_quality`。远端失败时，响应会把完整 `rawText` 保留在 `unparsed`，供前端运行既有本地兜底。服务商与模型配置统一见 `docs/AI_USAGE_INVENTORY.md`。
 Plant endpoints require `Authorization: Bearer <supabase access token>` and validate current user before DB read/write.
 `/api/extract-profile` requires `Authorization: Bearer <supabase access token>` and accepts `recentMessages[] + lang` (`zh`/`en`/`it`) from frontend weekly-report flow.
+`/api/delete-account` requires `Authorization: Bearer <supabase access token>` plus `SUPABASE_SERVICE_ROLE_KEY`. It fails closed: for Apple-linked accounts it first attempts token revocation with the current session's provider token/refresh token plus server-side Apple credentials, then deletes known user-scoped tables with the service-role client, deletes all `seeday-images/<userId>/**` storage objects, and only then deletes the Supabase Auth user. Any step failure aborts the flow instead of silently continuing with partial deletion.
 `/api/plant-generate` `status` supports: `too_early` / `empty_day` / `generated` / `already_generated` / `monthly_exhausted`.
 `/api/plant-generate` accepts optional `action: 'snapshot_existing'`. This action is allowed before 20:00 only for an already-existing user/date record and stores its current cloud-derived root/activity/direction snapshot inside `root_metrics`; it never creates a new plant.
 Newly generated records include the same root snapshot, and Plus observation text is rejected/retried when it exceeds the card budget before falling back to the existing localized static line.
@@ -59,16 +62,11 @@ Live input telemetry ingest/dashboard currently share one endpoint (`/api/live-i
 `/api/live-input-telemetry` `GET` also supports `module=holiday_check&date=YYYY-MM-DD&country=XX` for reminder scheduling (weekend/legal holiday check), replacing standalone `/api/check-holiday` to keep Hobby deployment within the function limit.
 Membership AI classification path observability is recorded through `/api/live-input-telemetry` `eventType='classification'` by attaching tags in `reasons[]` (`membership_classification`, `user_plan:*`, `classification_path:*`, `ai_called:*`, `ai_result_kind:*`, `bottle_match_source:*`).
 
-当前 provider 映射：
+## 外部服务配置
 
-- `/api/annotation` -> `DEEPSEEK_API_KEY`（zh, model `deepseek-chat`）+ `OPENAI_API_KEY`（en/it, model `gpt-4.1-mini`）；可选 `ANNOTATION_DEEPSEEK_BASE_URL`、`OPENAI_BASE_URL`
-- `/api/extract-profile` -> `OPENAI_API_KEY`（可选 `PROFILE_EXTRACT_MODEL`，默认 `gpt-4o-mini`；按 `lang` 路由中/英/意 prompt）
-- `/api/todo-decompose` -> 中文默认走 DashScope `QWEN_API_KEY`（`TODO_DECOMPOSE_MODEL_ZH`，默认 `qwen-plus`），其余语言走 Gemini 原生 `GEMINI_API_KEY`（`TODO_DECOMPOSE_MODEL`，默认 `gemini-2.5-flash`）；可选 `TODO_DECOMPOSE_GEMINI_BASE_URL`、`TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL` 与 `TODO_DECOMPOSE_VERBOSE_LOGS=true`
-- `/api/report` -> 当前未接入外部模型（占位返回）
-- `/api/diary` -> `OPENAI_API_KEY`（`gpt-4o`）
-- `/api/classify` -> `QWEN_API_KEY`（可选 `CLASSIFY_MODEL`、`DASHSCOPE_BASE_URL`）
-- `/api/magic-pen-parse` -> `DEEPSEEK_API_KEY`（默认 `deepseek-chat`，可选 `MAGIC_PEN_DEEPSEEK_API_KEY`、`MAGIC_PEN_DEEPSEEK_BASE_URL`、`MAGIC_PEN_MODEL`）
-- `/api/subscription` -> Apple App Store Server API（`APPLE_IAP_ISSUER_ID`、`APPLE_IAP_KEY_ID`、`APPLE_IAP_PRIVATE_KEY`、`APPLE_IAP_BUNDLE_ID`）+ Stripe API（`STRIPE_SECRET_KEY`、`STRIPE_PRICE_MONTHLY`、`STRIPE_PRICE_ANNUAL`）
+- AI 服务商、模型、发送数据范围和 AI 日志边界只在 `docs/AI_USAGE_INVENTORY.md` 维护；本文件不再复制 provider 映射。
+- `/api/subscription` 使用 Apple App Store Server API（`APPLE_IAP_ISSUER_ID`、`APPLE_IAP_KEY_ID`、`APPLE_IAP_PRIVATE_KEY`、`APPLE_IAP_BUNDLE_ID`）和 Stripe API（`STRIPE_SECRET_KEY`、`STRIPE_PRICE_MONTHLY`、`STRIPE_PRICE_ANNUAL`）。
+- `/api/delete-account` 复用 `APPLE_IAP_ISSUER_ID`、`APPLE_IAP_KEY_ID`、`APPLE_IAP_PRIVATE_KEY`，并可选读取 `APPLE_SIGN_IN_CLIENT_ID`（未设置时回退 `APPLE_IAP_BUNDLE_ID`）来生成 Apple Sign in token revoke 的 client secret。
 
 ## 本地调试（Windows）
 
@@ -90,4 +88,4 @@ npm run dev
 
 ## Endpoint test anchor
 
-- `src/server/magic-pen-parse.test.ts` + `src/server/magic-pen-quality.test.ts`: 覆盖入参校验、包裹 JSON 解析、低质量输出换模、原文安全兜底和中英文覆盖率/时间锚点判断。
+- `src/server/magic-pen-parse.test.ts` + `src/server/magic-pen-quality.test.ts`: 覆盖入参校验、包裹 JSON 解析、低质量输出、本地安全兜底和中英文覆盖率/时间锚点判断。

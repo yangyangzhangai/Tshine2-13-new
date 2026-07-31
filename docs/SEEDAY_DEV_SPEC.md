@@ -534,9 +534,14 @@ export default config;
 |---|---|---|
 | `api/annotation.ts` | `annotation` | ⬜ 待迁移 |
 | `api/classify.ts` | `classify` | ⬜ 待迁移 |
+| `api/delete-account.ts` | `delete-account` | ⬜ 待迁移 |
 | `api/diary.ts` | `diary` | ⬜ 待迁移 |
-| `api/report.ts` | `report` | ⬜ 待迁移 |
-| `api/stardust.ts` | `stardust` | ⬜ 待迁移 |
+| `api/extract-profile.ts` | `extract-profile` | ⬜ 待迁移 |
+| `api/live-input-telemetry.ts` | `live-input-telemetry` | ⬜ 待迁移 |
+| `api/magic-pen-parse.ts` | `magic-pen-parse` | ⬜ 待迁移 |
+| `api/plant-generate.ts` | `plant-generate` | ⬜ 待迁移 |
+| `api/plant-history.ts` | `plant-history` | ⬜ 待迁移 |
+| `api/subscription.ts` | `subscription` | ⬜ 待迁移 |
 | `src/server/http.ts` | 工具函数，已从 `api/` 迁移到 `src/server/` | ✅ 已完成 |
 
 迁移步骤：
@@ -545,7 +550,7 @@ export default config;
 npx supabase init
 
 # 2. 配置密钥
-npx supabase secrets set OPENAI_API_KEY=xxx QWEN_API_KEY=xxx ZHIPU_API_KEY=xxx
+npx supabase secrets set DEEPSEEK_API_KEY=xxx OPENAI_API_KEY=xxx GEMINI_API_KEY=xxx
 
 # 3. 部署仍在使用中的函数
 

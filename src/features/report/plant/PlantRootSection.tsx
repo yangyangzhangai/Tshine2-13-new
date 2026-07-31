@@ -11,6 +11,7 @@ import { usePlantStore, resolvePlantDurationForMessage } from '../../../store/us
 import { buildPlantGenerateUiState } from './plantGenerateUi';
 import { playLoopSound, stopSound } from '../../../services/sound/soundService';
 import { dismissKeyboard } from '../../../services/native/keyboardService';
+import { canEditDailyMyDiary } from '../../../lib/reportDiaryEditPolicy';
 import type { PlantCategoryKey } from '../../../types/plant';
 import { PlantFlipCard } from './PlantFlipCard';
 import { SoilCanvas } from './SoilCanvas';
@@ -118,6 +119,9 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
     () => reports.find((report) => report.type === 'daily' && isSameDay(new Date(report.date), new Date())) ?? null,
     [reports],
   );
+  const isMyDiaryEditable = todayDailyReport
+    ? canEditDailyMyDiary(todayDailyReport.date)
+    : true;
 
   useEffect(() => {
     const reportId = todayDailyReport?.id ?? null;
@@ -150,6 +154,7 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
   }, [ensureDiaryEditorAboveKeyboard, isDiaryEditing, myDiaryText]);
 
   const persistDiaryNote = useCallback(async () => {
+    if (!isMyDiaryEditable) return;
     const nextNote = myDiaryText;
     const nextTrimmed = nextNote.trim();
     let reportId = todayDailyReport?.id ?? pendingDiaryReportIdRef.current;
@@ -163,7 +168,7 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
     const latest = useReportStore.getState().reports.find(report => report.id === reportId);
     if ((latest?.userNote ?? '') === nextNote) return;
     await updateReport(reportId, { userNote: nextNote });
-  }, [generateReport, myDiaryText, todayDailyReport?.id, updateReport]);
+  }, [generateReport, isMyDiaryEditable, myDiaryText, todayDailyReport?.id, updateReport]);
 
   useEffect(() => {
     if (!isDiaryEditing) return;
@@ -175,6 +180,7 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
   }, [isDiaryEditing, persistDiaryNote]);
 
   const handleDiarySave = useCallback(async () => {
+    if (!isMyDiaryEditable) return;
     setIsDiarySaving(true);
     try {
       await persistDiaryNote();
@@ -187,7 +193,13 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
         isClosingDiaryEditorRef.current = false;
       }, 0);
     }
-  }, [persistDiaryNote]);
+  }, [isMyDiaryEditable, persistDiaryNote]);
+
+  useEffect(() => {
+    if (isMyDiaryEditable) return;
+    setIsDiaryEditing(false);
+    setIsDiarySaving(false);
+  }, [isMyDiaryEditable]);
 
   useEffect(() => {
     void (async () => {
@@ -541,25 +553,29 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
             ref={diaryTextareaRef}
             value={myDiaryText}
             onChange={(event) => {
+              if (!isMyDiaryEditable) return;
               setMyDiaryText(event.target.value);
               resizeDiaryTextarea(event.currentTarget);
               window.setTimeout(() => ensureDiaryEditorAboveKeyboard(), 0);
             }}
             onFocus={() => {
+              if (!isMyDiaryEditable) return;
               setIsDiaryEditing(true);
               window.setTimeout(() => ensureDiaryEditorAboveKeyboard(), 140);
             }}
             onBlur={() => {
+              if (!isMyDiaryEditable) return;
               if (isClosingDiaryEditorRef.current) return;
               if (!isDiaryEditing) return;
               void persistDiaryNote();
               setIsDiaryEditing(false);
             }}
+            readOnly={!isMyDiaryEditable}
             placeholder={t('report_diary_placeholder')}
             className="app-form-text w-full resize-none border-0 border-b border-slate-300/60 bg-transparent px-0 py-1 leading-6 outline-none transition focus:border-[#8FAF92]"
-            style={{ minHeight: 128, color: '#334155', overflowY: 'hidden' }}
+            style={{ minHeight: 128, color: isMyDiaryEditable ? '#334155' : '#94A3B8', overflowY: 'hidden' }}
           />
-          {isDiaryEditing ? (
+          {isDiaryEditing && isMyDiaryEditable ? (
             <div className="mt-2 flex justify-end">
               <button
                 ref={diarySaveButtonRef}

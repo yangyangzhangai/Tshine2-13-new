@@ -8,7 +8,7 @@
 
 ## 0. 一句话现状
 
-Seeday 是 AI 陪伴日记 + 多 AI 厂商（OpenAI / Qwen / 智谱）+ UGC + 跨境数据传输的应用，对应 App Store 审核高敏感品类。**核心封号风险来源**：私有/隐藏 API 调用、AI 数据共享未取得明示同意、UGC + AI 输出无审核机制、隐私文档不完整、动态下发可执行代码。本文件按这些风险逐项治理。
+Seeday 是 AI 陪伴日记 + DeepSeek / OpenAI / Gemini 三家 AI 服务商 + UGC + 跨境数据传输的应用，对应 App Store 审核高敏感品类。现行 AI 调用口径以 `docs/AI_USAGE_INVENTORY.md` 为准。Qwen、智谱与 Chutes 已退出运行时。**核心封号风险来源**：私有/隐藏 API 调用、AI 数据共享未取得明示同意、UGC + AI 输出无审核机制、隐私文档不完整、动态下发可执行代码。本文件按这些风险逐项治理。
 
 ---
 
@@ -160,8 +160,8 @@ Apple ARG 2.5.1 明文："**Apps may only use public APIs and must run on the cu
 
 | # | 检查目标 | 命令 | 预期 |
 |---|----------|------|------|
-| S1 | 前端打包后无任何 AI 厂商密钥字符串 | `npm run build && grep -rE "sk-[A-Za-z0-9]{20,}\|OPENAI_API_KEY\|ZHIPU_API_KEY\|QWEN_API_KEY" dist/` | 0 命中 |
-| S2 | 前端不直接 import openai SDK | `grep -rn "from ['\"]openai['\"]\|require(['\"]openai" src/` | 0 命中（`package.json` 中 `openai` 应只在 `api/*` 用） |
+| S1 | 前端打包后无任何 AI 厂商密钥字符串 | `npm run build && grep -rE "sk-[A-Za-z0-9]{20,}\|OPENAI_API_KEY\|GEMINI_API_KEY\|DEEPSEEK.*API_KEY" dist/` | 0 命中 |
+| S2 | 浏览器代码不直接 import AI SDK | `rg -n "from ['\"]openai['\"]" src --glob "!src/server/**"` | 0 命中（`src/server/*` 是 serverless 共用服务端代码） |
 | S3 | 已运行的 `npm run lint:secrets` 通过 | 见 `scripts/check-secrets.mjs` | 通过 |
 | S4 | Supabase 仅 anon key 在前端，service_role 仅在 `api/*` | `grep -rn "service_role\|SUPABASE_SERVICE" src/` | 0 命中 |
 | S5 | `import.meta.env` 暴露面 | `grep -rn "VITE_" src/ \| grep -v "VITE_PUBLIC"` | 仅以 `VITE_PUBLIC_` 开头的 key 被打包 |
@@ -261,12 +261,12 @@ ARG 2.5.4：后台模式只能在你确实需要的场景声明（VoIP/audio/loc
 3. 收集的个人数据类别（日记原文、心情、设备 ID、邮箱、IP……）
 4. 使用目的（生成 AI 回应、统计、改进服务）
 5. 法律依据（EU 用户：GDPR Art.6 同意；US 用户：CCPA notice at collection）
-6. **第三方共享与子处理者列表**（逐家列出：Supabase / OpenAI / Qwen / 智谱 / Vercel / Apple Push 等，写明所在国家）
+6. **第三方共享与子处理者列表**（逐家列出：Supabase / DeepSeek / OpenAI / Google Gemini / Vercel / Apple Push 等，写明所在国家）
 7. 跨境传输（EU → 美国/中国 必须声明 SCC 或类似机制；提及 PIPL）
 8. 用户权利（访问/更正/删除/导出/反对/撤回同意）
 9. 数据保留期（账号删除后多久彻底删除）
 10. 儿童条款（13/16 岁以下不可用）
-11. **AI 训练用途声明**（明确说"我们不会用你的日记训练模型；第三方 AI 提供商的政策见 XXX"）
+11. **AI 训练与服务商留存声明**（只写经账号设置或合同证据确认的结论；未核实时不得承诺第三方“零留存”或“绝不训练”）
 12. 安全措施（加密传输、加密存储、最小权限）
 13. 变更通知机制
 14. 联系方式 + DPO（如适用）
@@ -408,7 +408,7 @@ ARG 2.5.4：后台模式只能在你确实需要的场景声明（VoIP/audio/loc
 
 1. ❌ 不要用任何 OTA 热更新（Capgo / CodePush / 自建 JS 下发） → DPLA 3.3.2 死亡红线
 2. ❌ 不要在 App Store 描述里出现"治疗""诊断""治愈""焦虑症""抑郁症"等医疗词
-3. ❌ 不要把 OpenAI / Zhipu API key 放到前端 / 任何打包产物里
+3. ❌ 不要把 DeepSeek / OpenAI / Gemini API key 放到前端 / 任何打包产物里
 4. ❌ 不要让 4+ / 9+ 用户接触 AI 自由生成内容
 5. ❌ 不要在隐私政策没列举的厂商之外发用户数据
 6. ❌ 不要做"模仿其他知名日记 App 的 UI/icon/名称"

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlarmClock, Check, Play, X } from 'lucide-react';
+import { AlarmClock, Check, Pin, Play, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useGrowthStore } from '../../store/useGrowthStore';
 import { type GrowthTodo, type GrowthPriority, type Recurrence } from '../../store/useTodoStore';
@@ -25,6 +25,8 @@ const BLUE_SELECTED_STYLE = {
 
 const TODO_CARD_SHADOW = '0 0 5px rgba(82,105,91,0.05), 0 2px 6px rgba(146,166,142,0.095)';
 const TODO_ACTION_SELECTOR = 'button, input, textarea, select, [data-no-expand="true"]';
+const TODO_STATUS_BADGE_BASE_CLASS = 'inline-flex h-5 items-center rounded-full border px-1.5 text-[11px] font-medium leading-none';
+const TODO_PINNED_BADGE_CLASS = 'text-slate-500 bg-slate-50 border-slate-200';
 
 interface Props {
   todo: GrowthTodo;
@@ -125,7 +127,6 @@ export const GrowthTodoCard = ({
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
       })
     : null;
-  const isOverdue = todo.dueAt && !todo.completed && todo.dueAt < Date.now();
 
   const getDueBadge = (): { label: string; className: string } | null => {
     if (!todo.dueAt || todo.completed) return null;
@@ -347,15 +348,27 @@ export const GrowthTodoCard = ({
               className="app-body w-full bg-transparent text-[#334155] focus:outline-none"
             />
           ) : (
-            <span className={cn("app-body block truncate", todo.completed && "line-through text-gray-400")}>
-              {todo.title}
-            </span>
+            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+              <span className={cn("app-body min-w-0 max-w-full truncate", todo.completed && "line-through text-gray-400")}>
+                {todo.title}
+              </span>
+              {dueBadge ? (
+                <span className={cn(TODO_STATUS_BADGE_BASE_CLASS, 'shrink-0', dueBadge.className)}>
+                  {dueBadge.label}
+                </span>
+              ) : null}
+              {todo.isPinned ? (
+                <span
+                  className={cn(TODO_STATUS_BADGE_BASE_CLASS, TODO_PINNED_BADGE_CLASS, 'shrink-0 px-1.5')}
+                  title={t('todo_pin')}
+                  aria-label={t('todo_pin')}
+                >
+                  <Pin size={10} strokeWidth={1.8} />
+                </span>
+              ) : null}
+            </div>
           )}
-          {dueBadge ? (
-            <span className={cn("app-caption mt-0.5 inline-block rounded-full px-1.5 py-0.5 font-medium leading-none", dueBadge.className)}>
-              {dueBadge.label}
-            </span>
-          ) : dueStr ? (
+          {!dueBadge && dueStr ? (
             <span className="app-caption text-gray-400">{dueStr}</span>
           ) : null}
         </div>

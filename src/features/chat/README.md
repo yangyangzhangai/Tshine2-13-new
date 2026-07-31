@@ -11,12 +11,12 @@
   - Auto-recognized record input: `sendAutoRecognizedInput()` must return exactly one of `new_activity / standalone_mood / mood_about_last_activity`
   - English local evidence uses `compromise/two` grammar plus exact matches from the latest 50 activity messages; this history is local context, not a new persisted profile or classification kind
   - Magic Pen side flow: simple single-intent input may use the local fast path; mixed activity+mood evidence is checked before short-text handling and routes the whole unsliced input to `parseMagicPenInput(...)`; AI keeps `activity / mood / todo_add / activity_backfill`
-  - Complex Magic Pen AI output passes a semantic quality gate before use. Empty, low-coverage, missing-time-anchor, or under-split output retries through the second provider; provider exhaustion keeps the original input in the existing unparsed review area and then uses the local parser where it can safely recover drafts
+  - Complex Magic Pen AI output passes a semantic quality gate before use. Empty, low-coverage, missing-time-anchor, or under-split output keeps the original input in the existing unparsed review area and then uses the local parser where it can safely recover drafts; the app does not switch to a second AI provider
   - Remote-failure recovery uses one conservative ZH/EN/IT semantic fallback: it segments clauses, reuses the shared activity/mood lexicons, requires action context for todo intent, and leaves wishes, negation, cross-day text, and conflicting evidence unparsed instead of guessing
   - Latest-message correction: message row supports quick reclassify between `activity` and `mood` through `reclassifyRecentInput(messageId, nextKind)`
   - Primary record input path uses local rule classification by default (no unconditional classifier API call)
 - Mood quick record (`isMood` message path) remains as the message semantic output, not a separate chat-mode toggle
-- Activity cards support two independent cloud image slots (`imageUrl` / `imageUrl2`); when both are empty, the photo picker accepts up to two files in one selection and runs the existing crop/upload flow once per slot. Upload/retry paths must preserve the slot identity instead of synthesizing a fake second message id
+- Activity cards support two independent cloud image slots (`imageUrl` / `imageUrl2`); when both are empty, the photo picker accepts up to two files in one selection and runs the existing crop/upload flow once per slot. Upload/retry paths must preserve the slot identity instead of synthesizing a fake second message id, and every replacement upload must get a fresh storage object path so delete-then-reupload cannot reuse a stale public URL cache entry
 
 ## Typography Semantics
 

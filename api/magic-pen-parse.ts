@@ -1,6 +1,10 @@
 // DOC-DEPS: LLM.md -> docs/MAGIC_PEN_CAPTURE_SPEC.md -> docs/PROJECT_MAP.md -> api/README.md
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { applyCors, handlePreflight, jsonError, requireMethod } from '../src/server/http.js';
+import {
+  getDeepSeekChatCompletionsUrl,
+  resolveDeepSeekRuntime,
+} from '../src/server/deepseek-runtime.js';
 import { MAGIC_PEN_PROMPT_EN, MAGIC_PEN_PROMPT_IT, MAGIC_PEN_PROMPT_ZH } from '../src/server/magic-pen-prompts.js';
 import { assessMagicPenResult } from '../src/server/magic-pen-quality.js';
 
@@ -66,8 +70,6 @@ interface ProviderCallFailure {
 type ProviderCallResult = ProviderCallSuccess | ProviderCallFailure;
 type MagicPenFailureCategory = 'model_output_invalid' | 'provider_call_failed' | 'unknown';
 
-const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
-const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
 const REQUEST_TIMEOUT_MS = 12000;
 
 function shouldDebugMagicPen(): boolean {
@@ -101,16 +103,6 @@ function getTimeoutMs(value: string | undefined, fallbackMs: number): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallbackMs;
   return Math.min(60000, Math.max(1000, Math.round(parsed)));
-}
-
-function normalizeBaseUrl(baseUrl: string | undefined): string {
-  const value = (baseUrl || DEFAULT_DEEPSEEK_BASE_URL).trim();
-  return value.replace(/\/+$/, '');
-}
-
-function resolveDeepSeekModel(): string {
-  const current = process.env.MAGIC_PEN_MODEL?.trim();
-  return current || DEFAULT_DEEPSEEK_MODEL;
 }
 
 function isAbortError(error: unknown): boolean {
@@ -425,14 +417,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     timezoneOffsetMinutes: typeof timezoneOffsetMinutes === 'number' ? timezoneOffsetMinutes : 0,
   });
 
-  const apiKey = String(
-    process.env.MAGIC_PEN_DEEPSEEK_API_KEY
-    || process.env.DEEPSEEK_API_KEY
-    || '',
-  ).trim();
-  if (!apiKey) {
+  const runtime = resolveDeepSeekRuntime({
+    apiKey: process.env.MAGIC_PEN_DEEPSEEK_API_KEY,
+    baseURL: process.env.MAGIC_PEN_DEEPSEEK_BASE_URL,
+    model: process.env.MAGIC_PEN_MODEL,
+  });
+  if (!runtime.apiKey) {
     logMagicPen(traceId, 'request.missing_api_keys');
-    jsonError(res, 500, 'Server configuration error: Missing API key');
+    jsonError(res, 500, 'Server configuration error: Missing DEEPSEEK_API_KEY');
     return;
   }
 
@@ -448,16 +440,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const providerAttempts: ProviderCallFailure[] = [];
-    const model = resolveDeepSeekModel();
-    const baseUrl = process.env.MAGIC_PEN_DEEPSEEK_BASE_URL
-      || process.env.DEEPSEEK_BASE_URL;
-    const apiUrl = `${normalizeBaseUrl(baseUrl)}/chat/completions`;
+    const apiUrl = getDeepSeekChatCompletionsUrl(runtime.baseURL);
     const timeoutMs = getTimeoutMs(process.env.MAGIC_PEN_TIMEOUT_MS, REQUEST_TIMEOUT_MS);
     const result = await callProvider(
       'deepseek',
       apiUrl,
-      apiKey,
-      model,
+      runtime.apiKey,
+      runtime.model,
       prompt,
       rawText,
       timeoutMs,

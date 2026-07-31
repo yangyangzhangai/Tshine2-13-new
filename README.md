@@ -71,17 +71,21 @@ npm run preview
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `DEEPSEEK_API_KEY`
 - `OPENAI_API_KEY`
-- `QWEN_API_KEY`
-- `ZHIPU_API_KEY`
+- `GEMINI_API_KEY`
 
 可选扩展变量：
 
+- `DEEPSEEK_BASE_URL`
+- `OPENAI_BASE_URL`
+- `GEMINI_BASE_URL`
 - `CLASSIFY_MODEL`
-- `DASHSCOPE_BASE_URL`
-- `MAGIC_PEN_FALLBACK_MODEL`
+- `TODO_DECOMPOSE_MODEL_ZH`
+- `TODO_DECOMPOSE_MODEL`
+- `MAGIC_PEN_MODEL`
 
-说明：AI 相关 Key 仅在服务端函数 `api/*` 使用，不应暴露到前端。
+说明：AI 相关 Key 仅在服务端函数 `api/*` / `src/server/*` 使用，不应暴露到前端；完整配置见 `docs/AI_USAGE_INVENTORY.md`。
 
 ## 目录结构（当前）
 

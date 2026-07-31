@@ -1,68 +1,76 @@
-# 项目 AI 使用清单（代码运行态）
+<!-- DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> api/README.md -> src/api/README.md -->
 
-本文仅统计代码里**实际调用 AI 模型/服务**的位置（不含纯文档描述）。
+# AI 服务商与调用清单（唯一事实源）
 
-## 总览
+Last verified: 2026-07-29
 
-- 前端统一通过 `src/api/client.ts` 调用 `/api/*`。
-- 当前共识别到 8 个 AI 运行角色（含植物日记能力）。
+本文是 Seeday **当前 AI 服务商、模型、调用入口和发送数据范围的唯一事实源（SSOT）**。`api/README.md` 负责端点契约，功能 README 负责业务行为；其他文档只引用本清单，不再维护平行的供应商映射。
 
-## AI 使用明细
+## 1. 当前结论
 
-| AI角色 | 用到的地方 | 当前模型/供应商 | 具体功能描述 | 对模型能力要求 | 建议参数级别 |
-| --- | --- | --- | --- | --- | --- |
-| AI 批注（含建议模式） | `api/annotation.ts` -> `src/server/annotation-handler.ts`；触发：`src/store/useAnnotationStore.ts` | `zh=deepseek-chat`（DeepSeek，chat completions）+ `en/it=gpt-4.1-mini`（OpenAI） | 针对事件生成短批注；可输出建议 JSON；重写去重（文本相似度/emoji） | 人设稳定、多语言、上下文融合、结构化输出稳定 | 20B-70B（建议主力 30B+） |
-| 待办拆解 | `api/todo-decompose.ts` + `src/server/todo-decompose-service.ts`；入口：`src/features/growth/SubTodoList.tsx` | zh 默认 DashScope `qwen-plus`（`TODO_DECOMPOSE_MODEL_ZH`），en/it 默认 Gemini `gemini-2.5-flash`（`TODO_DECOMPOSE_MODEL`，404 下线自动降级 `TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`） | 将待办拆成 3-6 个可执行步骤并给时长 | 指令遵循、JSON 稳定、轻规划能力 | 7B-20B |
-| 日记生成（长文） | `api/diary.ts`；调用：`src/store/reportActions.ts` | OpenAI Chat Completions；`gpt-4o` | 基于结构化日报数据+历史上下文生成 AI 日记 | 长上下文总结、叙事能力、事实约束 | 30B-70B |
-| 报告短洞察（短文） | `api/diary.ts`（`action='insight'`）；调用：`src/features/report/ReportDetailModal.tsx` | OpenAI；`gpt-4o-mini` | 生成 todo/habit 的短洞察句（超短） | 极短文本压缩、格式遵循 | 7B-14B |
-| 时间记录分类器 | `api/classify.ts`；调用：`src/store/useChatStore.ts`、`src/store/useTodoStore.ts` | DashScope 兼容接口 + Qwen；默认 `qwen-plus` | 将输入分类成结构化数据（类别、时段、能量日志）；并做瓶子语义匹配 | 分类抽取、语义匹配、JSON 稳定 | 14B-32B |
-| 魔法笔解析 | `api/magic-pen-parse.ts`；调用：`src/services/input/magicPenParser.ts` | Qwen `qwen-plus` 主路 + Zhipu `glm-4.7-flash` 质量/调用失败兜底 | 将自然语言拆成 `activity/mood/todo_add/activity_backfill`，并校验原文覆盖率与时间锚点 | 多语言复杂句拆分、时间抽取、鲁棒 JSON | 主力结构化抽取 |
-| 报告分析（日报/周报/月报） | `api/report.ts`；调用：`src/store/reportActions.ts` | 未接入模型（占位返回） | 当前能力未上线，接口返回占位文案 | 不适用 | 不适用 |
-| 植物日记与 plantId 选择 | `api/plant-generate.ts` -> `src/server/plant-diary-service.ts` | OpenAI Chat Completions；`gpt-4.1-mini` | 从候选植物中选 `plantId` 并生成一句观察文案 | 受限集合选择、短文案、多语言 | 7B-20B |
+- 生产运行时保留三家 AI 服务商：**DeepSeek、OpenAI、Gemini**。
+- 原 Qwen、智谱（Zhipu）调用已迁移到 DeepSeek；旧 Chutes `/api/report` 端点已删除，不再存在运行时调用。
+- GPT/OpenAI 与 Gemini 的既有业务路径保持不变，没有迁移到 DeepSeek。
+- 所有 AI 请求均从前端 `src/api/client.ts` 进入 Vercel `api/*`，再由服务端调用对应服务商；前端不持有 AI 密钥。
+- `openai` npm 包既用于 OpenAI 官方接口，也作为部分 DeepSeek OpenAI-compatible 接口的协议客户端；是否调用 OpenAI 以本表的具体路径为准。
+- 当前没有跨服务商自动兜底；本地解析或静态文案兜底不属于第二 AI 服务商。
 
-## API 与环境变量映射
+## 2. AI 调用矩阵
 
-- `/api/annotation` -> `DEEPSEEK_API_KEY`（zh）+ `OPENAI_API_KEY`（en/it）；可选 `ANNOTATION_DEEPSEEK_BASE_URL` / `OPENAI_BASE_URL`
-- `/api/todo-decompose` -> `QWEN_API_KEY`（zh，`TODO_DECOMPOSE_MODEL_ZH`）+ `GEMINI_API_KEY`（en/it，`TODO_DECOMPOSE_MODEL`）；可选 `TODO_DECOMPOSE_GEMINI_BASE_URL`、`TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`、`TODO_DECOMPOSE_VERBOSE_LOGS`
-- `/api/diary` -> `OPENAI_API_KEY`
-- `/api/classify` -> `QWEN_API_KEY`（可选 `CLASSIFY_MODEL`、`DASHSCOPE_BASE_URL`）
-- `/api/magic-pen-parse` -> `QWEN_API_KEY` + `ZHIPU_API_KEY`（可选 `MAGIC_PEN_MODEL`，默认 `qwen-plus`）
-- `/api/report` -> 当前未读取外部模型密钥
-- `src/server/plant-diary-service.ts`（由 `/api/plant-generate` 调用）-> `OPENAI_API_KEY`
+| 功能 | API / 服务端实现 | 服务商与默认模型 | 发送给服务商的主要数据 | 失败处理 |
+| --- | --- | --- | --- | --- |
+| AI 批注与建议 | `/api/annotation` → `src/server/annotation-handler.ts` | 中文：DeepSeek `deepseek-chat`；英/意：OpenAI `gpt-4.1-mini` | 用户事件文本、当天活动摘要、近期情绪/批注、待办摘要、所选 AI 人格；启用长期画像时包含画像摘要 | 返回本地默认批注或不展示无效建议 |
+| 会员输入分类 | `/api/classify` | DeepSeek `deepseek-chat` | 当前输入文本、语言、可选习惯/目标候选 | API 返回结构化错误；前端保留本地分类路径 |
+| 待办拆解 | `/api/todo-decompose` → `/api/classify?module=todo_decompose` | 中文：DeepSeek `deepseek-chat`；英/意：Gemini `gemini-2.5-flash` | 待办标题、语言 | 返回结构化错误，不跨服务商切换 |
+| 完整日记 | `/api/diary` (`mode=full`) | OpenAI `gpt-4o` | 当日日报结构、历史上下文、语言、AI 人格 | 不完整时重试一次；仍失败则不持久化草稿 |
+| 报告短洞察 | `/api/diary` (`action=insight`) | OpenAI `gpt-4o-mini` | 报告卡片所需的简短上下文、语言 | 返回错误，不保存不完整结果 |
+| 用户画像提取 | `/api/extract-profile` | OpenAI `gpt-4o-mini`（可由 `PROFILE_EXTRACT_MODEL` 覆盖） | 最近消息、语言、现有画像相关上下文 | 跳过更新或返回错误 |
+| 魔法笔解析 | `/api/magic-pen-parse` | DeepSeek `deepseek-chat` | 完整原文、语言、本地日期时间和时区偏移 | 保留完整原文到 `unparsed`，前端运行本地保守解析 |
+| 植物观察日记 | `/api/plant-generate` → `src/server/plant-diary-service.ts` | OpenAI `gpt-4.1-mini` | 当天统计、候选植物信息、语言、AI 人格 | 使用既有本地化静态观察文案 |
 
-## 补充观察
+`/api/diary` 的 Free teaser 模式使用本地确定性模板，不调用 AI。
 
-- `api/magic-pen-parse.ts` 先尝试 Qwen `qwen-plus`，空结果、低原文覆盖率、漏时间锚点或复杂句拆分不足均按低质量失败处理，再尝试 Zhipu。
-- `api/README.md` 提到 `/api/plant-diary`，但仓库中无 `api/plant-diary.ts`；植物日记能力由 `api/plant-generate.ts` + `src/server/plant-diary-service.ts` 组成。
+## 3. 服务端配置
 
-## 主流模型官网定价速查（2026-04-09 抓取）
+| 环境变量 | 用途 | 默认值 |
+| --- | --- | --- |
+| `DEEPSEEK_API_KEY` | DeepSeek 服务端密钥 | 无，相关生产路径必填 |
+| `DEEPSEEK_BASE_URL` | DeepSeek OpenAI-compatible base URL | `https://api.deepseek.com/v1` |
+| `OPENAI_API_KEY` | OpenAI 服务端密钥 | 无，相关生产路径必填 |
+| `OPENAI_BASE_URL` | OpenAI base URL（可选覆盖） | OpenAI SDK 默认值 |
+| `GEMINI_API_KEY` | Gemini 服务端密钥 | 无，英/意待办拆解必填 |
+| `GEMINI_BASE_URL` | Gemini native API base URL | `https://generativelanguage.googleapis.com/v1beta` |
 
-> 说明：
-> - 价格单位默认是“每 1M tokens”（若非 token 计费会单独写明）。
-> - 不同官网有“标准/优先/批处理/地区/上下文分档”差异，表中优先放可直接对比的一档价格，并在备注里标注。
-> - 部分官网页面强依赖 JS（当前抓取环境无法直接抽取表格），对应项标记为“官网可见但本次抓取未直出数值”。
+功能级覆盖：
 
-| 参数规模（约） | 模型名字 | 供应商 | 输入报价 | 缓存报价 | 输出报价 | 价格参考网址 |
-| --- | --- | --- | --- | --- | --- | --- |
-| 未披露 | GPT-5.4 | OpenAI | $2.50 | $0.25 | $15.00 | https://openai.com/api/pricing |
-| 未披露 | Claude Sonnet 4.6 | Anthropic (Claude) | $3.00 | Cache read $0.30（5m write $3.75 / 1h write $6.00） | $15.00 | https://platform.claude.com/docs/en/about-claude/pricing |
-| 未披露 | DeepSeek-V3.2（deepseek-chat/reasoner） | DeepSeek | $0.28（cache miss） | $0.028（cache hit） | $0.42 | https://api-docs.deepseek.com/quick_start/pricing |
-| 未披露（商业版未公开） | Qwen3-Max（Global, <=32K 档） | Qwen / 阿里云百炼 | $0.359 | 支持 context cache（折扣分档见官网） | $1.434 | https://www.alibabacloud.com/help/en/model-studio/models |
-| 1T 总参数 / 32B 激活 | Kimi K2（0905-preview） | Moonshot (Kimi) | CNY 4.00（cache miss） | CNY 1.00（cache hit） | CNY 16.00 | https://platform.kimi.com/docs/pricing/chat-k2 |
-| 未披露 | Kimi K2.5 | Moonshot (Kimi) | CNY 4.00（cache miss） | CNY 0.70（cache hit） | CNY 21.00 | https://platform.kimi.com/docs/pricing/chat-k25 |
-| 未披露 | MiniMax-M2.7 | MiniMax | CNY 2.10 | cache read CNY 0.42（write CNY 2.625） | CNY 8.40 | https://platform.minimaxi.com/docs/guides/pricing-paygo |
-| 未披露 | Gemini 2.5 Pro（Standard, <=200K） | Google (Gemini/Vertex AI) | $1.25 | $0.13 | $10.00 | https://cloud.google.com/vertex-ai/generative-ai/pricing |
-| 未披露 | Gemini 2.5 Flash Lite（Standard） | Google (Gemini/Vertex AI) | $0.10 | $0.01 | $0.40 | https://cloud.google.com/vertex-ai/generative-ai/pricing |
-| 未披露 | Grok-4.20 reasoning | xAI | $2.00 | $0.20 | $6.00 | https://docs.x.ai/docs/models |
-| 70B | Llama 3.3 70B Versatile（托管） | Groq | $0.59 | 未标注 | $0.79 | https://groq.com/pricing/ |
-| 8B | Llama 3.1 8B Instant（托管） | Groq | $0.05 | 未标注 | $0.08 | https://groq.com/pricing/ |
-| 32B | Aya Expanse 32B | Cohere | $0.50 | 未标注 | $1.50 | https://cohere.com/pricing |
-| 30B / 120B（托管） | Qwen3 32B（Bedrock Standard, Sydney） | AWS Bedrock (Qwen) | $0.1545 | 见 Priority/Flex/Batch 分档 | $0.6180 | https://aws.amazon.com/bedrock/pricing/ |
-| 13B / 70B（托管） | Llama 2 Chat（Bedrock） | AWS Bedrock (Meta) | $0.75（13B） / $1.95（70B） | 未标注 | $1.00（13B） / $2.56（70B） | https://aws.amazon.com/bedrock/pricing/ |
-| 未披露 | GLM 系列（如 GLM-5.1 / GLM-5 / GLM-4.7） | 智谱（GLM / Zhipu） | 官网价格页可见但本次抓取未直出 | 同左 | 同左 | https://open.bigmodel.cn/pricing |
-| 未披露 | 豆包（火山方舟） | 字节跳动（Doubao / Volcengine Ark） | 官网价格页可见但本次抓取未直出 | 同左 | 同左 | https://www.volcengine.com/docs/82379/1544106 |
+- `CLASSIFY_MODEL`：默认 `deepseek-chat`
+- `TODO_DECOMPOSE_MODEL_ZH`：默认 `deepseek-chat`
+- `TODO_DECOMPOSE_MODEL`：默认 `gemini-2.5-flash`
+- `TODO_DECOMPOSE_GEMINI_BASE_URL`
+- `TODO_DECOMPOSE_GEMINI_FALLBACK_MODEL`
+- `PROFILE_EXTRACT_MODEL`：默认 `gpt-4o-mini`
+- `MAGIC_PEN_MODEL`：默认 `deepseek-chat`
+- `ANNOTATION_DEEPSEEK_BASE_URL`
+- `MAGIC_PEN_DEEPSEEK_API_KEY`
+- `MAGIC_PEN_DEEPSEEK_BASE_URL`
 
-### 备注
+DeepSeek 共用解析逻辑位于 `src/server/deepseek-runtime.ts`。新增或修改 AI 能力时，应先更新本清单，再复用对应服务商的现有服务端入口，禁止把密钥放入浏览器端。
 
-- 上表已覆盖你点名的供应商/系列：豆包、智谱、DeepSeek、Qwen、OpenAI、MiniMax、Meta、Lite（Gemini 2.5 Flash Lite）、GLM、Kimi、Gemini、Claude。
-- 对于 Zhipu 和 Doubao：官方页面在当前抓取环境下为 JS 渲染，无法像其他站点一样直接抽取明细数字；已保留官网入口，后续可人工二次校对补齐。
+## 4. 数据留存与日志边界
+
+- 代码没有在请求中配置 DeepSeek、OpenAI 或 Gemini 的供应商侧留存期限。
+- 仓库无法证明三家服务商控制台、合同或组织账号当前采用的训练/留存设置；App Store 材料中不得仅凭代码写“零留存”“仅会话期间保存”或“绝不训练”。这些结论必须由各账号后台截图或合同条款佐证。
+- Vercel 函数日志与 AI 服务商侧留存是两件不同的事，真实期限应在独立的数据留存文档中分别记录。
+- `ANNOTATION_VERBOSE_LOGS=true` 会记录事件上下文、完整 prompt、原始模型输出和最终响应，可能包含用户日记信息；生产环境应保持关闭。
+- `ANNOTATION_PROMPT_DEBUG` 和 `MAGIC_PEN_DEBUG` 只应用于受控调试，不能作为生产常开设置。
+- App 内三语隐私政策已于 2026-07-30 更新为 DeepSeek、OpenAI、Google Gemini 三家现行服务商，并明确代码不设置服务商侧留存期限；训练与留存结论仍须由服务商条款及实际账号设置佐证。
+
+## 5. 变更规则
+
+任何 AI 服务商、模型、base URL、发送数据范围或日志策略变更，必须同步更新：
+
+1. 本文；
+2. `.env.example`；
+3. `api/README.md` 与 `src/api/README.md` 的相关端点契约；
+4. `docs/CURRENT_TASK.md` 与 `docs/CHANGELOG.md`；
+5. App 隐私政策与 App Store Connect 材料（涉及用户可见三语文案时，先按 `AGENTS.md` 完成文案来源确认）。

@@ -59,7 +59,7 @@ if (type === 'weekly') {
 
 ### 2.3 提取模型与 prompt
 
-- Provider：OpenAI
+- Provider：OpenAI（全项目供应商口径见 `docs/AI_USAGE_INVENTORY.md`）
 - 默认模型：`gpt-4o-mini`（可用 `PROFILE_EXTRACT_MODEL` 覆盖）
 - 调用方式：`chat.completions` + `response_format: json_object`
 - Prompt 路由：按 `lang` 分流中/英/意三套文案，规则一致

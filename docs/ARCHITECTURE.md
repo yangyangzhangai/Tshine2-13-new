@@ -73,30 +73,30 @@ Browser (React)
 - 文件: `src/api/client.ts`
 - 作用:
   - 统一封装前端到 serverless 的 HTTP 调用
-  - 提供 `callReportAPI` / `callAnnotationAPI`
-  - 提供 `callClassifierAPI` / `callDiaryAPI`
-  - 提供 `callMagicPenParseAPI`
-  - 提供 `callPlantGenerateAPI` / `callPlantDiaryAPI` / `callPlantHistoryAPI`
+  - 提供 `callAnnotationAPI` / `callClassifierAPI` / `callDiaryAPI`
+  - 提供 `callMagicPenParseAPI` / `callTodoDecomposeAPI`
+  - 提供 `callPlantGenerateAPI` / `callPlantHistoryAPI`
+  - 提供画像提取、订阅和遥测等调用
 
 ## 3. 服务端函数层
 
 目录: `api/`
 
-- `report.ts`: 报告分析（`POST /api/report`）
 - `annotation.ts`: 批注生成与内容提取（`POST /api/annotation`）
 - `classify.ts`: 结构化分类（`POST /api/classify`）
 - `diary.ts`: 观察手记生成（`POST /api/diary`）
 - `magic-pen-parse.ts`: Magic Pen AI 结构化提取（`POST /api/magic-pen-parse`）
-- `todo-decompose.ts`: Todo 步骤拆解（`POST /api/todo-decompose`）
+- `classify.ts` 的 `todo_decompose` 分支：Todo 步骤拆解（`POST /api/todo-decompose` 经 `vercel.json` rewrite）
+- `extract-profile.ts`: 用户画像提取（`POST /api/extract-profile`）
 - `plant-generate.ts`: 生成当日植物记录（`POST /api/plant-generate`）
-- `plant-diary.ts`: 植物日记生成（`POST /api/plant-diary`）
 - `plant-history.ts`: 植物历史读取（`GET /api/plant-history`）
-- `plant-asset-telemetry.ts`: 植物素材降级埋点（`POST /api/plant-asset-telemetry`）
-- `live-input-telemetry.ts`: live-input 埋点与看板（`POST` ingest, `GET` dashboard）
+- `live-input-telemetry.ts`: live-input/植物素材埋点与看板（含 `/api/plant-asset-telemetry` rewrite）
+- `subscription.ts`: IAP / Stripe 订阅验证与状态持久化
 
 共享服务位于 `src/server/`：
 
 - `http.ts`: CORS / method / error 包装
+- `deepseek-runtime.ts`: 统一 DeepSeek 路径的密钥、base URL、默认模型和兼容客户端
 - `annotation-handler.ts` / `annotation-prompts.ts`
 - `annotation-prompts.defaults.ts` / `annotation-prompts.user.ts`
 - `annotation-suggestion.ts` / `annotation-similarity.ts`
@@ -106,7 +106,7 @@ Browser (React)
 通用约束:
 
 1. 仅接受预期方法（大多数为 `POST`，`plant-history` 为 `GET`）。
-2. 从环境变量读取密钥（如 `OPENAI_API_KEY`、`QWEN_API_KEY`、`ZHIPU_API_KEY`）。
+2. AI 运行时只从服务端环境变量读取 `DEEPSEEK_API_KEY`、`OPENAI_API_KEY`、`GEMINI_API_KEY`；供应商映射以 `docs/AI_USAGE_INVENTORY.md` 为准。
 3. 返回结构化错误，避免前端拿到原始异常堆栈。
 
 ## 4. 数据与持久化

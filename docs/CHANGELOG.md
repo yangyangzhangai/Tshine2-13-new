@@ -90,6 +90,48 @@
 - Lowered the generic button hover/press transform specificity and added a reusable transparent `44x44` hit target to confirmed compact actions, modal close controls, and switches without enlarging their visible artwork.
 - Replaced every runtime Material Symbols glyph with Lucide SVG icons and removed the unused icon-font bootstrap/dependency, eliminating the path where a failed font readiness check could leave navigation or action icons transparent.
 
+## 2026-07-30 - Account deletion now fails closed and clears storage
+
+- Reworked `api/delete-account.ts` to use the service-role client for explicit deletion of all currently known user-scoped tables before auth deletion, adding `telemetry_events`, `user_feedback`, `reminder_responses`, `user_profiles`, `user_account_state`, `user_login_days`, and `timing_sessions` to the hard-delete path.
+- Account deletion now recursively removes all `seeday-images/<userId>/**` objects, covering avatar uploads, current chat-image folders, and legacy top-level chat image files, before deleting the Supabase Auth user.
+- Apple-linked account deletion now attempts Sign in with Apple token revocation first when the current Supabase session exposes a provider token or provider refresh token and the server has Apple credentials; any revoke/delete/auth failure now aborts the flow instead of silently continuing with partial deletion.
+
+## 2026-07-30 - In-app privacy provider disclosure matches runtime
+
+- Updated the existing ZH/EN/IT privacy-policy i18n keys to list only the current AI providers: DeepSeek, OpenAI, and Google Gemini, with the actual language and feature routing.
+- Removed the unverified claims that AI providers retain content only for the session and never use it for model training; the policy now states that provider-side retention and training depend on applicable terms and the active account configuration.
+- Updated third-party disclosures to identify Supabase as Free and explain that Open-Meteo receives the configured region coordinates for weather and air-quality lookup, not journal text.
+
+## 2026-07-29 - My Diary stays editable until next-day 06:00
+
+- Kept the existing 20:00 AI diary generation gate and same-moment freeze for generated observation copy plus `stats.diaryPageSnapshot`, but changed the user-authored `My Diary` note (`reports.userNote`) to remain editable until the next local-day `06:00`.
+- `src/features/report/ReportDetailModal.tsx` now allows conditional editing on page 2 during that grace window instead of rendering `My Diary` as permanently read-only immediately after generation, while `src/features/report/plant/PlantRootSection.tsx` closes the root-surface editor once the same cutoff passes.
+- `src/store/useReportStore.ts` now rejects expired `daily.userNote` writes before local state/outbox changes, preventing late UI events from reopening a locked note after the grace window ends.
+
+## 2026-07-29 - Qwen/Zhipu/Chutes retired; GPT and Gemini preserved
+
+- Migrated the remaining Qwen classification path and Qwen/Zhipu Magic Pen chain to the shared DeepSeek `deepseek-chat` runtime, while preserving all existing OpenAI GPT and Gemini routes.
+- Kept annotation split as `zh=DeepSeek / en,it=OpenAI`, todo decomposition as `zh=DeepSeek / en,it=Gemini`, and diary/insight/profile/plant diary on OpenAI.
+- Deleted the orphaned Chutes-backed `/api/report` function and removed obsolete Qwen/Zhipu configuration plus the Magic Pen `fallbackFrom` client field.
+- Made `docs/AI_USAGE_INVENTORY.md` the sole current provider/model/data-scope SSOT and updated deployment, API, architecture, compliance, profile, project-map, and App Store submission docs to reference the three-provider runtime.
+
+## 2026-07-29 - Chat store integration tests split under max-lines gate
+
+- Replaced the single oversized `src/store/useChatStore.integration.test.ts` with one shared helper file plus four focused suites: auto-recognition, timeline/manual-end edits, sync/images, and reclassify/mood stability.
+- Preserved the same chat-store regression scenarios while bringing every individual test file back under the repository's max-lines threshold, so pre-commit no longer fails on that test coverage bundle.
+
+## 2026-07-29 - Growth todo status pills moved inline with the title
+
+- Moved the compact `today / tomorrow / overdue` todo status pills from the second line below the title into the title row itself, attached directly after the title text instead of forming a right-aligned status area, while shrinking the pill height so collapsed cards stay visually tighter.
+- Pinned todos now show a matching compact pin pill beside the title, keeping pin state in the same visual language as due-state pills instead of hiding it only inside the expanded editor.
+- The right-side priority/start/focus action cluster is unchanged; title text still truncates first so the state pills remain readable on narrow mobile widths.
+
+## 2026-07-29 - Todo decompose zh now uses DeepSeek and caps at five steps
+
+- Switched Growth todo manual decompose so Chinese requests now call DeepSeek `deepseek-chat`, while English and Italian stay on Gemini.
+- Tightened the decompose prompt and normalization to return 3-5 sub-steps instead of allowing six, preserving the existing title + duration response contract.
+- Updated the todo-decompose client/provider typing, server logging, deployment notes, and AI inventory/docs to match the new `zh=DeepSeek / en,it=Gemini` split.
+
 ## 2026-07-29 - Welcome feature illustrations
 
 - Cropped seven user-provided transparent PNG illustrations into individually named Welcome assets for diary, Magic Pen, task breakdown, mood recognition, goal tracking, personal memory, and greenhouse companions; the personal-memory frame is vertically recentered within its transparent canvas.
@@ -487,6 +529,12 @@ Validation:
 - `src/lib/authMetadataSanitizer.ts`, `src/lib/authMetadataSanitizer.test.ts`, and `src/store/authProfileCloudStore.test.ts` now allow normal avatar URLs to stay in JWT-safe metadata while still stripping data URLs, and add focused regression coverage for cached-avatar reuse.
 
 ## 2026-07-19
+
+### Fix: Chat image replacement no longer revives deleted photos
+
+- `src/hooks/useImageUpload.ts`, `src/lib/chatImageStorage.ts`, and `src/store/useOutboxStore.ts` now give every new chat-card image upload its own storage object path instead of reusing one fixed slot URL, while still recognizing legacy fixed-path URLs during deletion and reupload fallback.
+- `src/store/chatTimelineActions.ts` now treats chat image field changes like other durable chat edits: public-URL writes and null clears mark the message pending, sync through `chat.upsert`, and only flip back to `synced` after cloud success; local data-URL fallbacks stay local-pending until the existing `image.reupload` path replaces them with a storage URL.
+- `src/store/useChatStore.integration.test.ts`, `src/lib/chatImageStorage.test.ts`, and `src/store/README.md` add regression/documentation coverage for unique storage paths, offline image-field durability, and the delete-then-reupload cache-resurrection fix.
 
 ### Fix: Growth parent todo deletes now cascade through subtasks
 

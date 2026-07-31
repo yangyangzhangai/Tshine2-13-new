@@ -1,12 +1,12 @@
 // DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> api/README.md
-import OpenAI from 'openai';
+import type OpenAI from 'openai';
 import type { AnnotationPromptPackage } from './annotation-prompt-builder.js';
+import type { AnnotationProvider } from './annotation-provider-runtime.js';
 
-type AnnotationRuntimeProvider = 'qwen' | 'gemini' | 'deepseek' | 'openai';
 type AnnotationLang = 'zh' | 'en' | 'it';
 
 interface AnnotationLLMCallParams {
-  provider: AnnotationRuntimeProvider;
+  provider: AnnotationProvider;
   model: string;
   instructions: string;
   input: string;
@@ -24,8 +24,6 @@ interface AnnotationLLMCallResult {
   finishReason?: string;
 }
 
-const ENABLE_VERBOSE_ANNOTATION_LOGS = process.env.ANNOTATION_VERBOSE_LOGS === 'true';
-
 const STALE_TODO_DAYS_THRESHOLD = 3;
 const OVERDUE_TODO_MS_THRESHOLD = 24 * 60 * 60 * 1000;
 
@@ -37,118 +35,10 @@ export type PendingTodoLite = {
   ageDays?: number;
 };
 
-function normalizeGeminiModel(model: string): string {
-  const trimmed = String(model || '').trim();
-  if (!trimmed) return 'gemini-2.5-flash';
-  if (trimmed === 'gemini2.0-flash') return 'gemini-2.0-flash';
-  if (trimmed === 'gemini2.5-flash') return 'gemini-2.5-flash';
-  if (trimmed.startsWith('models/')) return trimmed.slice(7);
-  return trimmed;
-}
-
-function isVertexGeminiBase(baseURL: string): boolean {
-  return /aiplatform\.googleapis\.com/i.test(baseURL);
-}
-
-function buildGeminiGenerateContentUrl(baseURL: string, model: string, apiKey: string): string {
-  const normalizedBase = baseURL.replace(/\/$/, '');
-  const modelPath = isVertexGeminiBase(normalizedBase)
-    ? `publishers/google/models/${model}`
-    : `models/${model}`;
-  return `${normalizedBase}/${modelPath}:generateContent?key=${encodeURIComponent(apiKey)}`;
-}
-
 export async function callAnnotationLLM(
-  client: OpenAI | undefined,
+  client: OpenAI,
   params: AnnotationLLMCallParams,
 ): Promise<AnnotationLLMCallResult> {
-  if (params.provider === 'gemini') {
-    const apiKey = String(params.apiKey || '').trim();
-    if (!apiKey) {
-      throw new Error('Missing GEMINI_API_KEY for annotation');
-    }
-    const geminiBase = String(params.baseURL || 'https://aiplatform.googleapis.com/v1').replace(/\/$/, '');
-    if (/\/openai$/i.test(geminiBase)) {
-      if (!client) {
-        throw new Error('Missing OpenAI client for Gemini OpenAI-compatible mode');
-      }
-      const response = await client.responses.create({
-        model: params.model,
-        instructions: params.instructions,
-        input: params.input,
-        temperature: params.temperature,
-        max_output_tokens: params.maxOutputTokens,
-        stream: false,
-      });
-      return {
-        outputText: response.output_text || '',
-        usage: response.usage,
-        responseId: response.id,
-      };
-    }
-    const geminiModel = normalizeGeminiModel(params.model);
-    const response = await fetch(buildGeminiGenerateContentUrl(geminiBase, geminiModel, apiKey), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: params.instructions }],
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: params.input }],
-          },
-        ],
-        generationConfig: {
-          temperature: params.temperature,
-          maxOutputTokens: params.maxOutputTokens,
-          thinkingConfig: {
-            thinkingBudget: 0,
-          },
-          ...(params.expectJson ? { responseMimeType: 'application/json' } : {}),
-        },
-      }),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      if (ENABLE_VERBOSE_ANNOTATION_LOGS) {
-        console.error('[Annotation API] llm.gemini.error', {
-          model: geminiModel,
-          status: response.status,
-          statusText: response.statusText,
-          responseRaw: errorText,
-        });
-      }
-      throw new Error(`Gemini annotation failed: ${response.status} ${errorText}`);
-    }
-    const payload = (await response.json()) as {
-      usageMetadata?: unknown;
-      promptFeedback?: {
-        blockReason?: string;
-      };
-      candidates?: Array<{
-        finishReason?: string;
-        content?: {
-          parts?: Array<{ text?: string }>;
-        };
-      }>;
-    };
-    const outputText = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
-    const finishReason = payload.candidates?.[0]?.finishReason || payload.promptFeedback?.blockReason;
-    return {
-      outputText,
-      usage: payload.usageMetadata,
-      finishReason,
-    };
-  }
-
-  if (!client) {
-    throw new Error(`Missing OpenAI client for provider: ${params.provider}`);
-  }
-
   if (params.provider === 'deepseek') {
     const completion = await client.chat.completions.create({
       model: params.model,

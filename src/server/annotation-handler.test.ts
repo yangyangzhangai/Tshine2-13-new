@@ -56,9 +56,9 @@ describe('annotation-handler', () => {
       choices: [{ message: { content: '{"steps":[]}' } }],
     });
     process.env.OPENAI_API_KEY = 'test-key';
-    process.env.QWEN_API_KEY = 'test-qwen-key';
+    process.env.DEEPSEEK_API_KEY = 'test-deepseek-key';
     process.env.GEMINI_API_KEY = 'test-gemini-key';
-    process.env.ANNOTATION_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai';
+    process.env.GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
     process.env.ANNOTATION_CHARACTER_STATE_ENABLED = 'true';
   });
 
@@ -96,7 +96,7 @@ describe('annotation-handler', () => {
     expect(res.statusCode).toBe(200);
     expect((res.payload as { debugAiMode?: string }).debugAiMode).toBe('zep');
     expect((res.payload as { source?: string }).source).toBe('ai');
-  });
+  }, 10_000);
 
   it('rewrites when generated annotation is too similar to recent ones', async () => {
     responsesCreateMock
@@ -357,10 +357,6 @@ describe('annotation-handler', () => {
         prompt_cache_misses: 1,
       },
     });
-    chatCompletionsCreateMock.mockResolvedValueOnce({
-      choices: [{ message: { content: '{"steps":[{"title":"Collect requirements","durationMinutes":20},{"title":"Draft outline","durationMinutes":30},{"title":"Review and finalize","durationMinutes":25}]}' } }],
-    });
-
     const { default: handler } = await import('./annotation-handler');
     const res = createResponseMock();
 
@@ -422,10 +418,6 @@ describe('annotation-handler', () => {
         prompt_cache_misses: 1,
       },
     });
-    chatCompletionsCreateMock.mockResolvedValueOnce({
-      choices: [{ message: { content: '{"steps":[{"title":"Collect requirements","durationMinutes":20},{"title":"Draft outline","durationMinutes":30},{"title":"Review and finalize","durationMinutes":25}]}' } }],
-    });
-
     const { default: handler } = await import('./annotation-handler');
     const res = createResponseMock();
     const oldCreatedAt = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();

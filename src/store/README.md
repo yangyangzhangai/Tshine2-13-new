@@ -86,6 +86,7 @@
 - `mood.upsert` 重试与登录上云会先核验父 `messages`：本地消息、日期缓存、待补传 `chat.upsert` 或云端消息任一存在时均不会被误删；仅在云端检查完整且本地/云端均无父消息时，才清理确认孤立的 mood map 与 outbox。独立心情的 `messages.is_mood=true` 仍属于合法父消息。
 - `useChatStore` 现为新发消息接入显式 `syncState`：本地新消息先标记 `pending` 并立即展示，首次写库失败时进入 `chat.upsert` outbox；云端回拉/flush 成功后回写为 `synced`，本地仅在 `pending/failed` 时保留“云端不存在”的条目，避免把已被删除的消息误当成离线数据复活。
 - `useChatStore.endActivity()` 现也走同一套 `chat.upsert` durable sync：本地先把活动卡结束并标记为 `pending`，成功写云后改回 `synced`，失败则进入 outbox；同 ID 合并时，若本地 `pending/failed` 卡片的持久化字段已比云端更新（例如本地已结束、云端仍 `is_active=true`），则优先保留本地版本，避免首页刷新把刚结束的活动复活。
+- `useChatStore.updateMessageImage()` 现与其他聊天消息编辑共享 durable sync 语义：公开图片 URL 写入和图片清空都会先本地标记 `pending`，再通过 `chat.upsert` 落云，失败进入 outbox；本地 data URL 仅作为离线临时预览保留，必须等 `image.reupload` 产出正式 storage URL 后才会上云，避免把临时 data URL 写进 `messages.image_url(_2)` 或被静默刷新用旧云端图片覆盖回来。
 - `useChatStore.sendMessage()/sendMood()` 现保证 `messages` 与 `dateCache` 同步更新（包括“自动结束上一条活动”后的 `duration/isActive` 变化），避免提醒弹窗确认后因缓存口径不一致出现“新活动闪现后消失/上一条未自动结束”的竞态。
 - `useChatStore.sendMessage()` 现会在新活动创建前统一收口所有 ongoing 活动（不再只关闭最后一条 record），并且 `insertActivity()/updateActivity()` 会拦截与 ongoing 活动冲突的手动时间编辑，避免时间线被污染后出现双活动同时计时。
 - `useChatStore.updateActivity()` 现会区分 ongoing 活动的“只改开始时间”和“手动改结束时间”两种编辑：只改开始时间时保持 ongoing；一旦用户显式改了结束时间，则立即写成已结束并同步 `dateCache`/云端 `is_active=false`，避免下一条活动再次改写结束时间。
@@ -99,6 +100,7 @@
 - `useTodoStore.deleteTodo()` 现对一次性/重复待办删除补上 durable fallback：本地仍先移除并记录 `pendingDeletedTodoIds`，但若云端软删除因无 session、网络抖动或 0-row 未命中而未真正落库，会自动写入 `todo.delete` outbox；`fetchTodos()` 在拉云前会先 flush 队列，并在最终合并云端结果时再次读取最新 tombstone，避免 in-flight refresh 把刚删掉的待办写回本地。删除父待办时会级联删除全部子待办，避免刷新后把孤儿子待办扶正成顶层任务；`fetchTodos()` 也会把历史遗留的 orphan subtrees 识别为删除对象并入队 durable cloud delete，而不是清空 `parentId`。`useRealtimeSync` 对 tombstoned todo 的晚到 `INSERT/UPDATE` 也会直接忽略，避免删除后立即/切后台刷新后被 realtime 重新显示。
 - `useTodoStore.deleteTodo()` 不再触发 annotation 事件；AI 批注当前仅由记录/完成/心情/闲置/过劳等保留事件驱动，删除待办只执行本地移除与 durable cloud delete。
 - `useReportStore.updateReport()` 现也接入 durable fallback：本地仍先乐观更新；若当前无 session 或 `reports.update(...)` 失败，则将完整 report 作为 `report.upsert` 入队，确保 title/content/stats/userNote/AI 结果类二次编辑不会因为瞬时网络问题丢失。
+- `useReportStore.updateReport()` 现在也会拦截已过期的 `daily.userNote` 修改：`My Diary` 只允许编辑到报告对应日期次日当地 `06:00`，逾期后即便页面误触发更新也不会再写入本地或 outbox。
 - `useAnnotationStore.recordSuggestionOutcome()` 现也接入 durable fallback：用户点“接受/拒绝建议”时本地状态先更新；若当前无 session 或 `suggestion_accepted` 更新失败，则把结果写入 `annotation.outcome` outbox，避免建议反馈丢失。
 - `useAuthStore` 的长期画像开关与语言切换也改成 local-first：先更新本地 UI，再后台写云端；画像开关写 `user_profiles`，语言仍写 Auth metadata。Profile 面板不再因为后台同步而闪出“Saving...”。
 - `useAuthStore` 的 onboarding 守卫现改为 `user_account_state` 优先：主判断读取 `accountState.onboardingStatus`；`userProfileV2.onboardingCompleted` 与旧 `seeday_onboarded_*` 本地标记只作为迁移/冷启动 fallback，避免 Google/Apple OAuth 新账号绕过 onboarding 或云端写失败后反复被送回引导。

@@ -27,6 +27,7 @@ import { UpgradeModal } from './UpgradeModal';
 import { PlantCardModal } from './PlantCardModal';
 import { ReportCalendarModal, type ReportCalendarValue } from './ReportCalendarModal';
 import {
+  canEditMyDiary,
   getDailyMoodDistribution,
   getMessagesForReport,
   findDailyReportForDate,
@@ -470,11 +471,7 @@ export const ReportPage = () => {
         presentation={isPrimaryTodayDiary ? 'page' : 'modal'}
         onOpenCalendar={isPrimaryTodayDiary ? handleOpenCalendar : undefined}
         onOpenDiaryBook={isPrimaryTodayDiary ? handleOpenDiaryBook : undefined}
-        readOnly={(() => {
-          if (!selectedReport) return false;
-          const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-          return new Date(selectedReport.date) < todayStart;
-        })()}
+        readOnly={selectedReport ? !canEditMyDiary(selectedReport, today) : false}
         onNavigatePrev={diaryNavDate ? handleDiaryNavPrev : undefined}
         onNavigateNext={diaryNavDate ? handleDiaryNavNext : undefined}
         canNavigateNext={diaryNavDate ? diaryNavDate.toDateString() !== today.toDateString() : false}

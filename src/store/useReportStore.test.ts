@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../lib/supabase-utils', () => ({
   getSupabaseSession: vi.fn(async () => null),
@@ -20,6 +20,8 @@ import { useTodoStore } from './useTodoStore';
 
 describe('useReportStore regeneration persistence', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-20T22:00:00Z'));
     useChatStore.setState({ messages: [] });
     useTodoStore.setState({ todos: [] });
     useMoodStore.setState({
@@ -33,6 +35,10 @@ describe('useReportStore regeneration persistence', () => {
     });
     useReportStore.setState({ reports: [], computedHistory: [] });
     useOutboxStore.setState({ entries: [] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('reuses the same report id when regenerating the same daily report', async () => {
@@ -105,5 +111,44 @@ describe('useReportStore regeneration persistence', () => {
     expect(useReportStore.getState().reports[0].userNote).toBe('new note');
     expect(useOutboxStore.getState().entries).toHaveLength(1);
     expect(useOutboxStore.getState().entries[0].kind).toBe('report.upsert');
+  });
+
+  it('keeps my diary editable until next day 06:00', async () => {
+    const reportDate = new Date(2026, 2, 20, 12, 0, 0, 0);
+    useReportStore.setState({
+      reports: [{
+        id: 'report-1',
+        title: 'Today',
+        date: reportDate.getTime(),
+        type: 'daily',
+        content: 'Generated report',
+        userNote: 'old',
+      }],
+    });
+
+    vi.setSystemTime(new Date(2026, 2, 21, 5, 59, 0, 0));
+    await useReportStore.getState().updateReport('report-1', { userNote: 'still editable' });
+
+    expect(useReportStore.getState().reports[0].userNote).toBe('still editable');
+  });
+
+  it('locks my diary updates from next day 06:00 onward', async () => {
+    const reportDate = new Date(2026, 2, 20, 12, 0, 0, 0);
+    useReportStore.setState({
+      reports: [{
+        id: 'report-1',
+        title: 'Today',
+        date: reportDate.getTime(),
+        type: 'daily',
+        content: 'Generated report',
+        userNote: 'locked note',
+      }],
+    });
+
+    vi.setSystemTime(new Date(2026, 2, 21, 6, 0, 0, 0));
+    await useReportStore.getState().updateReport('report-1', { userNote: 'should not save' });
+
+    expect(useReportStore.getState().reports[0].userNote).toBe('locked note');
+    expect(useOutboxStore.getState().entries).toHaveLength(0);
   });
 });

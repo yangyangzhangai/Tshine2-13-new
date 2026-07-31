@@ -233,4 +233,4 @@ TC-099,P0,M03 聊天/记录,活动数据落盘同步 Supabase,功能,"已登录�
 4. 重新打开 App","活动卡数据保留，时间线完整恢复",,,,,
 TC-100,P1,M08 会员/订阅,密钥不暴露在前端（安全审计）,安全,Web 端打开 DevTools,"1. 打开浏览器 DevTools -> Network
 2. 发送一条聊天消息
-3. 检查请求 Headers/Body","所有 AI API 请求均到 /api/* 代理，前端不出现 OPENAI_API_KEY/QWEN_API_KEY 等密钥",,,,,
+3. 检查请求 Headers/Body","所有 AI API 请求均到 /api/* 代理，前端不出现 DEEPSEEK_API_KEY/OPENAI_API_KEY/GEMINI_API_KEY 等密钥",,,,,

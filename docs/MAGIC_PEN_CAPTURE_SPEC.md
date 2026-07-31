@@ -222,8 +222,8 @@ const activeRecord = useMemo(() => {
 
 | 层级 | 文件 | 说明 |
 |------|------|------|
-| Serverless | `api/classify.ts` | 用智谱 GLM-4.7-flash，OpenAI 兼容协议 |
-| Serverless | `src/server/annotation-handler.ts` | 用多提供商路由（DeepSeek/OpenAI 等），OpenAI 兼容协议 |
+| Serverless | `api/classify.ts` | 会员分类使用 DeepSeek；待办拆解按语言路由 DeepSeek / Gemini |
+| Serverless | `src/server/annotation-handler.ts` | AI 批注按语言路由 DeepSeek / OpenAI |
 | 前端 Client | `src/api/client.ts` | 统一 `postJson` 封装 |
 | 共用基础 | `src/server/http.ts` | CORS、method 校验、`jsonError` 工具 |
 
@@ -237,7 +237,7 @@ const activeRecord = useMemo(() => {
 2. 活动补录直接调用 `insertActivity(null, null, content, startTime, endTime)`。
 3. Todo 提取必须沿用现有 Todo 模型，不发明新字段。
 4. 不新增 Supabase 字段。
-5. 新增 `/api/magic-pen-parse` serverless endpoint 做 AI 结构化提取（复用现有 `src/server/http.ts` 基础设施和 `ZHIPU_API_KEY`）。
+5. `/api/magic-pen-parse` serverless endpoint 做 AI 结构化提取，复用 `src/server/http.ts` 与共用 DeepSeek runtime。
 
 ## 3. 最终产品定义
 
@@ -487,7 +487,7 @@ V1 采用 **AI 提取 + 前端校验** 二层架构，取代纯前端正则方�
 ### 6.2 为什么用 AI 而非正则
 
 1. **复杂度不对等**：魔法笔面对的是多段混合文本（拆段 + 每段分类 + 时间提取），比主输入二分类复杂得多；纯正则预计 600+ 行且长尾覆盖差。
-2. **频率极低**：用户一天最多 10 次，单次 AI 成本 < ¥0.003（智谱 GLM-4.7-flash），每月 < ¥1。
+2. **频率较低**：用户主动触发且有每日次数限制；实际 DeepSeek 成本应按生产账号当前计费核算，不在本规格中写死。
 3. **天然多语言**：AI 无需为 en/it 单独写规则，V2 自动获得多语言支持。
 4. **主输入不变**：主输入仍用现有 `classifyLiveInput()` 正则，高频（每天几十上百次）、简单二分类，正则是正确选择。
 
@@ -631,13 +631,13 @@ unparsed（无法分类）：以下情况归入此类：
 
 #### AI 模型选择
 
-主 provider 使用 DashScope OpenAI-compatible `qwen-plus`（`QWEN_API_KEY` + `DASHSCOPE_BASE_URL`，可由 `MAGIC_PEN_MODEL` 覆盖），并在调用失败或语义质量不合格时自动回退到智谱 `glm-4.7-flash`（`ZHIPU_API_KEY`）。
+魔法笔复用项目的 DeepSeek runtime，当前默认模型为 `deepseek-chat`。服务商、模型和环境变量的唯一事实源是 `docs/AI_USAGE_INVENTORY.md`。
 
-主 provider 参数：
+调用参数：
 
 ```ts
 {
-  model: 'qwen-plus',
+  model: 'deepseek-chat',
   temperature: 0.2,    // 低温度保证结构化输出稳定
   max_tokens: 2048,
   stream: false,
@@ -645,7 +645,7 @@ unparsed（无法分类）：以下情况归入此类：
 ```
 
 > [!NOTE]
-> 简单单意图输入仍可走本地 fast path；进入 AI 端点的通常是混合或复杂输入，因此默认使用 `qwen-plus`。双 provider 不仅处理网络/格式失败，也处理空提取、原文覆盖不足、漏掉明确时间锚点和复杂句严重欠拆分。
+> 简单单意图输入仍可走本地 fast path；进入 AI 端点的通常是混合或复杂输入。远端调用或质量检查失败时保留原文并走本地保守解析，不切换第二 AI 服务商。
 
 #### AI 响应解析与容错
 
@@ -662,21 +662,21 @@ function parseMagicPenAIResponse(raw: string): ParsedMagicPenAIResponse {
     try { return validateAndReturn(JSON.parse(match[0])); } catch {}
   }
 
-  // 策略3：格式失败，交给下一个 provider
+  // 策略3：格式失败，交给本地安全兜底
   return { data: { segments: [], unparsed: [] }, strategy: 'fallback_failed' };
 }
 ```
 
-Provider fallback 触发条件（任一命中）：
-1. 主 provider 超时（默认 12s，可由 `MAGIC_PEN_FALLBACK_TIMEOUT_MS` 覆盖）
-2. 主 provider HTTP 非 2xx
-3. 主 provider 返回空 `choices[0].message.content`
-4. 主 provider 返回内容无法通过 `parseMagicPenAIResponse(...)`
+远端失败并转入本地安全兜底的条件（任一命中）：
+1. DeepSeek 超时（默认 12s，可由 `MAGIC_PEN_TIMEOUT_MS` 覆盖）
+2. DeepSeek HTTP 非 2xx
+3. DeepSeek 返回空 `choices[0].message.content`
+4. DeepSeek 返回内容无法通过 `parseMagicPenAIResponse(...)`
 5. 非空输入得到空 `segments`
 6. `sourceText + unparsed` 对原文总体覆盖不足
 7. 已识别 `sourceText` 覆盖不足、遗漏明确时间锚点，或复杂多分句只提取出一个片段
 
-所有 provider 都失败时，服务端返回 `providerUsed: 'none'`，并把完整原始 `rawText` 放入 `unparsed`。禁止用固定中文错误占位语替换原文。
+远端失败时，服务端返回 `providerUsed: 'none'`，并把完整原始 `rawText` 放入 `unparsed`。禁止用固定中文错误占位语替换原文。
 
 `validateAndReturn` 必须校验：
 1. `segments` 是数组
@@ -703,8 +703,7 @@ interface MagicPenParseResponse {
   data: MagicPenAIResult;
   traceId?: string;
   parseStrategy?: 'direct_json' | 'wrapped_object' | 'fallback_failed';
-  providerUsed?: 'zhipu' | 'qwen' | 'none';
-  fallbackFrom?: 'qwen';
+  providerUsed?: 'deepseek' | 'none';
 }
 
 export async function callMagicPenParseAPI(
@@ -787,8 +786,8 @@ export function buildDraftsFromAIResult(
 | 错误场景 | 前端行为 |
 |------|------|
 | 网络错误 / 超时 | 发送触发解析失败时走本地 fallback，仍打开 Sheet |
-| AI 返回空 segments / 低覆盖率结果 | 按低质量失败自动尝试第二 provider |
-| AI 返回格式异常 | 自动尝试第二 provider；全部失败时完整原文进入 `unparsedSegments` |
+| AI 返回空 segments / 低覆盖率结果 | 按低质量失败处理，完整原文进入 `unparsedSegments` 并尝试本地解析 |
+| AI 返回格式异常 | 完整原文进入 `unparsedSegments` 并尝试本地解析 |
 | API Key 缺失 | serverless 返回 500，前端提示"服务暂不可用" |
 
 补充约束：
@@ -933,7 +932,7 @@ V1 规则：
 
 | 文件 | 职责 |
 |------|------|
-| `api/magic-pen-parse.ts` | Serverless endpoint：接收原始文本 → 调用智谱 AI → 返回结构化 JSON |
+| `api/magic-pen-parse.ts` | Serverless endpoint：接收原始文本 → 调用 DeepSeek → 返回结构化 JSON |
 | `src/features/chat/MagicPenSheet.tsx` | Sheet 组件：草稿展示、编辑、提交 |
 | `src/services/input/magicPenTypes.ts` | 类型定义（前端 draft 类型 + AI 响应类型） |
 | `src/services/input/magicPenParser.ts` | 前端解析入口：预处理 → 调用 API → 调用 draftBuilder |
@@ -1031,7 +1030,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // 参数校验...
   // 构建 prompt（替换 {{todayDateStr}} 和 {{currentHour}}）...
-  // 调用主 provider（Qwen qwen-plus）并在调用/质量失败时回退到 Zhipu ...
+  // 调用共用 DeepSeek runtime，调用/质量失败时保留原文给本地兜底 ...
   // 解析响应 + 校验...
   // 返回 { success: true, data: MagicPenAIResult }
 }
@@ -1040,7 +1039,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 必须同步更新 `api/README.md` 的端点清单，新增一行：
 
 ```
-| `/api/magic-pen-parse` | `magic-pen-parse.ts` | `{ success: true, data: { segments, unparsed }, raw, traceId, parseStrategy, providerUsed, fallbackFrom? }` |
+| `/api/magic-pen-parse` | `magic-pen-parse.ts` | `{ success: true, data: { segments, unparsed }, raw, traceId, parseStrategy, providerUsed }` |
 ```
 
 ### 9.4 前端服务层职责
@@ -1291,7 +1290,7 @@ chat_magic_pen_service_unavailable: 'Service temporarily unavailable',
 ### 13.2 工程验收
 
 1. 不新增数据库字段。
-2. 新增 `/api/magic-pen-parse` endpoint（复用现有 serverless 基础设施和 `ZHIPU_API_KEY`）。
+2. `/api/magic-pen-parse` endpoint 复用现有 serverless 基础设施和共用 DeepSeek runtime。
 3. 不把解析逻辑写进 `ChatPage.tsx`。
 4. 不把历史补录走到 `sendMessage()`。
 5. 不破坏报告页对活动时长的统计逻辑。
@@ -1306,7 +1305,7 @@ chat_magic_pen_service_unavailable: 'Service temporarily unavailable',
 
 1. 聊天页入口（`ChatInputBar` 按钮 + `ChatPage` 状态）
 2. `MagicPenSheet` 完整交互（草稿编辑、冲突提示、部分失败重试）
-3. `/api/magic-pen-parse` serverless endpoint（智谱 GLM-4.7-flash）
+3. `/api/magic-pen-parse` serverless endpoint（DeepSeek `deepseek-chat`）
 4. `src/api/client.ts` 新增 `callMagicPenParseAPI()`
 5. `magicPenDraftBuilder.ts`：AI 结果 → 标准 draft + 校验
 6. 活动草稿编辑与时间补全
@@ -1342,7 +1341,7 @@ chat_magic_pen_service_unavailable: 'Service temporarily unavailable',
 1. 在聊天页输入栏保留一个显式 wand mode toggle。
 2. 发送时先做 clause-level dual routing：强 realtime 直写，magic / uncertain 走 review。
 3. `uncertain` 子句默认进入 magic review / `unparsedSegments`，而不是直接写入 realtime。
-4. 解析层采用 AI 结构化提取（`/api/magic-pen-parse`：主路 Qwen `qwen-plus`，调用/质量失败自动回退智谱 `glm-4.7-flash`），并按 `lang` 路由 prompt。
+4. 解析层采用 AI 结构化提取（`/api/magic-pen-parse` 复用共用 DeepSeek runtime），调用/质量失败时保留完整原文给本地保守解析，并按 `lang` 路由 prompt。
 5. 前端 `magicPenDraftBuilder.ts` 负责将 AI 结果转为标准 draft、做时间合法性校验和 batch 冲突检测——所有确定性逻辑不依赖 AI。
 6. 活动补录直接调用 `insertActivity(null, null, content, startAt, endAt)`，绝不复用主输入发送链路。
 7. Todo 提取复用 `useTodoStore.addTodo()`。
