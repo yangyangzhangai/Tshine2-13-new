@@ -38,6 +38,7 @@ import { useReminderStore } from './store/useReminderStore';
 import { getReminderCopy } from './services/reminder/reminderCopy';
 import { QuickActivityPicker } from './components/QuickActivityPicker';
 import { CloudRetryButton } from './components/feedback/CloudRetryButton';
+import { AIConsentGate } from './features/profile/components/AIConsentGate';
 import { useOutboxStore, getOutboxRetrySummary } from './store/useOutboxStore';
 import { formatUserFacingDiagnostic, logDiagnostic } from './lib/diagnostics';
 
@@ -400,6 +401,7 @@ const MainLayout = () => {
         />
       )}
       <QuickActivityPicker />
+      <AIConsentGate />
     </div>
   );
 };

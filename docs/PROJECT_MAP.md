@@ -67,6 +67,9 @@ src/
 ## 4. 共享 server 模块
 
 - `src/server/http.ts`：CORS、method 和错误包装。
+- `src/server/account-deletion-data.ts`：账号删除的数据表与 Storage fail-closed 清理。
+- `src/server/apple-account-revoke.ts`：Apple authorization code 交换、identity 核对与 token revoke。
+- `src/server/ai-consent.ts`：第三方 AI 当前同意版本的服务端数据库核验与失败关闭响应。
 - `src/server/deepseek-runtime.ts`：DeepSeek 路径共用的密钥、base URL、默认模型和兼容客户端。
 - `src/server/annotation-*.ts`：批注 handler、prompt、suggestion 和相似度。
 - `src/server/country-resolver.ts`、`holiday-resolver.ts`：国家与节日上下文。
@@ -75,6 +78,7 @@ src/
 - `src/server/magic-pen-quality.ts`：魔法笔中英文原文覆盖率、时间锚点与复杂句拆分质量门槛。
 - `src/server/todo-decompose-service.ts`：待办拆解共享服务。
 - `src/server/plant-*.ts`：植物接口和日记共享逻辑。
+- `src/lib/aiConsent.ts`：前后端共用的 consent 版本、状态判断与前端唤起事件常量。
 
 ## 5. 架构边界
 

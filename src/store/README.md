@@ -34,6 +34,7 @@
 3. 新增持久化字段要考虑清理策略，避免 localStorage 无限增长。
 4. 跨 store 调用优先使用 `useXxxStore.getState()`，避免循环依赖。
 5. `useAuthStore` 邮箱注册采用“验证码确认”链路：`signUp(...)` 发起注册后，通过 `verifySignUpCode(email, code)` 完成 `verifyOtp(type='signup')` 校验（`resendSignUpCode(email)` 负责重发）。
+6. `useAuthStore.deleteAccount()` 统一编排账号删除；Apple-linked iOS 用户先经原生 Apple sheet 获取一次性 authorization code，再调用 `/api/delete-account`，成功后才清理本地 scope 并退出。
 
 ## Annotation Store Notes
 ## Chat Input Classification
@@ -71,6 +72,7 @@
 - `useReportStore.generateAIDiary()` now branches by membership: Plus -> full AI diary (`aiAnalysis`), Free -> teaser copy (`teaserText`) for blur-lock upgrade UI.
 - metadata 并发写已串行化：新增 `authMetadataQueue.ts`，`updateLanguagePreference/updateAvatar/updatePreferences` 及迁移写入统一走 `patchUserMetadata(...)`；画像与登录日期已拆到业务表，减少 `user_metadata` 覆盖竞争和 JWT 体积。
 - 账号生命周期状态已开始从零散 metadata/profile/local flag 收口到 `user_account_state`：`useAuthStore` 现在维护 `accountState`，路由守卫优先读取 `onboarding_status`，本地仅保留 user-scoped pending account-state 作为离线/写云失败兜底；冲突策略为“completed/skipped 不回退，未完成时取进度更靠后的 step”。
+- 第三方 AI 明示同意也复用 `user_account_state`：`updateAiConsent()` 写入 status/version/granted/updated/withdrawn 时间。授予同意必须先成功写云才会在本地生效；拒绝/撤回则立即在本地失败关闭并保留 pending cloud write，避免网络故障继续发送 AI 请求。
 - `useMoodStore.fetchMoods()` 改为 cloud + local merge（云端覆盖同 ID，本地独有保留），避免前后台拉取覆盖在途心情写入。
 - `useAnnotationStore.fetchAnnotations()` 改为 cloud + local pending 合并，且 `todayStats.events` 上限从 400 下调到 150。
 - `useAnnotationStore` 持久化新增双重裁剪：`annotations` 仅保留最近 30 天（本地未同步项例外），`characterStateTracker` 仅保留最近 7 天/未过期效果，hydration 时也会再次防御性裁剪。

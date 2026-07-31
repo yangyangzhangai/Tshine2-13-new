@@ -324,6 +324,11 @@ create table if not exists public.user_account_state (
   deletion_status text not null default 'none',
   deletion_requested_at timestamptz,
   deletion_effective_at timestamptz,
+  ai_consent_status text not null default 'unknown',
+  ai_consent_version text,
+  ai_consent_granted_at timestamptz,
+  ai_consent_updated_at timestamptz,
+  ai_consent_withdrawn_at timestamptz,
   last_active_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -346,6 +351,11 @@ alter table public.user_account_state add column if not exists trial_ends_at tim
 alter table public.user_account_state add column if not exists deletion_status text default 'none';
 alter table public.user_account_state add column if not exists deletion_requested_at timestamptz;
 alter table public.user_account_state add column if not exists deletion_effective_at timestamptz;
+alter table public.user_account_state add column if not exists ai_consent_status text default 'unknown';
+alter table public.user_account_state add column if not exists ai_consent_version text;
+alter table public.user_account_state add column if not exists ai_consent_granted_at timestamptz;
+alter table public.user_account_state add column if not exists ai_consent_updated_at timestamptz;
+alter table public.user_account_state add column if not exists ai_consent_withdrawn_at timestamptz;
 alter table public.user_account_state add column if not exists last_active_at timestamptz;
 alter table public.user_account_state add column if not exists created_at timestamptz default now();
 alter table public.user_account_state add column if not exists updated_at timestamptz default now();

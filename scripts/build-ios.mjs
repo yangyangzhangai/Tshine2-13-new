@@ -1,10 +1,13 @@
+// DOC-DEPS: LLM.md -> docs/SEEDAY_DEV_SPEC.md -> docs/CURRENT_TASK.md
 import { spawnSync } from 'node:child_process';
+import { loadEnv } from 'vite';
 
-const rawApiBase = String(process.env.VITE_API_BASE ?? '').trim();
+const iosEnv = loadEnv('ios', process.cwd(), 'VITE_');
+const rawApiBase = String(process.env.VITE_API_BASE || iosEnv.VITE_API_BASE || '').trim();
 
 if (!rawApiBase) {
   console.error(
-    '[build:ios] Missing VITE_API_BASE. Example: VITE_API_BASE=https://seedayapp.com/api npm run build:ios',
+    '[build:ios] Missing VITE_API_BASE. Set it in .env.ios or the build environment.',
   );
   process.exit(1);
 }
@@ -28,19 +31,24 @@ if (parsedUrl.pathname === '/' || parsedUrl.pathname === '') {
   );
 }
 
-const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-
-const result = spawnSync(npmCmd, ['run', 'build'], {
-  stdio: 'inherit',
-  env: {
-    ...process.env,
-    VITE_API_BASE: normalizedApiBase,
-  },
-});
-
-if (result.error) {
-  console.error(`[build:ios] Failed to run npm build: ${result.error.message}`);
-  process.exit(1);
+function runStep(args, label, env) {
+  const npmExecPath = process.env.npm_execpath;
+  const command = npmExecPath ? process.execPath : (process.platform === 'win32' ? 'npm.cmd' : 'npm');
+  const commandArgs = npmExecPath ? [npmExecPath, ...args] : args;
+  const result = spawnSync(command, commandArgs, { stdio: 'inherit', env });
+  if (result.error) {
+    console.error(`[build:ios] ${label} failed: ${result.error.message}`);
+    process.exit(1);
+  }
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
 }
 
-process.exit(result.status ?? 1);
+const buildEnv = {
+  ...process.env,
+  VITE_API_BASE: normalizedApiBase,
+};
+
+runStep(['run', 'build', '--', '--mode', 'ios'], 'Vite build', buildEnv);
+runStep(['exec', '--', 'cap', 'copy', 'ios'], 'Capacitor copy', buildEnv);

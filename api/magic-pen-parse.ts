@@ -7,6 +7,7 @@ import {
 } from '../src/server/deepseek-runtime.js';
 import { MAGIC_PEN_PROMPT_EN, MAGIC_PEN_PROMPT_IT, MAGIC_PEN_PROMPT_ZH } from '../src/server/magic-pen-prompts.js';
 import { assessMagicPenResult } from '../src/server/magic-pen-quality.js';
+import { requireSupabaseAiConsent } from '../src/server/ai-consent.js';
 
 type MagicPenKind = 'activity' | 'mood' | 'todo_add' | 'activity_backfill';
 type MagicPenConfidence = 'high' | 'medium' | 'low';
@@ -367,6 +368,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   applyCors(res, ['POST']);
   if (handlePreflight(req, res)) return;
   if (!requireMethod(req, res, 'POST')) return;
+  if (!(await requireSupabaseAiConsent(req, res))) return;
 
   const traceId = createTraceId();
   res.setHeader('X-Magic-Pen-Trace-Id', traceId);

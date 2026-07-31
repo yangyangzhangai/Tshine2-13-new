@@ -1,6 +1,7 @@
+// DOC-DEPS: LLM.md -> docs/CURRENT_TASK.md -> src/features/profile/README.md
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { HelpCircle, Info, LogOut, ChevronRight, Sprout, BarChart3, MapPin, UserX, KeyRound } from 'lucide-react';
+import { HelpCircle, Info, LogOut, ChevronRight, Sprout, BarChart3, MapPin, UserX, KeyRound, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { reportTelemetryEvent } from '../../../services/input/reportTelemetryEvent';
 import { useAuthStore } from '../../../store/useAuthStore';
@@ -11,6 +12,7 @@ import { AboutPanel } from './AboutPanel';
 import { DeleteAccountModal } from './DeleteAccountModal';
 import { ChangePasswordPanel } from './ChangePasswordPanel';
 import { isTelemetryAdmin } from '../../telemetry/isTelemetryAdmin';
+import { AIConsentSettingsPanel } from './AIConsentSettingsPanel';
 
 interface Props {
   plain?: boolean;
@@ -26,6 +28,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
   const [isAboutOpen, setIsAboutOpen] = React.useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
+  const [isAiConsentOpen, setIsAiConsentOpen] = React.useState(false);
   const canSeeTelemetry = isTelemetryAdmin(user);
 
   const hasEmailIdentity = Array.isArray(user?.identities)
@@ -45,6 +48,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
       action: () => setIsChangePasswordOpen(true),
     },
     { icon: HelpCircle, labelKey: 'profile_help', action: () => setIsHelpOpen(true) },
+    { icon: ShieldCheck, labelKey: 'ai_consent_settings_label', action: () => setIsAiConsentOpen(true) },
     { icon: Info, labelKey: 'profile_about', action: () => setIsAboutOpen(true) },
   ];
 
@@ -59,6 +63,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
         onClose={() => setIsChangePasswordOpen(false)}
       />
     )}
+    {isAiConsentOpen && <AIConsentSettingsPanel onClose={() => setIsAiConsentOpen(false)} />}
     <div className={plain ? 'overflow-hidden' : 'overflow-hidden rounded-2xl border border-white/65 bg-[#F7F9F8] [box-shadow:inset_0_1px_1px_rgba(255,255,255,0.75),0_8px_24px_rgba(148,163,184,0.12)]'}>
       <button
         onClick={() => setIsRegionOpen(prev => !prev)}

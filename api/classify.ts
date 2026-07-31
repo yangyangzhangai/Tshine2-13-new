@@ -2,6 +2,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { applyCors, handlePreflight, jsonError, requireMethod } from '../src/server/http.js';
 import { requireSupabaseRequestAuth } from '../src/server/supabase-request-auth.js';
+import { requireAiConsentForAuth } from '../src/server/ai-consent.js';
 import { decomposeTodoWithAIDiagnostics } from '../src/server/todo-decompose-service.js';
 import { matchBottleByKeywords } from '../src/lib/bottleMatcher.js';
 import {
@@ -388,6 +389,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     jsonError(res, 403, 'membership_required');
     return;
   }
+  if (!(await requireAiConsentForAuth(auth, res))) return;
 
   const isTodoDecomposeMode = req.body?.module === 'todo_decompose'
     || (typeof req.body?.title === 'string' && typeof req.body?.rawInput !== 'string');

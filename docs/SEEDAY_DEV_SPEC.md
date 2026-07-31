@@ -277,13 +277,13 @@ Apple 原文：“如果你的 App 需要登录，请提供演示账户信息。
 
 Apple 原文：“如果 App 支持账户创建，则也必须在 App 内提供账户删除功能。”
 
-**Seeday 需要实现（当前缺失）**：
+**Seeday 当前实现（提审前仍需实机验证）**：
 ```
-1. App 内“设置”或“账户”页面中添加“删除账号”按钮
-2. 点击后显示确认弹窗（“删除后所有数据将无法恢复”）
-3. 确认后调用 Supabase Auth deleteUser API 删除账号
-4. 同时删除该用户的所有 messages、todos、reports 数据
-5. 删除后跳转回登录页
+1. App 设置页提供“删除账号”按钮和显式确认
+2. Apple-linked iOS 账号在删除时重新进行原生 Apple 授权
+3. 服务端完成 Apple code exchange、identity 核对与 token revoke
+4. 服务端递归删除用户 Storage 文件并硬删除全部已知用户域表
+5. 任一步失败即停止后续删除；全部成功后删除 Supabase Auth 用户并退出
 ```
 
 ### 4.7.7 🟡 Guideline 2.5.5 — IPv6 必须支持

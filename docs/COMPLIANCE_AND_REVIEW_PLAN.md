@@ -8,7 +8,7 @@
 
 ## 0. 一句话现状
 
-Seeday 是 AI 陪伴日记 + DeepSeek / OpenAI / Gemini 三家 AI 服务商 + UGC + 跨境数据传输的应用，对应 App Store 审核高敏感品类。现行 AI 调用口径以 `docs/AI_USAGE_INVENTORY.md` 为准。Qwen、智谱与 Chutes 已退出运行时。**核心封号风险来源**：私有/隐藏 API 调用、AI 数据共享未取得明示同意、UGC + AI 输出无审核机制、隐私文档不完整、动态下发可执行代码。本文件按这些风险逐项治理。
+Seeday 是 AI 陪伴日记 + DeepSeek / OpenAI / Gemini 三家 AI 服务商 + UGC + 跨境数据传输的应用，对应 App Store 审核高敏感品类。现行 AI 调用口径以 `docs/AI_USAGE_INVENTORY.md` 为准。Qwen、智谱与 Chutes 已退出运行时。第三方 AI 明示同意、版本记录、调用门控与设置页撤回已在代码中完成；上线前仍须执行 Supabase consent schema 并部署服务端/iOS 新包。**当前核心风险来源**：UGC + AI 输出无完整审核机制、隐私政策公网 URL/跨境法律文本仍未完成、生产后台部署与 ASC 元数据尚未核验、动态下发可执行代码。本文件按这些风险逐项治理。
 
 ---
 
@@ -241,18 +241,26 @@ ARG 2.5.4：后台模式只能在你确实需要的场景声明（VoIP/audio/loc
 
 | # | 文档 | 形式 | 负责人 | 状态 |
 |---|------|------|--------|------|
-| D1 | 隐私政策（Privacy Policy）三语版本 | 公网 URL | 待定（建议外包/律师）| ❌ |
-| D2 | 服务条款 / EULA 三语版本 | 公网 URL | 同上 | ❌ |
-| D3 | AI 数据共享首次同意弹窗文案 | i18n key | 自写 | ❌ |
-| D4 | 子处理者列表（Sub-processors） | 隐私政策附录 | 自写 | ❌ |
-| D5 | 儿童条款（不面向 <13 岁） | 隐私政策内 | 自写 | ❌ |
-| D6 | `ios/App/App/PrivacyInfo.xcprivacy` | 工程文件 | 自写（模板见 §5.1）| ❌ |
+| D1 | 隐私政策（Privacy Policy）三语版本 | 公网 URL | 待定（建议外包/律师）| ⚠️ App 内三语已按实况更新；公网 URL/法律复核未完成 |
+| D2 | 服务条款 / EULA 三语版本 | 公网 URL | 同上 | ⚠️ App 内三语已有；公网 URL/法律复核未完成 |
+| D3 | AI 数据共享首次同意弹窗文案 | i18n key | 自写 | ✅ 中/英/意三语，独立勾选与拒绝按钮 |
+| D4 | 子处理者列表（Sub-processors） | 隐私政策附录 | 自写 | ⚠️ App 内已列服务商与用途；所在国家/传输机制附录未完成 |
+| D5 | 儿童条款（不面向 <13 岁） | 隐私政策内 | 自写 | ✅ App 内三语已包含 |
+| D6 | `ios/App/App/PrivacyInfo.xcprivacy` | 工程文件 | 自写（模板见 §5.1）| ✅ 已存在并加入 iOS target |
 | D7 | App Privacy 问卷答复 | App Store Connect 后台填 | 自填 | ❌ |
-| D8 | 加密出口合规自评（豁免） | Info.plist 一行 | 自写 | ❌ |
+| D8 | 加密出口合规自评（豁免） | Info.plist 一行 | 自写 | ✅ `ITSAppUsesNonExemptEncryption=false` |
 | D9 | 内容审核与举报 SOP（含响应时限） | 内部 + App 内"如何举报"页 | 自写 | ❌ |
 | D10 | AI 生成内容标识规则（icon + 水印 + metadata） | UI + 设计文档 | 自写 | ❌ |
 | D11 | App Review Information（demo 账号 + 备注） | App Store Connect 提交时填 | 自填 | ❌ |
-| D12 | App 内"关于" / "联系我们"页面 | UI | 自写 | ❌ |
+| D12 | App 内"关于" / "联系我们"页面 | UI | 自写 | ✅ 已提供 `hello@seedayapp.com` |
+
+### 3.2 2026-07-31 后台证据与不可外推边界
+
+- Supabase：截图确认 Free Plan、无计划备份、无 PITR、无 Log Drain；Free 平台日志保留按当前定价规则为 1 天。不能由此宣称 Supabase 内部基础设施灾备副本绝对不存在。
+- OpenAI：截图确认 model feedback、evaluation/fine-tuning、inputs/outputs 共享全部关闭；Data retention 页为 API call logging `Enabled per call`，未见 ZDR/MAM 批准。现行代码对所有 OpenAI 请求显式设置 `store:false`；默认滥用监测仍可能保留最多 30 天。
+- Gemini：截图确认 `Tshine` 为 Tier 1 Postpay、GenerateContent 日志存储关闭；Interactions API 存储开启且默认 55 天，但 Seeday 不调用 Interactions。截图显示 0 logs，但未展开 Dataset 下拉框，因此“无 Dataset”尚未被证明。
+- DeepSeek：仍缺 Open Platform 的书面留存/训练/DPA 证据，不得写成零留存或绝不训练。
+- 证据目录：`C:\Users\yangy\Desktop\app数据合规截图supabase+gpt+gemini（ai供应商）`；对外提交时应复制到团队可访问的受控证据库，不要把 API key 全值放进审核备注。
 
 ### 3.1 隐私政策必须章节（针对 Seeday）
 
@@ -344,15 +352,16 @@ ARG 2.5.4：后台模式只能在你确实需要的场景声明（VoIP/audio/loc
 ### 4.3 App 内合规 UI 任务
 
 - [ ] 首次启动同意页（隐私政策 + 服务条款 + AI 数据共享）
-- [ ] 首次使用 AI 时再次明示弹窗（5.1.2(i) 强要求）
-- [ ] 设置页：隐私政策 / 服务条款 / 联系我们 / 删除账号 / 撤回 AI 数据共享同意
+- [x] 首次使用 AI 前明示弹窗（5.1.2(i)）：独立说明接收方/数据/用途，主动勾选后启用，可拒绝并继续非 AI 功能
+- [x] 设置页：隐私政策 / 服务条款 / 联系我们 / 删除账号 / 撤回 AI 数据共享同意
 - [ ] AI 输出标记（消息气泡 icon、生成图片可见水印、metadata 写入服务方）
 - [ ] AI 内容举报入口（长按 → 举报）
 
 ### 4.4 服务端（`api/*`）改造
 
 - [ ] 在 `api/diary.ts`、`api/magic-pen-parse.ts`、`api/plant-generate.ts` 接入 OpenAI Moderation API（免费），对**输入**和**输出**都过一遍
-- [ ] `api/delete-account.ts` 内调用 [Sign in with Apple Token Revoke API](https://developer.apple.com/documentation/sign_in_with_apple/revoke_tokens) 撤销凭证
+- [x] `api/delete-account.ts` 已接入 [Sign in with Apple Token Revoke API](https://developer.apple.com/documentation/sign_in_with_apple/revoke_tokens)：iOS 删除前原生重新授权，服务端 code exchange + identity 核对 + revoke；提审部署前仍须在 Vercel 配齐独立的 `APPLE_SIGN_IN_KEY_ID` / `APPLE_SIGN_IN_PRIVATE_KEY`
+- [x] 所有现行第三方 AI 入口执行版本化 consent 校验：纯 AI 入口前端先拦截、服务端再次核验；植物混合功能在未同意时只走本地模板
 - [ ] 所有 `api/*` 入口加 zod schema 校验
 - [ ] 日志层禁止打印日记原文 / 用户消息原文（脱敏后再打）
 
@@ -394,7 +403,7 @@ ARG 2.5.4：后台模式只能在你确实需要的场景声明（VoIP/audio/loc
 | W1 | 写隐私政策 + 服务条款（三语，建议外包） + 部署到公网 |
 | W1 | 创建 `PrivacyInfo.xcprivacy` + 修 `Info.plist` |
 | W1 | 跑 §2.1 / §2.4 / §2.7 全部自动化扫描，把 0 命中作为 baseline |
-| W2 | 实现首次同意 + AI 二次同意双弹窗 + 设置页 5 个入口 |
+| W2 | ✅ AI 首次明示同意、版本记录、调用门控与设置页撤回已完成；通用隐私/服务条款首次启动同意仍单独评估 |
 | W2 | AI 输出标识 UI + 内容举报入口 |
 | W2 | OpenAI Moderation API 兜底接入 `api/*` |
 | W3 | 完成 App Privacy 问卷 + App Store Connect 元数据 + demo 账号准备 |
@@ -423,11 +432,11 @@ ARG 2.5.4：后台模式只能在你确实需要的场景声明（VoIP/audio/loc
 
 | 类别 | 项目 | 状态 |
 |------|------|------|
-| 文档 | D1-D12 | ❌ 0/12 |
-| 工程 | §4.1 PrivacyInfo.xcprivacy | ❌ |
-| 工程 | §4.2 Info.plist 修补 | ❌ |
-| 工程 | §4.3 App 内合规 UI（5 项） | ❌ 0/5 |
-| 工程 | §4.4 服务端改造（4 项） | ❌ 0/4 |
+| 文档 | D1-D12 | ⚠️ 5/12 完成，3/12 部分完成 |
+| 工程 | §4.1 PrivacyInfo.xcprivacy | ✅ |
+| 工程 | §4.2 Info.plist 修补 | ⚠️ 加密豁免与相机/相册说明已配置；仍残留非标准通知用途 key |
+| 工程 | §4.3 App 内合规 UI（5 项） | ⚠️ 2/5 完成 |
+| 工程 | §4.4 服务端改造 | ⚠️ Apple revoke 与 AI consent 校验完成；Moderation/schema 校验/日志全量收口未完成 |
 | 自动化 | §6 脚手架（5 项） | ❌ 0/5 |
 | 审查 | §2.1-§2.10（10 大类） | ❌ 0/10 |
 

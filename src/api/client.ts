@@ -6,6 +6,7 @@
  */
 
 import { normalizeAiCompanionMode, type AiCompanionMode } from '../lib/aiCompanion';
+import { hasCurrentAiConsent, requestAiConsentReview } from '../lib/aiConsent';
 import { getSupabaseSession } from '../lib/supabase-utils';
 import {
   createInstrumentedFetch,
@@ -50,6 +51,8 @@ interface ApiErrorShape {
 }
 
 export type ApiErrorCode =
+  | 'ai_consent_required'
+  | 'ai_consent_verification_failed'
   | 'membership_required'
   | 'unauthorized'
   | 'network_error'
@@ -134,6 +137,15 @@ function inferApiErrorCode(status: number | undefined, rawCode: unknown, rawMess
   if (normalizedCode === 'membership_required' || normalizedMessage === 'membership_required') {
     return 'membership_required';
   }
+  if (normalizedCode === 'ai_consent_required' || normalizedMessage === 'ai_consent_required') {
+    return 'ai_consent_required';
+  }
+  if (
+    normalizedCode === 'ai_consent_verification_failed'
+    || normalizedMessage === 'ai_consent_verification_failed'
+  ) {
+    return 'ai_consent_verification_failed';
+  }
   if (status === 401 || normalizedCode === 'unauthorized' || normalizedMessage === 'unauthorized') {
     return 'unauthorized';
   }
@@ -170,6 +182,18 @@ function createUnauthorizedApiError(path: string): ApiClientError {
     message: 'Unauthorized',
     status: 401,
     code: 'unauthorized',
+  });
+}
+
+function createAiConsentRequiredError(path: string): ApiClientError {
+  requestAiConsentReview();
+  const requestId = createApiRequestId(path);
+  return buildApiClientError({
+    path,
+    requestId,
+    message: 'ai_consent_required',
+    status: 403,
+    code: 'ai_consent_required',
   });
 }
 
@@ -247,7 +271,7 @@ async function postJson<TReq, TRes>(path: string, body: TReq, init?: RequestInit
       path,
       elapsedMs,
     });
-    throw buildApiClientError({
+    const apiError = buildApiClientError({
       path,
       requestId,
       status: response.status,
@@ -256,6 +280,8 @@ async function postJson<TReq, TRes>(path: string, body: TReq, init?: RequestInit
       message: detailedMessage,
       traceId,
     });
+    if (apiError.code === 'ai_consent_required') requestAiConsentReview();
+    throw apiError;
   }
 
   logApiDebug('request.success', {
@@ -390,6 +416,16 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   };
 }
 
+async function postAiJson<TReq, TRes>(path: string, body: TReq): Promise<TRes> {
+  const { accountState } = useAuthStore.getState();
+  if (!hasCurrentAiConsent(accountState)) {
+    throw createAiConsentRequiredError(path);
+  }
+  const headers = await getAuthHeaders();
+  if (!headers.Authorization) throw createUnauthorizedApiError(path);
+  return postJson<TReq, TRes>(path, body, { headers });
+}
+
 interface SubscriptionRequest {
   action: SubscriptionAction;
   source: SubscriptionSource;
@@ -499,8 +535,7 @@ export async function callStripeFinalizeAPI(sessionId: string): Promise<Subscrip
 }
 
 export async function callExtractProfileAPI(request: ExtractProfileRequest): Promise<ExtractProfileResponse> {
-  const headers = await getAuthHeaders();
-  return postJson<ExtractProfileRequest, ExtractProfileResponse>('/extract-profile', request, { headers });
+  return postAiJson<ExtractProfileRequest, ExtractProfileResponse>('/extract-profile', request);
 }
 
 /**
@@ -518,7 +553,7 @@ export async function callAnnotationAPI(request: AnnotationRequest): Promise<Ann
     debugPrompts,
   });
 
-  const response = await postJson<AnnotationRequest, AnnotationResponse>('/annotation', {
+  const response = await postAiJson<AnnotationRequest, AnnotationResponse>('/annotation', {
     ...request,
     aiMode: resolvedAiMode,
     debugPrompts,
@@ -599,18 +634,20 @@ interface DiaryResponse {
  * 步骤1: 调用分类器 API - 将用户原始输入分类为结构化数据
  */
 export async function callClassifierAPI(request: ClassifyRequest): Promise<ClassifyResponse> {
-  const headers = await getAuthHeaders();
-  return postJson<ClassifyRequest, ClassifyResponse>('/classify', request, { headers });
+  return postAiJson<ClassifyRequest, ClassifyResponse>('/classify', request);
 }
 
 /**
  * 步骤3: 调用日记 API - 生成 AI 日记
  */
 export async function callDiaryAPI(request: DiaryRequest): Promise<DiaryResponse> {
-  return postJson<DiaryRequest, DiaryResponse>('/diary', {
+  const body = {
     ...request,
     aiMode: request.aiMode ?? getCurrentAiMode(),
-  });
+  };
+  return request.mode === 'teaser'
+    ? postJson<DiaryRequest, DiaryResponse>('/diary', body)
+    : postAiJson<DiaryRequest, DiaryResponse>('/diary', body);
 }
 
 interface MagicPenParseRequest {
@@ -656,7 +693,7 @@ interface MagicPenParseResponse {
 export async function callMagicPenParseAPI(
   request: MagicPenParseRequest,
 ): Promise<MagicPenParseResponse> {
-  return postJson<MagicPenParseRequest, MagicPenParseResponse>('/magic-pen-parse', request);
+  return postAiJson<MagicPenParseRequest, MagicPenParseResponse>('/magic-pen-parse', request);
 }
 
 export async function callPlantGenerateAPI(request: PlantGenerateRequest): Promise<PlantGenerateResponse> {
@@ -728,7 +765,7 @@ export async function callShortInsightAPI(request: ShortInsightRequest): Promise
   }
 
   try {
-    const data = await postJson<ShortInsightRequest & { action: string }, ShortInsightResponse>('/diary', {
+    const data = await postAiJson<ShortInsightRequest & { action: string }, ShortInsightResponse>('/diary', {
       ...request,
       action: 'insight',
       aiMode: request.aiMode ?? getCurrentAiMode(),
@@ -773,22 +810,15 @@ export async function callProfileSettingsTelemetryDashboardAPI(days = 7): Promis
 // ── Delete Account API ────────────────────────────────────────────────────────
 
 interface DeleteAccountRequest {
-  providerToken?: string;
-  providerRefreshToken?: string;
+  authorizationCode?: string;
 }
 
-export async function callDeleteAccountAPI(): Promise<void> {
+export async function callDeleteAccountAPI(
+  request: DeleteAccountRequest = {},
+): Promise<void> {
   const headers = await getAuthHeaders();
   if (!headers.Authorization) throw createUnauthorizedApiError('/delete-account');
-  const session = await getSupabaseSession('callDeleteAccountAPI');
-  const body: DeleteAccountRequest = {};
-  if (typeof session?.provider_token === 'string' && session.provider_token.trim()) {
-    body.providerToken = session.provider_token;
-  }
-  if (typeof session?.provider_refresh_token === 'string' && session.provider_refresh_token.trim()) {
-    body.providerRefreshToken = session.provider_refresh_token;
-  }
-  await postJson<DeleteAccountRequest, { ok: boolean }>('/delete-account', body, { headers });
+  await postJson<DeleteAccountRequest, { ok: boolean }>('/delete-account', request, { headers });
 }
 
 // ── Todo Decompose API ────────────────────────────────────────────────────────
@@ -822,11 +852,10 @@ export interface TodoDecomposeResult {
  * 调用 Todo 拆解 API - AI 将待办拆成 3-6 个子步骤
  */
 export async function callTodoDecomposeAPI(title: string, lang: 'zh' | 'en' | 'it' = 'zh'): Promise<TodoDecomposeResult> {
-  const headers = await getAuthHeaders();
-  if (!headers.Authorization) {
-    throw createUnauthorizedApiError('/todo-decompose');
-  }
-  const data = await postJson<TodoDecomposeRequest, TodoDecomposeResponse>('/todo-decompose', { title, lang }, { headers });
+  const data = await postAiJson<TodoDecomposeRequest, TodoDecomposeResponse>(
+    '/todo-decompose',
+    { title, lang },
+  );
   return {
     steps: data.steps ?? [],
     parseStatus: data.parseStatus === 'parse_failed' ? 'parse_failed' : 'ok',

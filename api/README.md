@@ -10,6 +10,7 @@
 2. 前端统一通过 `src/api/client.ts` 调用，不在 `src/**` 直连第三方 AI。
 3. 所有函数统一设置 CORS，并只接受各自的预期方法（含 `OPTIONS` 预检）；当前绝大多数为 `POST`，`/api/plant-history` 为 `GET`。
 4. 密钥统一从 `process.env` 读取；DeepSeek、OpenAI、Gemini 的现行端点与语言映射详见 `docs/AI_USAGE_INVENTORY.md`。
+5. 第三方 AI 端点必须在调用服务商前核验当前版本的 `user_account_state.ai_consent_*`。纯 AI 端点未同意返回 `403 ai_consent_required`，consent 状态无法读取时返回 `503 ai_consent_verification_failed`；不得因校验故障放行。
 
 ## 端点清单（与当前实现一致）
 
@@ -30,14 +31,16 @@
 | `POST` | `/api/subscription` | `subscription.ts` | iap: `{ success, plan, isPlus, expiresAt, verificationEnvironment }`; stripe checkout: `{ success, checkoutUrl }`; stripe finalize: `{ success, plan, isPlus, expiresAt, verificationEnvironment }` |
 
 `/api/classify` requires `Authorization: Bearer <supabase access token>` and enforces Plus membership; non-Plus requests return `403 { error: 'membership_required' }`.
+`/api/annotation`、AI 模式 `/api/diary`、`/api/classify`/`todo-decompose`、`/api/magic-pen-parse`、`/api/extract-profile` 都要求 Supabase bearer token 与当前 AI consent 版本。`/api/diary` teaser 不调用 AI，保持无 consent 的确定性模板路径。
 `/api/classify` unified response contract: `{ success: true, data: { kind: 'activity' | 'mood', activity_type: 'study' | 'work' | 'social' | 'life' | 'entertainment' | 'health', mood_type: 'happy' | 'calm' | 'focused' | 'satisfied' | 'tired' | 'anxious' | 'bored' | 'down' | null, matched_bottle: { type, id, stars } | null, confidence }, raw }`; `kind` is hard-constrained to binary `activity|mood` (no null/unknown).
 `/api/todo-decompose` is rewritten to the `/api/classify` `todo_decompose` branch, so it follows the same auth + Plus guard and membership error contract.
 `/api/magic-pen-parse` request body includes: `rawText`, `todayDateStr`, `currentHour`, optional `lang` (`zh`/`en`/`it`), and optional local-time context (`currentLocalDateTime`, `timezoneOffsetMinutes`) for finer future/past disambiguation.
 `segments[*]` may include `timeRelation` (`realtime`/`future`/`past`/`unknown`) for parser-first runtime gating.
 `/api/magic-pen-parse` 对可解析 JSON 仍执行语义质量门槛：空提取、低原文覆盖、漏掉明确时间锚点或复杂句拆分严重不足均视为 `low_quality`。远端失败时，响应会把完整 `rawText` 保留在 `unparsed`，供前端运行既有本地兜底。服务商与模型配置统一见 `docs/AI_USAGE_INVENTORY.md`。
 Plant endpoints require `Authorization: Bearer <supabase access token>` and validate current user before DB read/write.
+`/api/plant-generate` 是混合端点：未同意或 consent 状态不可读时仍可完成确定性植物计算，但必须使用本地静态文案，不得调用 OpenAI。
 `/api/extract-profile` requires `Authorization: Bearer <supabase access token>` and accepts `recentMessages[] + lang` (`zh`/`en`/`it`) from frontend weekly-report flow.
-`/api/delete-account` requires `Authorization: Bearer <supabase access token>` plus `SUPABASE_SERVICE_ROLE_KEY`. It fails closed: for Apple-linked accounts it first attempts token revocation with the current session's provider token/refresh token plus server-side Apple credentials, then deletes known user-scoped tables with the service-role client, deletes all `seeday-images/<userId>/**` storage objects, and only then deletes the Supabase Auth user. Any step failure aborts the flow instead of silently continuing with partial deletion.
+`/api/delete-account` requires `Authorization: Bearer <supabase access token>` plus `SUPABASE_SERVICE_ROLE_KEY`. It fails closed: for Apple-linked accounts the iOS client reauthorizes through the native Apple sheet and sends a fresh authorization code; the server exchanges it for an Apple token, verifies the returned Apple subject/audience against the linked Supabase identity, revokes the token, then deletes known user-scoped tables, all `seeday-images/<userId>/**` objects, and finally the Supabase Auth user. Any exchange/identity/revoke/storage/table/auth failure aborts the remaining flow.
 `/api/plant-generate` `status` supports: `too_early` / `empty_day` / `generated` / `already_generated` / `monthly_exhausted`.
 `/api/plant-generate` accepts optional `action: 'snapshot_existing'`. This action is allowed before 20:00 only for an already-existing user/date record and stores its current cloud-derived root/activity/direction snapshot inside `root_metrics`; it never creates a new plant.
 Newly generated records include the same root snapshot, and Plus observation text is rejected/retried when it exceeds the card budget before falling back to the existing localized static line.
@@ -65,8 +68,9 @@ Membership AI classification path observability is recorded through `/api/live-i
 ## 外部服务配置
 
 - AI 服务商、模型、发送数据范围和 AI 日志边界只在 `docs/AI_USAGE_INVENTORY.md` 维护；本文件不再复制 provider 映射。
+- 所有 OpenAI Chat Completions / Responses 请求均显式发送 `store: false`，避免在当前组织的 per-call logging 策略下创建应用状态；供应商 abuse-monitoring 留存仍以 `docs/AI_USAGE_INVENTORY.md` 的控制台证据和官方边界为准。
 - `/api/subscription` 使用 Apple App Store Server API（`APPLE_IAP_ISSUER_ID`、`APPLE_IAP_KEY_ID`、`APPLE_IAP_PRIVATE_KEY`、`APPLE_IAP_BUNDLE_ID`）和 Stripe API（`STRIPE_SECRET_KEY`、`STRIPE_PRICE_MONTHLY`、`STRIPE_PRICE_ANNUAL`）。
-- `/api/delete-account` 复用 `APPLE_IAP_ISSUER_ID`、`APPLE_IAP_KEY_ID`、`APPLE_IAP_PRIVATE_KEY`，并可选读取 `APPLE_SIGN_IN_CLIENT_ID`（未设置时回退 `APPLE_IAP_BUNDLE_ID`）来生成 Apple Sign in token revoke 的 client secret。
+- `/api/delete-account` 使用独立的 Sign in with Apple 凭据：`APPLE_SIGN_IN_TEAM_ID`、`APPLE_SIGN_IN_KEY_ID`、`APPLE_SIGN_IN_PRIVATE_KEY`、`APPLE_SIGN_IN_CLIENT_ID`。它们不能用 App Store Connect IAP issuer/key 替代；iOS App 的 client ID 应与 bundle ID 一致。
 
 ## 本地调试（Windows）
 

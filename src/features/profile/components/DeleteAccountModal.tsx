@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { callDeleteAccountAPI } from '../../../api/client';
 import { APP_GLASS_BUTTON_BASE_STYLE } from '../../../lib/modalTheme';
 
 interface Props {
@@ -14,7 +13,7 @@ interface Props {
 export const DeleteAccountModal: React.FC<Props> = ({ onClose }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { signOut } = useAuthStore();
+  const { deleteAccount } = useAuthStore();
   const [confirmed, setConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +23,8 @@ export const DeleteAccountModal: React.FC<Props> = ({ onClose }) => {
     setLoading(true);
     setError(null);
     try {
-      await callDeleteAccountAPI();
-      await signOut();
+      const result = await deleteAccount();
+      if (result.error) throw result.error;
       navigate('/onboarding', { replace: true });
     } catch {
       setError(t('delete_account_error'));

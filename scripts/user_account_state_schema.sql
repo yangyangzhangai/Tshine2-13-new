@@ -21,12 +21,23 @@ create table if not exists public.user_account_state (
   deletion_status text not null default 'none',
   deletion_requested_at timestamptz,
   deletion_effective_at timestamptz,
+  ai_consent_status text not null default 'unknown',
+  ai_consent_version text,
+  ai_consent_granted_at timestamptz,
+  ai_consent_updated_at timestamptz,
+  ai_consent_withdrawn_at timestamptz,
   last_active_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.user_account_state enable row level security;
+
+alter table public.user_account_state add column if not exists ai_consent_status text not null default 'unknown';
+alter table public.user_account_state add column if not exists ai_consent_version text;
+alter table public.user_account_state add column if not exists ai_consent_granted_at timestamptz;
+alter table public.user_account_state add column if not exists ai_consent_updated_at timestamptz;
+alter table public.user_account_state add column if not exists ai_consent_withdrawn_at timestamptz;
 
 create or replace function public.set_updated_at()
 returns trigger

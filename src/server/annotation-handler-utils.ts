@@ -63,6 +63,7 @@ export async function callAnnotationLLM(
     model: params.model,
     instructions: params.instructions,
     input: params.input,
+    store: false,
     temperature: params.temperature,
     max_output_tokens: params.maxOutputTokens,
   });

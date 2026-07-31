@@ -1,9 +1,15 @@
 // DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> src/store/README.md
 import i18n from '../i18n';
+import { callDeleteAccountAPI } from '../api/client';
 import { supabase } from '../api/supabase';
 import { isDataUrl, uploadAvatarToStorage } from '../lib/avatarStorage';
 import { formatUserFacingDiagnostic, logDiagnostic } from '../lib/diagnostics';
+import {
+  authorizeWithNativeApple,
+  isNativeAppleSignInAvailable,
+} from '../services/native/appleSignInService';
 import type { UserAccountState } from '../types/userAccountState';
+import { buildAiConsentState } from './authAiConsentHelpers';
 import { upsertCloudUserAccountState } from './authAccountStateCloudStore';
 import {
   clearPendingAccountStateWrite,
@@ -98,6 +104,35 @@ async function runAuthAction<T>(
   }
 }
 
+async function signInWithNativeApple(): Promise<{ error: any }> {
+  try {
+    const nativeStartedAt = Date.now();
+    logDiagnostic('info', 'auth.apple.native_authorize.start');
+    const redirectTo = resolveOAuthRedirectUrl();
+    if (!redirectTo || /placeholder\.seeday\.app/i.test(redirectTo)) {
+      return { error: new Error('Invalid Apple OAuth redirect URI') };
+    }
+    const authorization = await authorizeWithNativeApple(redirectTo);
+    logDiagnostic('info', 'auth.apple.native_authorize.success', {
+      elapsedMs: Date.now() - nativeStartedAt,
+      hasIdentityToken: Boolean(authorization.identityToken),
+      hasAuthorizationCode: Boolean(authorization.authorizationCode),
+    });
+    const { error } = await runAuthAction('signInWithIdToken:apple', () => supabase.auth.signInWithIdToken({
+      provider: 'apple',
+      token: authorization.identityToken,
+    }));
+    return { error };
+  } catch (error: any) {
+    const decorated = decorateAuthError('Apple native authorize', error, 0);
+    logDiagnostic('error', 'auth.apple.native_authorize.failed', {
+      error,
+      userFacing: decorated?.message,
+    });
+    return { error: decorated ?? error };
+  }
+}
+
 type AccountActionKeys =
   | 'signIn'
   | 'signInWithGoogle'
@@ -105,6 +140,7 @@ type AccountActionKeys =
   | 'signUp'
   | 'verifySignUpCode'
   | 'resendSignUpCode'
+  | 'deleteAccount'
   | 'signOut'
   | 'updateAvatar'
   | 'updateDisplayName'
@@ -112,6 +148,7 @@ type AccountActionKeys =
   | 'updateLongTermProfileEnabled'
   | 'updateUserProfile'
   | 'updateAccountState'
+  | 'updateAiConsent'
   | 'updatePreferences'
   | 'updateLanguagePreference'
   | 'refreshActivityStreak';
@@ -133,40 +170,8 @@ export function createAuthAccountActions(set: AuthSet, get: AuthGet): Pick<AuthS
     },
 
     signInWithApple: async () => {
-      const { Capacitor } = await import('@capacitor/core');
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const nativeStartedAt = Date.now();
-          logDiagnostic('info', 'auth.apple.native_authorize.start');
-          const redirectTo = resolveOAuthRedirectUrl();
-          if (!redirectTo || /placeholder\.seeday\.app/i.test(redirectTo)) {
-            return { error: new Error('Invalid Apple OAuth redirect URI') };
-          }
-          const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
-          const result = await SignInWithApple.authorize({
-            clientId: 'com.seeday.app',
-            redirectURI: redirectTo,
-            scopes: 'email name',
-          });
-          logDiagnostic('info', 'auth.apple.native_authorize.success', {
-            elapsedMs: Date.now() - nativeStartedAt,
-            hasIdentityToken: Boolean(result.response?.identityToken),
-          });
-          const identityToken = result.response?.identityToken;
-          if (!identityToken) return { error: new Error('No identity token') };
-          const { error } = await runAuthAction('signInWithIdToken:apple', () => supabase.auth.signInWithIdToken({
-            provider: 'apple',
-            token: identityToken,
-          }));
-          return { error };
-        } catch (e: any) {
-          const decorated = decorateAuthError('Apple native authorize', e, 0);
-          logDiagnostic('error', 'auth.apple.native_authorize.failed', {
-            error: e,
-            userFacing: decorated?.message,
-          });
-          return { error: decorated ?? e };
-        }
+      if (isNativeAppleSignInAvailable()) {
+        return signInWithNativeApple();
       }
       const redirectTo = resolveOAuthRedirectUrl();
       const { error } = await runAuthAction('signInWithOAuth:apple', () => supabase.auth.signInWithOAuth({
@@ -174,6 +179,34 @@ export function createAuthAccountActions(set: AuthSet, get: AuthGet): Pick<AuthS
           options: redirectTo ? { redirectTo } : undefined,
       }));
       return { error };
+    },
+
+    deleteAccount: async () => {
+      const currentUser = get().user;
+      if (!currentUser) return { error: new Error('Not signed in') };
+      try {
+        const providers = currentUser.app_metadata?.providers;
+        const hasAppleIdentity = currentUser.identities?.some(
+          (identity: { provider?: string }) => identity?.provider === 'apple',
+        ) || (Array.isArray(providers) && providers.includes('apple'));
+        let authorizationCode: string | undefined;
+        if (hasAppleIdentity) {
+          if (!isNativeAppleSignInAvailable()) {
+            throw new Error('Apple account deletion requires native reauthorization');
+          }
+          const redirectTo = resolveOAuthRedirectUrl();
+          if (!redirectTo || /placeholder\.seeday\.app/i.test(redirectTo)) {
+            throw new Error('Invalid Apple OAuth redirect URI');
+          }
+          authorizationCode = (await authorizeWithNativeApple(redirectTo)).authorizationCode;
+        }
+        await callDeleteAccountAPI({ authorizationCode });
+        await get().signOut();
+        return { error: null };
+      } catch (error) {
+        logDiagnostic('error', 'auth.account_delete.failed', { error });
+        return { error };
+      }
     },
 
     signUp: async (email, password, nickname, avatarDataUrl) => {
@@ -474,6 +507,37 @@ export function createAuthAccountActions(set: AuthSet, get: AuthGet): Pick<AuthS
         });
 
       return { error: null };
+    },
+
+    updateAiConsent: async (status) => {
+      const currentUser = get().user;
+      if (!currentUser) return { error: new Error('Not signed in') };
+
+      const previousState = get().accountState;
+      const nextState = buildAiConsentState(previousState, status);
+
+      if (status !== 'granted') {
+        set({ accountState: nextState });
+        savePendingAccountStateWrite(currentUser.id, nextState);
+      }
+
+      try {
+        await upsertCloudUserAccountState(currentUser.id, nextState);
+        set({ accountState: nextState });
+        clearPendingAccountStateWrite(currentUser.id);
+        return { error: null };
+      } catch (error) {
+        if (status === 'granted') {
+          set({ accountState: previousState });
+        }
+        logDiagnostic('error', 'auth.ai_consent.update.failed', {
+          userId: currentUser.id,
+          status,
+          consentVersion: nextState.aiConsentVersion,
+          error,
+        });
+        return { error };
+      }
     },
 
     updatePreferences: async (partial) => {

@@ -1,10 +1,36 @@
 # Changelog
 
+## 2026-07-31 - Explicit third-party AI consent and verified privacy wording
+
+- Added a separate, unselected ZH/EN/IT AI-consent dialog that identifies DeepSeek, OpenAI, and Google Gemini, explains data categories and purposes, requires an affirmative checkbox, and lets users continue with non-AI features.
+- Added versioned consent state/timestamps to `user_account_state`, a Profile settings surface for status/re-grant/withdrawal, and fail-closed persistence semantics so an unavailable cloud write cannot enable AI locally.
+- Centralized pure-AI client gating and added independent server-side database verification for annotation, classification/todo decomposition, full diary/insight, Magic Pen, and profile extraction. Plant generation stays available without consent but uses local static text instead of OpenAI.
+- Rewrote the in-app privacy and account-deletion copy in Chinese, English, and Italian to reflect the verified Supabase/OpenAI/Gemini settings, qualified DeepSeek evidence boundary, consent withdrawal, account-deletion interruption behavior, and provider log/backup limits.
+- Updated App Store submission/compliance trackers with the supplied control-panel evidence and a ready-to-paste Review Notes explanation; production rollout still requires the consent SQL migration, server deployment, and new iOS build.
+- Added focused consent verification tests and updated the annotation handler test harness for the new server guard.
+
+## 2026-07-31 - AI provider retention evidence and no-store requests
+
+- Reviewed the supplied Supabase, Gemini, and OpenAI control-panel evidence and recorded the verified plan, backup, logging, sharing, and retention settings in `docs/AI_USAGE_INVENTORY.md`.
+- Added explicit `store: false` to every active OpenAI Chat Completions and Responses request, covering full diary, report insight, profile extraction, English/Italian annotation, and plant observation generation.
+- Added a regression assertion for the Responses API annotation path so later refactors cannot silently restore provider-side application-state storage.
+- Kept provider abuse-monitoring retention distinct from application-state storage; DeepSeek still requires written API retention/training/DPA evidence before final privacy copy can make provider-specific claims.
+- Verification: all 13 annotation handler tests, `npm run lint:all`, `npm run lint:state-consistency`, and the production build pass.
+
+## 2026-07-30 - iOS production API bundle and Apple deletion reauthorization
+
+- Added a tracked `.env.ios` production API base and changed `npm run build:ios` to validate/normalize the endpoint, build with Vite's iOS mode, and run `cap copy ios`; the generated local Xcode bundle was verified to contain the absolute production `/api` base.
+- Moved account table/Storage cleanup into tested fail-closed server helpers while preserving recursive deletion of all `seeday-images/<userId>/**` files and the full known user-scoped table list, including feedback and telemetry.
+- Replaced the unreliable Supabase provider-token-at-delete dependency for Apple users. iOS deletion now reauthorizes with the native Apple sheet, sends a fresh authorization code, exchanges it server-side, verifies the returned Apple subject/audience against the linked account, revokes the token, and only then starts user-data deletion.
+- Separated Sign in with Apple revoke credentials from App Store Connect IAP credentials (`APPLE_SIGN_IN_TEAM_ID`, `APPLE_SIGN_IN_KEY_ID`, `APPLE_SIGN_IN_PRIVATE_KEY`, `APPLE_SIGN_IN_CLIENT_ID`) and added focused regression coverage for token exchange/revoke, identity mismatch, recursive Storage cleanup, and table-delete interruption.
+- Removed obsolete `QWEN_BASE_URL`, `QWEN_API_KEY`, `ZHIPU_API_KEY`, and `CHUTES_API_KEY` from the linked Vercel project. Added the verified Apple Team ID/client ID to all Vercel environments; the operator must still provide the Sign in with Apple Key ID and `.p8` private key.
+- Verification: `npm run lint:all`, the iOS production build/copy, and all 7 focused deletion/revoke tests pass. The repository-wide unit suite still has 19 failures in unrelated pre-existing annotation, magic-pen timezone, companion prompt, store, reminder, and feedback tests; no failing test targets a file changed by this work.
+
 ## 2026-07-30 - Account deletion now fails closed and clears storage
 
 - Reworked `api/delete-account.ts` to use the service-role client for explicit deletion of all currently known user-scoped tables before auth deletion, adding `telemetry_events`, `user_feedback`, `reminder_responses`, `user_profiles`, `user_account_state`, `user_login_days`, and `timing_sessions` to the hard-delete path.
 - Account deletion now recursively removes all `seeday-images/<userId>/**` objects, covering avatar uploads, current chat-image folders, and legacy top-level chat image files, before deleting the Supabase Auth user.
-- Apple-linked account deletion now attempts Sign in with Apple token revocation first when the current Supabase session exposes a provider token or provider refresh token and the server has Apple credentials; any revoke/delete/auth failure now aborts the flow instead of silently continuing with partial deletion.
+- This first pass attempted Apple revocation from transient Supabase provider tokens; the later entry above replaces it with fresh native reauthorization and server-side code exchange.
 
 ## 2026-07-30 - In-app privacy provider disclosure matches runtime
 

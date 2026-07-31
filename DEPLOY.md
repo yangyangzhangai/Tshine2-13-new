@@ -19,6 +19,11 @@ GEMINI_API_KEY=...
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+APPLE_SIGN_IN_TEAM_ID=...
+APPLE_SIGN_IN_KEY_ID=...
+APPLE_SIGN_IN_PRIVATE_KEY=...
+APPLE_SIGN_IN_CLIENT_ID=com.seeday.app
 ```
 
 说明：
@@ -28,6 +33,15 @@ VITE_SUPABASE_ANON_KEY=...
 - Qwen、智谱与 Chutes 不再有运行时调用。
 - 功能级模型覆盖包括 `CLASSIFY_MODEL`、`TODO_DECOMPOSE_MODEL_ZH`、`TODO_DECOMPOSE_MODEL`、`PROFILE_EXTRACT_MODEL`、`MAGIC_PEN_MODEL`。
 - 完整供应商与数据范围口径只在 `docs/AI_USAGE_INVENTORY.md` 维护。
+- `APPLE_SIGN_IN_*` 是账号删除时 Apple token revoke 使用的独立凭据，不能用 App Store Connect IAP issuer/key 替代。
+
+## iOS 发布 bundle
+
+```bash
+npm run build:ios
+```
+
+此命令读取 `.env.ios` 的 `VITE_API_BASE`，构建后自动执行 `cap copy ios`。提审前应在 `ios/App/App/public/assets/*.js` 中确认生产 API base 已编入，再从 Xcode Archive。
 
 ## 本地开发
 

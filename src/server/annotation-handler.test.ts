@@ -19,6 +19,10 @@ vi.mock('openai', () => ({
   },
 }));
 
+vi.mock('./ai-consent', () => ({
+  requireSupabaseAiConsent: vi.fn().mockResolvedValue({ user: { id: 'test-user' } }),
+}));
+
 function createResponseMock() {
   return {
     headers: {} as Record<string, string>,
@@ -87,6 +91,7 @@ describe('annotation-handler', () => {
     expect(responsesCreateMock).toHaveBeenCalledTimes(1);
 
     const request = responsesCreateMock.mock.calls[0][0];
+    expect(request.store).toBe(false);
     expect(request.instructions).toContain('You are Zep');
     expect(request.input).not.toContain('Current holiday:');
     expect(request.input).toContain('Season: unknown');

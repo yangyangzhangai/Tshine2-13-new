@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from '../../api/magic-pen-parse.js';
 
+vi.mock('../../src/server/ai-consent.js', () => ({
+  requireSupabaseAiConsent: vi.fn().mockResolvedValue({ user: { id: 'test-user' } }),
+}));
+
 type MockResponse = {
   statusCode: number;
   headers: Record<string, string>;
@@ -61,7 +65,7 @@ describe('api/magic-pen-parse handler', () => {
     delete process.env.MAGIC_PEN_DEEPSEEK_BASE_URL;
     delete process.env.MAGIC_PEN_MODEL;
     delete process.env.MAGIC_PEN_TIMEOUT_MS;
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

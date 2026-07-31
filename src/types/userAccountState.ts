@@ -10,6 +10,8 @@ export type AccountPlanSource = 'trial' | 'stripe' | 'iap' | 'admin' | 'legacy_m
 
 export type AccountDeletionStatus = 'none' | 'requested' | 'processing';
 
+export type AiConsentStatus = 'unknown' | 'granted' | 'declined' | 'withdrawn';
+
 export interface UserAccountState {
   accountStatus: AccountStatus;
   onboardingStatus: OnboardingStatus;
@@ -27,6 +29,11 @@ export interface UserAccountState {
   deletionStatus: AccountDeletionStatus;
   deletionRequestedAt?: string;
   deletionEffectiveAt?: string;
+  aiConsentStatus: AiConsentStatus;
+  aiConsentVersion?: string;
+  aiConsentGrantedAt?: string;
+  aiConsentUpdatedAt?: string;
+  aiConsentWithdrawnAt?: string;
   lastActiveAt?: string;
   createdAt: string;
   updatedAt: string;

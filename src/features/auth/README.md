@@ -11,6 +11,7 @@
   - Sign in / sign up
   - Email-code registration verification (`signUp` + `verifyOtp(type='signup')`)
   - OAuth sign-in (Google / Apple) with platform-aware redirect (`web origin` vs `iOS deep link`)
+  - Apple-linked deletion reauthorization through the native Apple sheet before token exchange/revocation
   - Auth-only entry for signed-out users (sign-out does not jump to onboarding)
   - Session restore via `useAuthStore.initialize()`
   - Sign out / preference updates are exposed by `useAuthStore` and consumed by other pages such as `/profile`
@@ -24,11 +25,13 @@
 - Signed-out users always enter `/auth`; onboarding is reserved for newly registered users that still need first-time setup
 - Session/profile refreshes preserve the in-memory profile only when the authenticated user ID is unchanged; switching accounts never inherits the previous account's onboarding profile
 - Auth bootstrap now also ensures a `user_account_state` row exists for signed-in users; OAuth users therefore get the same onboarding gate as email signup instead of relying on `created_at` + profile fallback alone
+- The same account-state row now carries versioned third-party AI consent. Consent is not bundled into email/social sign-in or the general Terms links; it is requested separately after onboarding, can be declined, and can later be withdrawn from Profile.
 - Email-code registration starts a 60-second resend cooldown after the initial code and after each successful resend; the main auth page and onboarding auth step share the same countdown behavior
 
 ## Upstream Dependencies
 
-- Store: `src/store/useAuthStore.ts`
+- Store: `src/store/useAuthStore.ts` (`deleteAccount()` owns reauthorization, server deletion, sign-out, and local cleanup orchestration)
+- Native Apple bridge: `src/services/native/appleSignInService.ts`
 - Mobile OAuth bridge: `src/lib/mobileAuthBridge.ts` (Capacitor `appUrlOpen` callback handling)
 - App routing: `src/App.tsx`
 - i18n: `src/i18n/*`

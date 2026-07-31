@@ -2,6 +2,7 @@
 import type { UserProfileV2 } from '../types/userProfile';
 import type {
   AccountDeletionStatus,
+  AiConsentStatus,
   AccountPlanSnapshot,
   AccountPlanSource,
   AccountStatus,
@@ -21,6 +22,7 @@ const PLAN_SOURCE_VALUES = new Set<Exclude<AccountPlanSource, null>>([
   'default_free',
 ]);
 const DELETION_STATUS_VALUES = new Set<AccountDeletionStatus>(['none', 'requested', 'processing']);
+const AI_CONSENT_STATUS_VALUES = new Set<AiConsentStatus>(['unknown', 'granted', 'declined', 'withdrawn']);
 
 const PENDING_ACCOUNT_STATE_PREFIX = 'seeday_pending_account_state_v1_';
 const LEGACY_LOCAL_ONBOARDING_FLAG_PREFIX = 'seeday_onboarded_';
@@ -77,6 +79,13 @@ export function parseUserAccountState(raw: unknown): UserAccountState | null {
     deletionStatus: normalizeEnum(value.deletionStatus, DELETION_STATUS_VALUES, 'none'),
     ...(normalizeIsoString(value.deletionRequestedAt) ? { deletionRequestedAt: normalizeIsoString(value.deletionRequestedAt) } : {}),
     ...(normalizeIsoString(value.deletionEffectiveAt) ? { deletionEffectiveAt: normalizeIsoString(value.deletionEffectiveAt) } : {}),
+    aiConsentStatus: normalizeEnum(value.aiConsentStatus, AI_CONSENT_STATUS_VALUES, 'unknown'),
+    ...(typeof value.aiConsentVersion === 'string' && value.aiConsentVersion.trim()
+      ? { aiConsentVersion: value.aiConsentVersion.trim() }
+      : {}),
+    ...(normalizeIsoString(value.aiConsentGrantedAt) ? { aiConsentGrantedAt: normalizeIsoString(value.aiConsentGrantedAt) } : {}),
+    ...(normalizeIsoString(value.aiConsentUpdatedAt) ? { aiConsentUpdatedAt: normalizeIsoString(value.aiConsentUpdatedAt) } : {}),
+    ...(normalizeIsoString(value.aiConsentWithdrawnAt) ? { aiConsentWithdrawnAt: normalizeIsoString(value.aiConsentWithdrawnAt) } : {}),
     ...(normalizeIsoString(value.lastActiveAt) ? { lastActiveAt: normalizeIsoString(value.lastActiveAt) } : {}),
     createdAt: normalizeIsoString(value.createdAt) || nowIso,
     updatedAt: normalizeIsoString(value.updatedAt) || nowIso,
@@ -124,6 +133,7 @@ export function createDefaultUserAccountState(params: {
     ...(normalizeIsoString(params.trialStartedAt) ? { trialStartedAt: normalizeIsoString(params.trialStartedAt) } : {}),
     ...(normalizeIsoString(params.trialEndsAt) ? { trialEndsAt: normalizeIsoString(params.trialEndsAt) } : {}),
     deletionStatus: 'none',
+    aiConsentStatus: 'unknown',
     createdAt: nowIso,
     updatedAt: nowIso,
   };
@@ -183,6 +193,11 @@ export function mergeAccountState(
     deletionStatus: partial.deletionStatus ?? prev?.deletionStatus ?? 'none',
     deletionRequestedAt: partial.deletionRequestedAt ?? prev?.deletionRequestedAt,
     deletionEffectiveAt: partial.deletionEffectiveAt ?? prev?.deletionEffectiveAt,
+    aiConsentStatus: partial.aiConsentStatus ?? prev?.aiConsentStatus ?? 'unknown',
+    aiConsentVersion: partial.aiConsentVersion ?? prev?.aiConsentVersion,
+    aiConsentGrantedAt: partial.aiConsentGrantedAt ?? prev?.aiConsentGrantedAt,
+    aiConsentUpdatedAt: partial.aiConsentUpdatedAt ?? prev?.aiConsentUpdatedAt,
+    aiConsentWithdrawnAt: partial.aiConsentWithdrawnAt ?? prev?.aiConsentWithdrawnAt,
     lastActiveAt: partial.lastActiveAt ?? prev?.lastActiveAt,
     createdAt: prev?.createdAt ?? partial.createdAt ?? nowIso,
     updatedAt: partial.updatedAt ?? nowIso,
@@ -251,6 +266,21 @@ function resolveOnboardingConflict(
   };
 }
 
+function resolvePendingAiConsent(
+  cloudState: UserAccountState,
+  pendingState: UserAccountState,
+): Partial<UserAccountState> {
+  if (!['declined', 'withdrawn'].includes(pendingState.aiConsentStatus)) return {};
+  return {
+    aiConsentStatus: pendingState.aiConsentStatus,
+    aiConsentVersion: pendingState.aiConsentVersion,
+    aiConsentGrantedAt: pendingState.aiConsentGrantedAt,
+    aiConsentUpdatedAt: pendingState.aiConsentUpdatedAt,
+    aiConsentWithdrawnAt: pendingState.aiConsentWithdrawnAt,
+    updatedAt: pendingState.updatedAt || cloudState.updatedAt,
+  };
+}
+
 export function resolveEffectiveAccountState(params: {
   cloudState?: UserAccountState | null;
   pendingState?: UserAccountState | null;
@@ -262,6 +292,7 @@ export function resolveEffectiveAccountState(params: {
   let merged = mergeAccountState(fallbackState ?? null, base);
   if (cloudState && pendingState) {
     merged = mergeAccountState(merged, resolveOnboardingConflict(cloudState, pendingState));
+    merged = mergeAccountState(merged, resolvePendingAiConsent(cloudState, pendingState));
     return merged;
   }
   if (pendingState) {

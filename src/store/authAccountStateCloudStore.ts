@@ -25,6 +25,11 @@ type AccountStateRow = {
   deletion_status?: unknown;
   deletion_requested_at?: unknown;
   deletion_effective_at?: unknown;
+  ai_consent_status?: unknown;
+  ai_consent_version?: unknown;
+  ai_consent_granted_at?: unknown;
+  ai_consent_updated_at?: unknown;
+  ai_consent_withdrawn_at?: unknown;
   last_active_at?: unknown;
   created_at?: unknown;
   updated_at?: unknown;
@@ -49,6 +54,11 @@ function rowToAccountState(row: AccountStateRow | null | undefined): UserAccount
     deletionStatus: row.deletion_status,
     deletionRequestedAt: row.deletion_requested_at,
     deletionEffectiveAt: row.deletion_effective_at,
+    aiConsentStatus: row.ai_consent_status,
+    aiConsentVersion: row.ai_consent_version,
+    aiConsentGrantedAt: row.ai_consent_granted_at,
+    aiConsentUpdatedAt: row.ai_consent_updated_at,
+    aiConsentWithdrawnAt: row.ai_consent_withdrawn_at,
     lastActiveAt: row.last_active_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -76,6 +86,11 @@ function buildAccountStateRow(userId: string, patch: Partial<UserAccountState>):
   if ('deletionStatus' in patch) row.deletion_status = patch.deletionStatus;
   if ('deletionRequestedAt' in patch) row.deletion_requested_at = patch.deletionRequestedAt ?? null;
   if ('deletionEffectiveAt' in patch) row.deletion_effective_at = patch.deletionEffectiveAt ?? null;
+  if ('aiConsentStatus' in patch) row.ai_consent_status = patch.aiConsentStatus;
+  if ('aiConsentVersion' in patch) row.ai_consent_version = patch.aiConsentVersion ?? null;
+  if ('aiConsentGrantedAt' in patch) row.ai_consent_granted_at = patch.aiConsentGrantedAt ?? null;
+  if ('aiConsentUpdatedAt' in patch) row.ai_consent_updated_at = patch.aiConsentUpdatedAt ?? null;
+  if ('aiConsentWithdrawnAt' in patch) row.ai_consent_withdrawn_at = patch.aiConsentWithdrawnAt ?? null;
   if ('lastActiveAt' in patch) row.last_active_at = patch.lastActiveAt ?? null;
   if ('createdAt' in patch) row.created_at = patch.createdAt;
   return row;
@@ -103,6 +118,11 @@ export async function fetchCloudUserAccountState(userId: string): Promise<UserAc
         'deletion_status',
         'deletion_requested_at',
         'deletion_effective_at',
+        'ai_consent_status',
+        'ai_consent_version',
+        'ai_consent_granted_at',
+        'ai_consent_updated_at',
+        'ai_consent_withdrawn_at',
         'last_active_at',
         'created_at',
         'updated_at',

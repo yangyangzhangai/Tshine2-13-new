@@ -25,6 +25,7 @@ import {
 } from '../src/types/plant.js';
 import { applyCors, handlePreflight, jsonError, requireMethod } from '../src/server/http.js';
 import { generatePlantDiaryWithFallback, FREE_FALLBACK_TEXT } from '../src/server/plant-diary-service.js';
+import { readCurrentAiConsent } from '../src/server/ai-consent.js';
 import {
   getDateInTimezone,
   isTooEarlyToGenerate,
@@ -275,7 +276,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   );
 
   const resolvedLang = (body.lang === 'zh' || body.lang === 'it') ? body.lang : 'en';
-  const diary = isPlus
+  const aiConsent = isPlus
+    ? await readCurrentAiConsent(auth.db, auth.user.id)
+    : 'not_granted';
+  const diary = isPlus && aiConsent === 'granted'
     ? await generatePlantDiaryWithFallback({
         date,
         activities: activities.map(item => ({

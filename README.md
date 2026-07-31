@@ -65,6 +65,14 @@ npm run build
 npm run preview
 ```
 
+Capacitor iOS 发布包必须使用：
+
+```bash
+npm run build:ios
+```
+
+该命令从 `.env.ios`（或当前进程的 `VITE_API_BASE` 覆盖）读取绝对生产 API 地址，执行 iOS mode 构建，并自动将 `dist` 复制到 `ios/App/App/public`。不要用普通 `npm run build` 代替 iOS 发布构建。
+
 ## 环境变量
 
 参见 `.env.example`，当前常用变量如下：

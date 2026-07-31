@@ -3,6 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { extractComment, removeThinkingTags } from '../lib/aiParser.js';
 import { normalizeAiCompanionMode } from '../lib/aiCompanion.js';
 import { applyCors, handlePreflight, jsonError, requireMethod } from './http.js';
+import { requireSupabaseAiConsent } from './ai-consent.js';
 import {
   buildRewritePrompt,
   ensureEmoji,
@@ -326,6 +327,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (handlePreflight(req, res)) return;
   if (!requireMethod(req, res, 'POST')) return;
+  if (!(await requireSupabaseAiConsent(req, res))) return;
 
   const { eventType, eventData, userContext, lang = 'zh', aiMode, debugPrompts } = req.body;
   const includePromptDebug = debugPrompts === true || process.env.ANNOTATION_PROMPT_DEBUG === 'true';

@@ -280,6 +280,7 @@ export async function extractUserProfileFromMessages(params: {
 
   const completion = await client.chat.completions.create({
     model,
+    store: false,
     response_format: { type: 'json_object' },
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.2,

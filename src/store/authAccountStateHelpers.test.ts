@@ -15,6 +15,7 @@ const baseState: UserAccountState = {
   planSnapshot: 'free',
   planSource: 'default_free',
   deletionStatus: 'none',
+  aiConsentStatus: 'unknown',
   createdAt: '2026-07-19T00:00:00.000Z',
   updatedAt: '2026-07-19T00:00:00.000Z',
 };
@@ -51,6 +52,24 @@ describe('authAccountStateHelpers', () => {
 
     const resolved = resolveEffectiveAccountState({ cloudState, pendingState, fallbackState: baseState });
     expect(resolved?.onboardingLastStep).toBe(5);
+  });
+
+  it('keeps a pending consent withdrawal fail-closed over a stale cloud grant', () => {
+    const cloudState: UserAccountState = {
+      ...baseState,
+      aiConsentStatus: 'granted',
+      aiConsentVersion: '2026-07-31.v1',
+    };
+    const pendingState: UserAccountState = {
+      ...baseState,
+      aiConsentStatus: 'withdrawn',
+      aiConsentVersion: '2026-07-31.v1',
+      aiConsentWithdrawnAt: '2026-07-31T12:00:00.000Z',
+    };
+
+    const resolved = resolveEffectiveAccountState({ cloudState, pendingState, fallbackState: baseState });
+    expect(resolved?.aiConsentStatus).toBe('withdrawn');
+    expect(resolved?.aiConsentWithdrawnAt).toBe('2026-07-31T12:00:00.000Z');
   });
 
   it('creates recent users as onboarding-required by default', () => {

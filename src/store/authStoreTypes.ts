@@ -1,6 +1,7 @@
 // DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> src/features/auth/README.md
 import type { AiCompanionMode } from '../lib/aiCompanion';
 import type { UserAccountState } from '../types/userAccountState';
+import type { AiConsentStatus } from '../types/userAccountState';
 import type { UserProfileV2 } from '../types/userProfile';
 import type { SupportedUiLanguage } from './authLanguageHelpers';
 
@@ -49,6 +50,7 @@ export interface AuthState {
   signUp: (email: string, pass: string, nickname?: string, avatarDataUrl?: string) => Promise<{ data?: any; error: any }>;
   verifySignUpCode: (email: string, code: string) => Promise<{ error: any }>;
   resendSignUpCode: (email: string) => Promise<{ error: any }>;
+  deleteAccount: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateAvatar: (avatarDataUrl: string) => Promise<{ error: any }>;
   updateDisplayName: (displayName: string) => Promise<{ error: any }>;
@@ -60,6 +62,7 @@ export interface AuthState {
   updateAccountState: (
     updater: Partial<UserAccountState> | ((prev: UserAccountState | null) => UserAccountState),
   ) => Promise<{ error: any }>;
+  updateAiConsent: (status: Exclude<AiConsentStatus, 'unknown'>) => Promise<{ error: any }>;
   updatePreferences: (partial: Partial<UserPreferences>) => Promise<void>;
   updateLanguagePreference: (language: string) => Promise<{ error: any }>;
   refreshActivityStreak: () => Promise<void>;

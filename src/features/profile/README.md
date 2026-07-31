@@ -17,7 +17,8 @@
   - User profile snapshot card: show meal-time hints, upcoming anniversaries, and latest recall moment from `buildUserProfileSnapshot(...)`
   - Plant direction customization: 5-slot mapping of activity categories to plant root positions
   - Membership display: FREE/PLUS tier feature matrix with upgrade CTA
-  - Account controls: help, privacy, about, logout, admin-only telemetry link
+  - Account controls: help, privacy, AI data/consent status and withdrawal, about, logout, admin-only telemetry link
+  - Account deletion: explicit confirmation; Apple-linked iOS accounts reauthorize natively before server-side Apple revoke and fail-closed data deletion
   - Password change verifies the existing email-password credential before updating to the new password; password setup for accounts without an email identity keeps the existing set-password flow.
 
 ## Component Hierarchy
@@ -34,6 +35,7 @@ ProfilePage
 ├── UserProfileInsightsCard (snapshot overview)
 ├── MembershipCard (tier display)
 ├── DirectionSettingsPanel (plant root mapping)
+├── AIConsentGate / AIConsentSettingsPanel (explicit consent + withdrawal)
 └── SettingsList (account actions)
 
 UpgradePage
@@ -63,8 +65,9 @@ UpgradePage
 - **Life goal sync**: `manual.lifeGoal` is shared with Growth-side life goal panel (two-way sync via `useAuthStore.updateUserProfile()`)
 - **Weekly streak**: calculated from `user_login_days` plus activity fallback for older accounts
 - **Account lifecycle state**: onboarding progress/completion, normalized FREE/PLUS snapshot, and future deletion intent are being centralized in `user_account_state`; profile surfaces should continue to treat `user_profiles` as memory/routine storage, not as the source of truth for onboarding status
+- **AI consent**: the current status/version/timestamps live in `user_account_state`. The first gate is separate from sign-in/Terms, is not preselected, allows continued non-AI use, and the settings panel can withdraw consent at any time.
 - **Direction settings**: maps 5 `PlantCategoryKey` values (work_study, exercise, social, entertainment, life) to plant root positions; saved via `usePlantStore.setDirectionOrder()` with local-first restore, and emits telemetry for open/change/reset/save outcomes
-- **Privacy disclosure**: the existing ZH/EN/IT i18n policy keys list DeepSeek, OpenAI, and Google Gemini with their current language/feature routing, identify Supabase as Free, disclose Open-Meteo coordinate use, and avoid unverified provider retention/training promises
+- **Privacy disclosure**: ZH/EN/IT policy keys list DeepSeek, OpenAI, and Google Gemini with current routing, the verified Supabase/OpenAI/Gemini settings, explicit AI consent/withdrawal, and fail-closed account deletion wording while retaining a qualified DeepSeek evidence boundary
 
 ## Downstream Impact
 

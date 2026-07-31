@@ -7,6 +7,7 @@ import { compactDiaryInsight } from '../src/lib/diaryInsightText.js';
 import { shouldRetryDiaryDraft } from '../src/server/diary-body-integrity.js';
 import { applyCors, handlePreflight, jsonError, requireMethod } from '../src/server/http.js';
 import { buildDiaryTeaser } from '../src/server/diaryTeasers.js';
+import { requireSupabaseAiConsent } from '../src/server/ai-consent.js';
 
 const openai = new OpenAI();
 
@@ -123,6 +124,7 @@ function buildDiaryRetryRule(lang: 'zh' | 'en' | 'it'): string {
 async function requestDiaryDraft(systemPrompt: string, userPrompt: string) {
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o',
+    store: false,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -226,6 +228,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Short insight branch: action === 'insight'
   if (action === 'insight') {
+    if (!(await requireSupabaseAiConsent(req, res))) return;
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey || !kind || !summary) {
       res.status(200).json({ insight: '' });
@@ -276,6 +279,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
+        store: false,
         messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: String(summary) }],
         temperature: 0.7,
         max_tokens: 60,
@@ -301,6 +305,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({ success: true, content: teaser });
     return;
   }
+
+  if (!(await requireSupabaseAiConsent(req, res))) return;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {

@@ -5,7 +5,7 @@ import {
   extractUserProfileFromMessages,
   type ExtractProfileMessage,
 } from '../src/server/extract-profile-service.js';
-import { requireSupabaseRequestAuth } from '../src/server/supabase-request-auth.js';
+import { requireSupabaseAiConsent } from '../src/server/ai-consent.js';
 
 function normalizeLang(raw: unknown): 'zh' | 'en' | 'it' {
   if (raw === 'zh' || raw === 'it') return raw;
@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handlePreflight(req, res)) return;
   if (!requireMethod(req, res, 'POST')) return;
 
-  if (!(await requireSupabaseRequestAuth(req, res))) return;
+  if (!(await requireSupabaseAiConsent(req, res))) return;
 
   const recentMessages = normalizeMessages(req.body?.recentMessages);
   const lang = normalizeLang(req.body?.lang);

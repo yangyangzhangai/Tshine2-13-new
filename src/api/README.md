@@ -23,7 +23,7 @@
 - `callUserAnalyticsDashboardAPI()` / `callUserAnalyticsLookupAPI()`
 - `callProfileSettingsTelemetryDashboardAPI()`
 - `callExtractProfileAPI()` (weekly report trigger; extracts `observed/dynamic/memory` profile patch, supports `lang` routing)
-- `callDeleteAccountAPI()` (forwards the current Supabase provider token / provider refresh token when present so server-side Apple revoke can run before auth deletion)
+- `callDeleteAccountAPI()` (accepts a fresh native Apple authorization code when the linked account uses Apple, allowing the server to exchange, identity-check, and revoke Apple authorization before data deletion)
 - `callSubscriptionAPI()` (membership activate/restore/cancel bridge for payment adapters)
 - `callActivateTrialAPI()`
 - `callStripeCheckoutAPI()` (web stripe adapter: create checkout session URL via `/api/subscription`)
@@ -31,6 +31,7 @@
 - `upsertReminderResponse()` / `fetchReminderResponses()` (idempotent current-day cross-device reminder receipts)
 
 All AI-facing requests must route through `/api/*` serverless handlers.
+Pure AI calls also pass through one client-side consent gate: the signed-in account must have the current consent version granted, otherwise the client emits the global consent-review event and raises `ApiClientError(code='ai_consent_required')`. The server independently verifies the same database record; client state is never the sole authorization evidence.
 Reminder receipts use the authenticated Supabase client directly; RLS restricts rows to `auth.uid() = user_id`.
 
 ## Upstream Dependencies
@@ -57,6 +58,7 @@ Reminder receipts use the authenticated Supabase client directly; RLS restricts 
 
 - The ongoing `moodauto` classifier/refactor work remains in `src/services/input` + `src/store` and does not add new frontend API endpoints.
 - `callClassifierAPI()` now forwards Supabase `Authorization` header; backend `/api/classify` enforces Plus membership and can return `403 membership_required` for non-Plus users.
+- Annotation, classifier/todo-decompose, full diary/insight, Magic Pen, and profile extraction now all attach Supabase auth and require current AI consent. Diary teaser remains deterministic; plant generation remains available without consent but the server uses only local fallback text and skips OpenAI.
 - `callClassifierAPI()` unified response is now single-input schema: `data.kind` (`activity|mood`, mandatory binary), `data.activity_type` (six activity classes), `data.mood_type` (8-key mood enum or null), `data.matched_bottle` (optional), and `data.confidence` (0~1).
 - API client now normalizes server errors into `ApiClientError` (`code/status/details/path/requestId`) and exports `isMembershipRequiredError()` for stable branch handling without brittle string matching.
 - Membership classification observability now reuses `/api/live-input-telemetry` `classification` ingest path with `reasons[]` tags (`membership_classification`, `user_plan:*`, `classification_path:*`, `ai_called:*`, `ai_result_kind:*`, `bottle_match_source:*`) to avoid adding extra endpoint/files.

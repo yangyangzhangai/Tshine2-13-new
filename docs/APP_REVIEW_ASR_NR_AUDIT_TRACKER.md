@@ -12,7 +12,7 @@
 - ASR/NR 条款总数（本轮清单）：52
 - 已完成审核：52
 - 待审核：0
-- 当前结论：ASR/NR 条款已完成代码证据审计；代码层高风险聚焦为 `R-ASR-007`（生产日志收口未完成）与多项 ASC 提审侧人工对齐项（metadata/年龄分级/隐私标签）
+- 当前结论：ASR/NR 条款已完成代码证据审计；第三方 AI 明示同意/撤回已完成代码闭环。剩余高风险聚焦为 `R-ASR-007`（生产日志收口未完成）、生产 schema/部署验证与 ASC 提审侧人工对齐项（metadata/年龄分级/隐私标签）
 
 ## 已审核条目（代码审计 Round 1）
 
@@ -28,7 +28,7 @@
 | 2.5.2 | App 自包含；不得动态下载并执行改变功能的代码 | 在 `src/**` 代码中未发现 `eval(` 或 `new Function(` 动态执行路径 | 符合 | 建议补 CI 扫描防回归 | 代码检索（`src/**/*.ts*`） |
 | 2.5.14 | 录音/录屏/摄像等需显式同意并有清晰提示 | 通知权限已通过 `checkPermissions/requestPermissions` 显式请求；本轮未发现录音/录屏代码路径 | 部分符合 | 若后续启用相机/麦克风入口，需补充权限提示与 consent 流程 | `src/services/notifications/localNotificationService.ts` |
 | 4.8 | 若使用第三方登录，需提供等价登录选项（典型为 Sign in with Apple 规范） | 已同时提供 Apple + Google + 邮箱登录 | 符合 | 需在 iOS 实机验证 Apple 登录全链路 | `src/features/auth/AuthPage.tsx`, `src/store/authStoreAccountActions.ts` |
-| 5.1.1(i) | 隐私政策需在 App Store Connect 与 App 内可访问，且内容完整 | App 内已提供隐私政策面板，删除口径已改为立即删除；已新增 iOS `PrivacyInfo.xcprivacy` 基础清单 | 部分符合 | 仍需确认“公网隐私政策 URL + ASC 字段”已上线，并继续核对清单条目与 SDK 实际访问 API 一致 | `src/features/profile/components/PrivacyPolicyPanel.tsx`, `src/i18n/locales/en.ts:1293`, `ios/App/App/PrivacyInfo.xcprivacy` |
+| 5.1.1(i) | 隐私政策需在 App Store Connect 与 App 内可访问，且内容完整 | App 内三语隐私政策已按 2026-07-31 Supabase/OpenAI/Gemini 证据更新，披露 AI 明示同意/撤回和删除失败中断口径；已有 iOS `PrivacyInfo.xcprivacy` | 部分符合 | 仍需把同版政策发布到公网 Privacy URL，并核对 ASC 字段与 SDK 实际访问 API | `src/features/profile/components/PrivacyPolicyPanel.tsx`, `src/i18n/locales/en.extra.ts`, `ios/App/App/PrivacyInfo.xcprivacy` |
 | 5.1.1(v) | 支持账号创建则必须支持 App 内账号删除 | 设置页可直达删除弹窗，用户确认后直接调用 `/api/delete-account`；服务端删除用户业务数据并删除 auth 用户 | 符合 | 低风险：补充失败态监控与手测脚本（弱网/重复点击/会话失效） | `src/features/profile/components/DeleteAccountModal.tsx:26`, `src/api/client.ts:740`, `api/delete-account.ts:45` |
 | 2.4.2 | 不得导致设备过热/过度耗电/无关后台进程 | 未见加密挖矿、无关常驻后台任务；前台轮询与本地通知属于核心功能链路 | 部分符合 | 中风险：补一轮 iOS 能耗实测（Xcode Instruments）并形成提审附件 | `src/App.tsx:292`, `src/services/notifications/localNotificationService.ts:293` |
 | 2.5.3 | 禁止传输可破坏系统/硬件正常工作的代码 | 未发现病毒传播、破坏系统能力、Push/GameCenter 滥用代码路径 | 符合 | 持续保持依赖审计与 SCA 扫描 | 代码检索（本轮） |
@@ -42,7 +42,7 @@
 | 2.5.17 | Matter 支持需使用 Apple 框架与认证组件 | 仓库未接入 Matter | 不适用 | 若后续接入需单列认证检查 | 代码检索（本轮） |
 | 2.5.18 | 广告展示范围与方式需合规 | 未接入广告 SDK，未见插屏/行为定向广告路径 | 符合 | 若接入广告需先补年龄分级与可关闭机制 | `package.json`, 代码检索（本轮） |
 | 4.5.4 | Push 不得作为功能必需；营销推送需显式同意且可退订 | 提醒入口提供独立开关，主功能链路不依赖通知权限；权限请求由用户触发，拒绝权限仅停用提醒能力 | 部分符合 | 中风险：若后续引入远程 Push 营销内容，需补“营销同意 + App 内退订”独立开关与审计记录 | `src/features/profile/components/RoutineSettingsPanel.tsx:581`, `src/features/profile/components/RoutineSettingsPanel.tsx:591`, `src/services/notifications/localNotificationService.ts:56` |
-| 5.1.2 | 数据使用/共享需与声明一致且用途受限 | 当前以 Supabase 鉴权 + 自有 serverless API 为主，未接入广告 SDK；隐私面板可在 App 内访问 | 部分符合 | 中风险：仓库无法直接证明 App Store Connect 隐私标签与第三方处理方披露完全一致，提审前需人工逐项比对 | `src/api/client.ts:171`, `api/README.md:8`, `src/features/profile/components/PrivacyPolicyPanel.tsx:27` |
+| 5.1.2 | 数据使用/共享需与声明一致且用途受限 | 第三方 AI 发送前有独立明示同意；同意按版本记录，前端统一门控且服务端再次核验，设置页可撤回；未接入广告 SDK | 部分符合 | 代码闭环已完成；仍需执行生产 Supabase schema、部署新服务端/iOS 包，并人工确认 ASC 隐私标签完全一致 | `src/features/profile/components/AIConsentGate.tsx`, `src/features/profile/components/AIConsentSettingsPanel.tsx`, `src/server/ai-consent.ts` |
 
 ## 已审核条目（代码审计 Round 1.9）
 
@@ -75,9 +75,9 @@
 | 4.7.5 | 超龄软件识别与未成年人限制 | 当前无 4.7 范畴软件索引/分发能力 | 不适用 | 无 | 代码检索（本轮） |
 | 4.9 | Apple Pay 信息披露与 UI 合规 | 当前订阅支付主链路是 Apple IAP/StoreKit，未接入 Apple Pay 支付按钮流 | 不适用 | 若未来接入 Apple Pay 需补周期扣费披露文案 | `src/features/profile/UpgradePage.tsx`, `api/subscription.ts` |
 | 4.10 | 禁止将系统内建能力单独收费 | 当前付费点为会员能力（AI 配额/体验增强），非“通知权限/相机权限”收费 | 符合 | 低风险：保持付费点与业务价值绑定 | `src/features/profile/UpgradePage.tsx`, `api/subscription.ts` |
-| 5.1 | 隐私总则（采集/处理/告知/撤回） | App 内有隐私政策入口，账号删除可达；但同意管理与 ASC 披露需人工对照 | 部分符合 | 中风险：提审前核对隐私标签、追踪披露、第三方共享 | `src/features/profile/components/PrivacyPolicyPanel.tsx`, `api/delete-account.ts` |
+| 5.1 | 隐私总则（采集/处理/告知/撤回） | App 内有三语隐私政策、账号删除和 AI consent 管理；AI 同意可拒绝、可撤回并阻断后续请求 | 部分符合 | 提审前仍需上线公网政策并核对隐私标签、追踪披露和生产部署 | `src/features/profile/components/PrivacyPolicyPanel.tsx`, `src/features/profile/components/AIConsentSettingsPanel.tsx`, `api/delete-account.ts` |
 | 5.1.1 | 数据采集与存储总要求 | 已声明收集与删除，提供应用内删除；但 ASC 隐私字段与外部 URL 仍需人工校验 | 部分符合 | 中风险：补齐提审 checklist 证据 | `src/i18n/locales/en.ts:1291`, `src/features/profile/components/DeleteAccountModal.tsx:21` |
-| 5.1.1(ii) | 收集数据需同意且可撤回 | 通知权限通过系统弹窗请求，非主流程强依赖；社交登录可退出并清 token | 部分符合 | 需补“第三方 AI 数据共享同意”与撤回路径的提审说明 | `src/services/notifications/localNotificationService.ts:131`, `src/store/authStoreAccountActions.ts:150` |
+| 5.1.1(ii) | 收集数据需同意且可撤回 | 通知权限由系统弹窗请求；第三方 AI 数据发送使用独立未预选勾选框，可拒绝后继续非 AI 功能，并可在设置中撤回；状态/版本/时间写入账号状态 | 符合 | 上线前执行 consent schema 并用全新/老账号各做一次同意、拒绝、撤回与版本升级回归 | `src/features/profile/components/AIConsentGate.tsx`, `src/store/authStoreAccountActions.ts`, `src/types/userAccountState.ts` |
 | 5.1.3 | 健康数据特殊限制 | 未接入 HealthKit/临床数据/运动健康 API | 不适用 | 无 | 代码检索（本轮） |
 | 5.1.4(a) | 儿童数据合规 | 应用声明非 13 岁以下用户，未见 Kids Category 特化能力 | 部分符合 | 提审前人工确认年龄分级与元数据无“for kids”表述 | `src/i18n/locales/en.ts:1304`, `docs/APP_REVIEW_ASR_NR_AUDIT_TRACKER.md` |
 | 5.1.5 | Location 使用需直接相关并告知用途 | 仅提供用户手动地理编码设置地区，无系统定位权限请求 | 符合 | 若引入 GPS 定位需补 purpose string+同意流程 | `src/features/profile/components/RegionSettingsPanel.tsx`, `src/services/location/geocode.ts` |
