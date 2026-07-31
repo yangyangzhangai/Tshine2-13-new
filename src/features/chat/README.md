@@ -16,6 +16,8 @@
   - Latest-message correction: message row supports quick reclassify between `activity` and `mood` through `reclassifyRecentInput(messageId, nextKind)`
   - Primary record input path uses local rule classification by default (no unconditional classifier API call)
 - Mood quick record (`isMood` message path) remains as the message semantic output, not a separate chat-mode toggle
+- New activity auto-mood detection infers its language from the entered text and begins cloud mood persistence only after the parent message has been persisted or queued, preventing multilingual misclassification and parent-row races.
+- Chinese Magic Pen period-only drafts use the specification windows: morning `09:00-11:00`, noon `12:00-13:00`, afternoon `15:00-17:00`, and evening `20:00-21:00`.
 - Activity cards support two independent cloud image slots (`imageUrl` / `imageUrl2`); when both are empty, the photo picker accepts up to two files in one selection and runs the existing crop/upload flow once per slot. Upload/retry paths must preserve the slot identity instead of synthesizing a fake second message id, and every replacement upload must get a fresh storage object path so delete-then-reupload cannot reuse a stale public URL cache entry
 
 ## Typography Semantics

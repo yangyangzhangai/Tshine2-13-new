@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-07-31 - Pre-merge stability baseline restored
+
+- Serialized new Chat activity persistence so the parent `messages` row is persisted or queued before automatic mood persistence starts, preventing mood foreign-key races without changing local-first message creation.
+- Automatic mood detection now infers language from the entered text in both new-activity and attached-mood paths, so multilingual input is no longer interpreted through the current UI language.
+- Aligned Chinese Magic Pen period windows with `docs/MAGIC_PEN_CAPTURE_SPEC.md` and made todo hydration normalize numeric-string `sort_order` timestamps instead of silently falling back to due/created time.
+- Updated stale annotation/diary/suggestion assertions, froze reminder/report tests in local time, and excluded nested `.claude/worktrees/**` from Vitest discovery. The canonical suite now passes all 823 tests across 103 files.
+- Added a GitHub Quality workflow that runs repository checks, the full unit suite, and the production build for pull requests and pushes to `main`.
+
 ## 2026-07-31 - Reorder Growth todo editor fields
 
 - Moved the Priority row below Repeat in both the expanded todo editor and Add Task modal, producing the order Due Date & Time, Repeat, Priority, then Link to Bottle after the task title.

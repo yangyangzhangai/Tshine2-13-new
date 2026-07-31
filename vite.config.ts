@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { configDefaults, defineConfig } from 'vitest/config';
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { youwareVitePlugin } from '@youware/vite-plugin-react';
@@ -10,6 +10,9 @@ const paymentAlias = paymentMode === 'iap'
 
 // https://vite.dev/config/
 export default defineConfig({
+  test: {
+    exclude: [...configDefaults.exclude, '**/.claude/worktrees/**'],
+  },
   plugins: [youwareVitePlugin(), react()],
   resolve: {
     alias: {

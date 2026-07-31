@@ -1,9 +1,11 @@
 # CURRENT TASK (Session Resume Anchor)
 
-Last Updated: 2026-07-30
+Last Updated: 2026-07-31
 Owner: current working session
 
 Session Notes:
+
+- 2026-07-31: Restored the full unit-test baseline on `codex/premerge-stability-fixes`. New Chat activity mood persistence now waits until its parent message has been persisted or queued, and automatic mood language follows the input text rather than the UI language. Magic Pen's Chinese period windows now match the capture specification (`09-11 / 12-13 / 15-17 / 20-21`), and todo hydration accepts numeric-string `sort_order` values. Stale prompt/suggestion assertions and timezone-sensitive reminder/report tests were corrected, Vitest excludes nested `.claude/worktrees`, and the new GitHub Quality workflow runs lint, all unit tests, and the production build for pull requests and `main` pushes. Full verification: 103 test files / 823 tests passed.
 
 - 2026-07-31: Reordered both Growth todo editors to show Due Date & Time, Repeat, Priority, then Link to Bottle after the task title. This covers the expanded todo card and Add Task modal; Priority values, selected palettes, update/draft handlers, persistence, typography, and copy are unchanged.
 

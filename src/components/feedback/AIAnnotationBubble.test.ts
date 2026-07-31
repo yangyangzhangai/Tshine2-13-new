@@ -28,9 +28,13 @@ describe('runSuggestionAcceptFlow', () => {
 
     expect(accepted).toBe(true);
     expect(params.markSuggestionAccepted).toHaveBeenCalledTimes(1);
-    expect(params.setPendingSuggestionIntent).not.toHaveBeenCalled();
+    expect(params.setPendingSuggestionIntent).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'activity',
+      annotationId: 'anno-1',
+      activityName: 'walk',
+    }));
     expect(params.emitEvent).not.toHaveBeenCalled();
-    expect(params.navigate).not.toHaveBeenCalled();
+    expect(params.navigate).toHaveBeenCalledWith('/chat');
     expect(params.recordSuggestionOutcome).toHaveBeenCalledWith('anno-1', true);
     expect(params.handleCondense).toHaveBeenCalledTimes(1);
   });
