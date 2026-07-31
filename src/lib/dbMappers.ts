@@ -147,7 +147,7 @@ export function fromDbTodo(row: any): Todo {
   const rawSortOrder = row.sort_order;
   const sortOrder = (typeof rawSortOrder === 'number' && Number.isFinite(rawSortOrder))
     ? rawSortOrder
-    : (dueAt ?? createdAt);
+    : (toTimestampMs(rawSortOrder) ?? dueAt ?? createdAt);
 
   return {
     id: row.id,

@@ -1,0 +1,37 @@
+# DOC-DEPS: LLM.md -> docs/CURRENT_TASK.md -> docs/CHANGELOG.md
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Scan repository for secrets
+        run: node ./scripts/check-secrets.mjs --all
+
+      - name: Run repository checks
+        run: npm run lint:all
+
+      - name: Run unit tests
+        run: npm run test:unit -- --silent
+
+      - name: Build production bundle
+        run: npm run build

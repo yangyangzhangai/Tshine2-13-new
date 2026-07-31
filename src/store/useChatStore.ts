@@ -42,7 +42,7 @@ import { readLegacyPersistedState } from './persistMigrationHelpers';
 import { applyChatMessageSyncState, mergeCloudMessagesWithLocal, projectMessagesForDate } from './chatSyncHelpers';
 import {
   clearMessageClassificationTasks, closeCrossDayActiveMessagesInDb,
-  ensureMessageClassification, keywordMatchBottleId, resolveCurrentLang, resolveLangForText,
+  ensureMessageClassification, keywordMatchBottleId, resolveLangForText,
   runAutoCloseBottleMatch,
 } from './chatClassificationHelpers';
 import {
@@ -428,7 +428,7 @@ export const useChatStore = create<ChatState>()(
             [todayDateStr]: projectMessagesForDate(updatedMessages, todayDateStr),
           }),
         }));
-        void (async () => {
+        const messagePersistenceTask = (async () => {
           const session = await getSupabaseSession();
           if (!session) {
             useOutboxStore.getState().enqueue({
@@ -465,7 +465,7 @@ export const useChatStore = create<ChatState>()(
           });
         });
         if (!options?.skipMoodDetection) {
-          void triggerMoodDetection(newMessage.id, content, 'auto', resolveCurrentLang());
+          void messagePersistenceTask.then(() => triggerMoodDetection(newMessage.id, content, 'auto', resolveLangForText(content)));
         }
         if (!options?.activityTypeOverride) {
           const isPlus = useAuthStore.getState().isPlus;
@@ -908,7 +908,7 @@ export const useChatStore = create<ChatState>()(
           void triggerMoodDetection(relatedActivityId, content, {
             source: 'auto',
             linkedMoodMessageId: newMessage.id,
-          }, resolveCurrentLang());
+          }, resolveLangForText(content));
         }
         const annotationStore = useAnnotationStore.getState();
         const moodEvent: AnnotationEvent = {

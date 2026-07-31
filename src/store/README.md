@@ -89,6 +89,7 @@
 - `useChatStore.updateMessageImage()` 现与其他聊天消息编辑共享 durable sync 语义：公开图片 URL 写入和图片清空都会先本地标记 `pending`，再通过 `chat.upsert` 落云，失败进入 outbox；本地 data URL 仅作为离线临时预览保留，必须等 `image.reupload` 产出正式 storage URL 后才会上云，避免把临时 data URL 写进 `messages.image_url(_2)` 或被静默刷新用旧云端图片覆盖回来。
 - `useChatStore.sendMessage()/sendMood()` 现保证 `messages` 与 `dateCache` 同步更新（包括“自动结束上一条活动”后的 `duration/isActive` 变化），避免提醒弹窗确认后因缓存口径不一致出现“新活动闪现后消失/上一条未自动结束”的竞态。
 - `useChatStore.sendMessage()` 现会在新活动创建前统一收口所有 ongoing 活动（不再只关闭最后一条 record），并且 `insertActivity()/updateActivity()` 会拦截与 ongoing 活动冲突的手动时间编辑，避免时间线被污染后出现双活动同时计时。
+- `useChatStore.sendMessage()` 的自动心情写云现在等待父 `messages` 写入成功或进入 `chat.upsert` 队列后再开始，避免 `moods.message_id` 抢先写入触发外键失败；自动心情语言按输入文字推断，不再沿用界面语言。
 - `useChatStore.updateActivity()` 现会区分 ongoing 活动的“只改开始时间”和“手动改结束时间”两种编辑：只改开始时间时保持 ongoing；一旦用户显式改了结束时间，则立即写成已结束并同步 `dateCache`/云端 `is_active=false`，避免下一条活动再次改写结束时间。
 - `useChatStore.deleteActivity()` 会原子清理当前 `messages`、所有持久化 `dateCache` 日期分组、对应的 pending manual-end 状态、附属 mood maps 与 `mood.upsert` outbox，并在删云端 message 前先删对应 mood row，避免撤回活动后缓存复活或遗留 `23503` 外键重试。
 - `useChatStore` 新增首页活动“手滑误触结束”缓冲层：`pendingManualEnds` 为非持久化的 3 秒待确认结束态，仅聊天首页时间线消费；倒计时内再次点击可取消，超时后才真正调用 `endActivity()` 并触发 todo/星星/annotation 等副作用。
@@ -131,6 +132,7 @@
 - `useGrowthStore.ts`（2026-04）：Bottle 新增 `checkinDates`（按 `YYYY-MM-DD` 去重）用于 Growth 瓶子详情面板统计：近 7 天打卡天数、当前连续天数、历史最长连续天数。
 - `useTodoStore.ts`（2026-04）：`fetchTodos()` 同步改为“父待办先推、子待办后推”，并增加 `parent_id` 外键冲突恢复（父任务补推 + 孤儿 `parentId` 去引用兜底），避免重试循环失败。
 - `useTodoStore.ts` + `dbMappers.ts`（2026-04）：新增待办 `sortOrder` 及 bigint 字段写库夹紧，避免异常极值导致 Supabase `22003 bigint out of range`。
+- `dbMappers.ts`（2026-07）：待办 hydration 兼容 Supabase 返回的数字字符串 `sort_order`，秒级时间戳会统一转换为毫秒后再参与排序，无效值才回退到截止/创建时间。
 - `useTodoStore.ts` + `useGrowthStore.ts`（2026-04）：新增待办完成奖励星数映射（`todoCompletionRewardStarsMap`）与 `decrementBottleStars()` 回滚 action；取消完成时按历史奖励值对称扣星，并在当日无其他同瓶完成时回滚 `checkinDates`。
 
 ```bash
