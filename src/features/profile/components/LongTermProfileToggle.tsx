@@ -25,7 +25,7 @@ export const LongTermProfileToggle: React.FC<Props> = ({ plain = false }) => {
           <div className="flex items-start space-x-2.5">
             <Brain size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-slate-800" />
             <div className="min-w-0">
-              <p className="profile-fn-title">{t('profile_long_term_profile')}</p>
+              <p className="app-item-title text-black">{t('profile_long_term_profile')}</p>
             </div>
           </div>
         </div>

@@ -47,6 +47,11 @@
 - Diary detail page activity and mood donut charts render at 0.9x of the shared default chart size; the root-page eco-sphere charts are unchanged.
 - The root-page canvas height follows the Report content area's available height with `320px`/`540px` bounds, reserving `120px` of first-view space for the Generate Plant action and My Diary entry while giving the soil/root area slightly more height.
 
+## Typography Semantics
+
+- Report root and supported detail headers use the shared `app-page-title` semantic; standard modal titles and visible form controls use the global section-title and form semantics.
+- Plant artwork, charts, observation hierarchy, swipe controls, and generated-report behavior retain their report-specific visual and business rules.
+
 ## Upstream Dependencies
 
 - Stores:

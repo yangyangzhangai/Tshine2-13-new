@@ -785,7 +785,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                     <textarea
                       readOnly
                       value={myDiaryText}
-                      className="text-xs"
+                      className="app-form-text"
                       style={{
                         position: 'absolute',
                         inset: 0,

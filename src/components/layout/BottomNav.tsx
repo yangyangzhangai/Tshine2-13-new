@@ -1,14 +1,15 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { BookOpen, Clock3, MessageCircle, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { triggerLightHaptic } from '../../lib/haptics';
 
 export const BottomNav = () => {
   const navItems = [
-    { to: '/chat', icon: 'chat_bubble' },
-    { to: '/growth', icon: 'schedule' },
-    { to: '/report', icon: 'menu_book' },
-    { to: '/profile', icon: 'person' },
+    { to: '/chat', icon: MessageCircle },
+    { to: '/growth', icon: Clock3 },
+    { to: '/report', icon: BookOpen },
+    { to: '/profile', icon: User },
   ] as const;
 
   return (
@@ -45,12 +46,11 @@ export const BottomNav = () => {
               }
             >
               {({ isActive }) => (
-                <span
-                  className="material-symbols-outlined text-[26px]"
+                <item.icon
+                  size={26}
+                  strokeWidth={2}
                   style={{ color: isActive ? '#5F7A63' : '#8FAF92' }}
-                >
-                  {item.icon}
-                </span>
+                />
               )}
             </NavLink>
           ))}

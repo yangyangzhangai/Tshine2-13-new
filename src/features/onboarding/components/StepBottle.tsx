@@ -55,7 +55,7 @@ export function StepBottle({ onNext }: StepBottleProps) {
               onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addBottle(); } }}
               enterKeyHint="done"
               placeholder={t('growth_bottle_name_placeholder')}
-              className="w-full bg-[#4a5d4c]/5 border-none rounded-2xl px-4 py-3 text-sm font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/25"
+          className="app-form-text w-full bg-[#4a5d4c]/5 border-none rounded-2xl px-4 py-3 font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/25"
             />
           </div>
 

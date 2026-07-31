@@ -152,7 +152,7 @@ export const OnboardingStepRoutine: React.FC<Props> = ({ state, onChange, onNext
             <input
               value={state.region}
               onChange={(e) => onChange('region', e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold text-sm"
+              className="app-form-text flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold"
               placeholder={t('onboarding2_routine_region_placeholder')}
             />
           </div>
@@ -255,7 +255,7 @@ export const OnboardingStepRoutine: React.FC<Props> = ({ state, onChange, onNext
           <span className="text-[11px] font-black text-[#4a5d4c] uppercase tracking-[0.2em]">{t('profile_user_profile_reminder_enable')}</span>
           <button
             onClick={() => onChange('remindMe', !state.remindMe)}
-            className={`w-14 h-8 rounded-full transition-colors relative ${state.remindMe ? 'bg-[#4a5d4c]' : 'bg-white/40'}`}
+            className={`app-hit-target-44 w-14 h-8 rounded-full transition-colors relative ${state.remindMe ? 'bg-[#4a5d4c]' : 'bg-white/40'}`}
           >
             <motion.div
               animate={{ x: state.remindMe ? 28 : 4 }}

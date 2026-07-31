@@ -61,12 +61,12 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
       <InfoSheetPanel title={t('feedback_sheet_title')} onClose={onClose}>
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <CheckCircle2 size={48} strokeWidth={1.5} className="mb-4 text-[#5F7A63]" />
-          <h2 className="mb-2 text-base font-semibold text-slate-800">{t('feedback_success_title')}</h2>
-          <p className="mb-8 text-sm leading-relaxed text-slate-500">{t('feedback_success_body')}</p>
+          <h2 className="app-section-title mb-2 text-slate-800">{t('feedback_success_title')}</h2>
+          <p className="app-body mb-8 leading-relaxed text-slate-500">{t('feedback_success_body')}</p>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[50px] px-8 py-3 text-sm font-semibold text-[#5F7A63] transition hover:opacity-90"
+            className="app-body rounded-[50px] px-8 py-3 font-semibold text-[#5F7A63] transition hover:opacity-90"
             style={APP_PROFILE_JELLY_BUTTON_STYLE}
           >
             {t('feedback_success_close')}
@@ -78,7 +78,7 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
 
   return (
     <InfoSheetPanel title={t('feedback_sheet_title')} onClose={onClose}>
-      <p className="mb-5 text-sm leading-relaxed text-slate-500">{t('feedback_intro')}</p>
+      <p className="app-body mb-5 leading-relaxed text-slate-500">{t('feedback_intro')}</p>
 
       <div className="space-y-4">
         {/* Email */}
@@ -109,7 +109,7 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
             <button
               type="button"
               onClick={() => setTypeOpen(v => !v)}
-              className={`flex w-full items-center justify-between rounded-[50px] border px-3.5 py-2.5 text-sm transition ${
+              className={`app-body flex w-full items-center justify-between rounded-[50px] border px-3.5 py-2.5 transition ${
                 error && !issueType
                   ? 'border-red-300 bg-red-50/60'
                   : 'border-[#8FAF92]/40 bg-white/85'
@@ -131,7 +131,7 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
                     key={key}
                     type="button"
                     onClick={() => { setIssueType(key); setTypeOpen(false); }}
-                    className={`flex w-full px-4 py-3 text-left text-sm text-slate-700 transition hover:bg-[#F0F4F1] ${
+                    className={`app-body flex w-full px-4 py-3 text-left text-slate-700 transition hover:bg-[#F0F4F1] ${
                       i < ISSUE_TYPES.length - 1 ? 'border-b border-slate-100' : ''
                     }`}
                   >
@@ -156,7 +156,7 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
 
         {/* Error hint */}
         {error && (
-          <p className="text-xs text-red-500">{t('feedback_required')}</p>
+          <p className="app-caption text-red-500">{t('feedback_required')}</p>
         )}
 
         {/* Submit */}
@@ -164,7 +164,7 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
           type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full rounded-[50px] py-3 text-sm font-semibold text-[#5F7A63] transition hover:opacity-90 disabled:opacity-50"
+          className="app-body w-full rounded-[50px] py-3 font-semibold text-[#5F7A63] transition hover:opacity-90 disabled:opacity-50"
           style={APP_PROFILE_JELLY_BUTTON_STYLE}
         >
           {loading ? '...' : t('feedback_submit')}
@@ -177,7 +177,7 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
 };
 
 const inputCls = (hasError: boolean) =>
-  `w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 outline-none transition-shadow ${
+  `app-form-text w-full rounded-xl border px-3.5 py-2.5 text-slate-800 placeholder-slate-400 outline-none transition-shadow ${
     hasError
       ? 'border-red-300 bg-red-50/60 focus:ring-2 focus:ring-red-200'
       : 'border-[#8FAF92]/40 bg-white/85 focus:border-[#8FAF92]/70 focus:ring-2 focus:ring-[#8FAF92]/25'
@@ -191,7 +191,7 @@ interface FieldProps {
 
 const Field: React.FC<FieldProps> = ({ label, required, children }) => (
   <div className="space-y-1.5">
-    <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
+    <label className="app-body flex items-center gap-1 font-medium text-slate-700">
       {label}
       {required && <span className="text-red-400">*</span>}
     </label>

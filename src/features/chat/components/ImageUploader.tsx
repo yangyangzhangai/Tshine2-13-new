@@ -205,7 +205,7 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
             />
             <button
               onClick={() => setLightbox(false)}
-              className="mt-5 flex items-center justify-center w-10 h-10 bg-white/15 hover:bg-white/25 rounded-full text-white transition-colors"
+              className="app-hit-target-44 mt-5 flex items-center justify-center w-10 h-10 bg-white/15 hover:bg-white/25 rounded-full text-white transition-colors"
             >
               <X size={20} />
             </button>
@@ -250,7 +250,7 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
           <button
             onClick={() => { setError(false); openFilePicker(); }}
             title={t('image_upload_fail')}
-            className="flex items-center justify-center w-7 h-7 text-red-400 hover:text-red-600 transition-colors"
+            className="app-hit-target-44 flex items-center justify-center w-7 h-7 text-red-400 hover:text-red-600 transition-colors"
           >
             <AlertCircle size={14} />
           </button>
@@ -258,7 +258,7 @@ export const ImageUploader = React.forwardRef<ImageUploaderHandle, ImageUploader
           <button
             onClick={openFilePicker}
             title={t('image_upload')}
-            className="flex items-center justify-center w-7 h-7 text-gray-300 hover:text-gray-500 transition-colors"
+            className="app-hit-target-44 flex items-center justify-center w-7 h-7 text-gray-300 hover:text-gray-500 transition-colors"
           >
             <Camera size={15} />
           </button>

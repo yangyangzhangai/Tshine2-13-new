@@ -244,7 +244,7 @@ export const FocusMode = ({ todo, queueTodos, onClose }: Props) => {
         <X size={24} strokeWidth={1.5} />
       </button>
 
-      <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-sky-300/70">
+      <p className="app-caption mb-2 font-bold uppercase tracking-[0.14em] text-sky-300/70">
         {isRunning ? t('growth_focus_start') : t('growth_focus_set_duration')}
       </p>
       <h2 className="mb-5 px-6 text-center text-lg font-semibold text-white/85">{activeTodo.title}</h2>
@@ -265,7 +265,7 @@ export const FocusMode = ({ todo, queueTodos, onClose }: Props) => {
                       : 'rgba(255,255,255,0.18)',
                 }}
               />
-              <span className="text-xs text-white/40 truncate max-w-[40px] text-center leading-tight">
+              <span className="app-caption max-w-[40px] truncate text-center leading-tight text-white/40">
                 {qt.title.slice(0, 4)}
               </span>
             </div>
@@ -303,13 +303,13 @@ export const FocusMode = ({ todo, queueTodos, onClose }: Props) => {
         </div>
       ) : isResting ? (
         <div className="flex flex-col items-center gap-6">
-          <p className="text-sky-200/80 text-sm font-medium tracking-wide">{t('growth_focus_resting')}</p>
+          <p className="app-body font-medium tracking-wide text-sky-200/80">{t('growth_focus_resting')}</p>
           <div className="font-mono text-5xl font-bold tabular-nums text-white [text-shadow:0_0_24px_rgba(125,211,252,0.55)]">
             {String(Math.floor(restCountdown / 60)).padStart(2, '0')}:{String(restCountdown % 60).padStart(2, '0')}
           </div>
           <button
             onClick={skipRest}
-            className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/20"
+            className="app-body flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 font-medium text-white transition hover:bg-white/20"
           >
             <SkipForward size={16} strokeWidth={1.5} />
             {t('growth_focus_skip_rest')}
@@ -386,7 +386,7 @@ export const FocusMode = ({ todo, queueTodos, onClose }: Props) => {
               <span className="font-mono text-5xl font-bold tabular-nums text-white [text-shadow:0_0_24px_rgba(125,211,252,0.55)]">
                 {String(durationMinutes).padStart(2, '0')}:00
               </span>
-              <span className="mt-1 text-xs tracking-[0.08em] text-sky-200/55">{t('growth_focus_set_duration')}</span>
+              <span className="app-caption mt-1 tracking-[0.08em] text-sky-200/55">{t('growth_focus_set_duration')}</span>
             </div>
           </div>
 
@@ -398,7 +398,7 @@ export const FocusMode = ({ todo, queueTodos, onClose }: Props) => {
                   key={preset}
                   type="button"
                   onClick={() => setDurationMinutes(preset)}
-                  className="rounded-full border px-3 py-1 text-xs font-semibold transition"
+                  className="app-caption rounded-full border px-3 py-1 font-semibold transition"
                   style={{
                     borderColor: selected ? 'rgba(125,211,252,0.55)' : 'rgba(255,255,255,0.16)',
                     background: selected ? 'rgba(125,211,252,0.28)' : 'rgba(255,255,255,0.08)',
@@ -426,7 +426,7 @@ export const FocusMode = ({ todo, queueTodos, onClose }: Props) => {
             {!isQueueMode && (
               <button
                 onClick={() => void handleStart(true)}
-                className="app-glass-button rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/20"
+                className="app-body app-glass-button rounded-full border border-white/20 bg-white/10 px-6 py-3 font-medium text-white transition hover:bg-white/20"
               >
                 {t('growth_focus_counting_up')}
               </button>
@@ -438,7 +438,7 @@ export const FocusMode = ({ todo, queueTodos, onClose }: Props) => {
       {showConfirmEnd && (isRunning || isResting) && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55">
           <div className="mx-8 w-full max-w-sm rounded-2xl bg-[#F7F9F8] p-6 shadow-2xl">
-            <p className="mb-4 text-center text-sm font-semibold text-slate-700">
+            <p className="app-body mb-4 text-center font-semibold text-slate-700">
               {t('growth_focus_end_confirm')}
             </p>
             <div className="flex gap-3">

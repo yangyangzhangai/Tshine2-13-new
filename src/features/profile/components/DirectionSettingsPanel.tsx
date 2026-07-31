@@ -70,7 +70,7 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
     ? 'w-[110px]'
     : language.startsWith('it')
       ? 'w-[155px]'
-      : 'w-[140px]';
+      : 'w-[155px]';
 
   const stableDraft = useMemo(
     () => (draft.length === 5 ? draft : [...DEFAULT_DIRECTION_ORDER]),
@@ -172,14 +172,14 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
         className="app-mobile-sheet-card relative flex min-h-0 w-full flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:max-w-md sm:rounded-[30px]"
       >
         <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-5">
-          <h3 className="text-base font-bold text-[#1C2E24]">{t('profile_root_direction_settings')}</h3>
+          <h3 className="app-section-title font-bold text-[#1C2E24]">{t('profile_root_direction_settings')}</h3>
           <button type="button" onClick={onClose} className="rounded-full p-2 transition hover:bg-black/5">
             <X size={18} className="text-[#1C2E24]" />
           </button>
         </div>
 
         <div className="app-modal-scroll min-h-0 flex-1 px-5 pb-4">
-          <p className="text-[12px] font-medium text-[#5F7A63]">{t('profile_root_direction_settings_desc')}</p>
+          <p className="app-description font-medium text-[#5F7A63]">{t('profile_root_direction_settings_desc')}</p>
 
           <div className="mt-4 space-y-2.5">
             {SLOTS.map(slot => {
@@ -193,12 +193,12 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
                     isDuplicate ? 'bg-red-50/80' : 'bg-[#F7F9F8] active:bg-[#EEF5F0]'
                   }`}
                 >
-                  <span className={`text-[13px] font-medium ${isDuplicate ? 'text-red-600' : 'text-[#1C2E24]'}`}>
+                  <span className={`app-item-title font-medium ${isDuplicate ? 'text-red-600' : 'text-[#1C2E24]'}`}>
                     {t(slot.positionKey)}
                   </span>
                   <span
                     aria-hidden="true"
-                    className={`inline-flex h-9 ${selectionWidthClass} shrink-0 items-center justify-between gap-2 rounded-[50px] border bg-white px-3 text-[13px] font-medium ${
+                    className={`app-body inline-flex h-9 ${selectionWidthClass} shrink-0 items-center justify-between gap-2 rounded-[50px] border bg-white px-3 font-medium ${
                       isDuplicate
                         ? 'border-red-300 text-red-600'
                         : 'border-[#CBE7D7] text-[#355643]'
@@ -216,7 +216,7 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
                     onChange={event => updateSlot(slot.index, event.target.value as PlantCategoryKey)}
                     onFocus={() => setFocusedSlot(slot.index)}
                     onBlur={() => setFocusedSlot(null)}
-                    className="absolute inset-0 h-full w-full cursor-pointer text-[13px] font-medium opacity-0"
+                    className="app-form-text absolute inset-0 h-full w-full cursor-pointer font-medium opacity-0"
                   >
                     {CATEGORIES.map(category => (
                       <option key={category} value={category}>
@@ -230,10 +230,10 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
           </div>
 
           {hasDuplicateSelection && (
-            <p className="mt-2 text-xs text-red-500">{t('profile_root_direction_duplicate_error')}</p>
+            <p className="app-caption mt-2 text-red-500">{t('profile_root_direction_duplicate_error')}</p>
           )}
           {saveError && (
-            <p className="mt-2 text-xs text-red-500">{saveError}</p>
+            <p className="app-caption mt-2 text-red-500">{saveError}</p>
           )}
         </div>
 
@@ -248,7 +248,7 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
               setSaveError(null);
               void reportTelemetryEvent('root_direction_reset', buildDirectionTelemetryPayload(DEFAULT_DIRECTION_ORDER));
             }}
-            className="min-h-11 flex-1 rounded-[50px] border border-[#CBE7D7] bg-white px-4 text-sm font-semibold text-[#355643] transition hover:bg-[#F7F9F8]"
+            className="app-body min-h-11 flex-1 rounded-[50px] border border-[#CBE7D7] bg-white px-4 font-semibold text-[#355643] transition hover:bg-[#F7F9F8]"
           >
             {t('profile_root_direction_reset')}
           </button>
@@ -256,7 +256,7 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
             type="button"
             onClick={handleSave}
             disabled={isSaving || hasDuplicateSelection}
-            className="min-h-11 flex-1 rounded-[50px] border border-transparent px-4 text-sm font-semibold text-[#355643] disabled:opacity-60"
+            className="app-body min-h-11 flex-1 rounded-[50px] border border-transparent px-4 font-semibold text-[#355643] disabled:opacity-60"
             style={{
               ...APP_PROFILE_JELLY_BUTTON_STYLE,
               color: APP_GREEN_GLASS_TEXT,

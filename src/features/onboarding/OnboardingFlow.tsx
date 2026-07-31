@@ -228,7 +228,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
               }
             }}
             placeholder={t('auth_account_placeholder')}
-            className="flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold placeholder:text-[#4a5d4c]/20 text-sm"
+                  className="app-form-text flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold placeholder:text-[#4a5d4c]/20"
           />
         </div>
 
@@ -243,7 +243,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               placeholder={t('auth_nickname_placeholder')}
-              className="flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold placeholder:text-[#4a5d4c]/20 text-sm"
+                  className="app-form-text flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold placeholder:text-[#4a5d4c]/20"
             />
           </div>
         )}
@@ -267,7 +267,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
               onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               onKeyDown={(e) => e.key === 'Enter' && canSubmit && handleSubmit()}
               placeholder={t('auth_otp_placeholder')}
-              className="flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold placeholder:text-[#4a5d4c]/20 text-sm"
+                  className="app-form-text flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold placeholder:text-[#4a5d4c]/20"
             />
           </div>
         ) : (
@@ -281,7 +281,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && canSubmit && handleSubmit()}
               placeholder={t('onboarding2_auth_password_placeholder')}
-              className="flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold placeholder:text-[#4a5d4c]/20 text-sm"
+                  className="app-form-text flex-1 bg-transparent border-none outline-none text-[#4a5d4c] font-bold placeholder:text-[#4a5d4c]/20"
             />
           </div>
         )}

@@ -5,7 +5,7 @@ import { AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { callDeleteAccountAPI } from '../../../api/client';
-import { APP_GLASS_BUTTON_BASE_STYLE } from '../../../lib/modalTheme';
+import { APP_GLASS_BUTTON_BASE_STYLE, APP_MODAL_TITLE_CLASS } from '../../../lib/modalTheme';
 
 interface Props {
   onClose: () => void;
@@ -59,20 +59,20 @@ export const DeleteAccountModal: React.FC<Props> = ({ onClose }) => {
         {/* Title */}
         <div className="mb-4 flex items-center gap-2.5">
           <AlertTriangle size={20} strokeWidth={2} className="shrink-0 text-red-500" />
-          <h2 className="text-base font-semibold text-slate-800">{t('delete_account_title')}</h2>
+          <h2 className={APP_MODAL_TITLE_CLASS}>{t('delete_account_title')}</h2>
         </div>
 
         {/* Subscription reminder */}
         <div className="mb-4 rounded-2xl border border-amber-200/80 bg-amber-50/80 px-4 py-3">
-          <p className="mb-1 text-xs font-semibold text-amber-700">{t('delete_account_subscription_title')}</p>
-          <p className="text-xs leading-relaxed text-amber-600">{t('delete_account_subscription_body')}</p>
+          <p className="app-caption mb-1 font-semibold text-amber-700">{t('delete_account_subscription_title')}</p>
+          <p className="app-caption leading-relaxed text-amber-600">{t('delete_account_subscription_body')}</p>
         </div>
 
         {/* What gets deleted */}
-        <p className="mb-2 text-xs font-medium text-slate-500">{t('delete_account_warning')}</p>
+        <p className="app-caption mb-2 font-medium text-slate-500">{t('delete_account_warning')}</p>
         <ul className="mb-4 space-y-1">
           {DELETE_ITEMS.map((item) => (
-            <li key={item} className="flex items-center gap-2 text-xs text-slate-500">
+            <li key={item} className="app-caption flex items-center gap-2 text-slate-500">
               <span className="h-1 w-1 shrink-0 rounded-full bg-slate-400" />
               {item}
             </li>
@@ -87,19 +87,19 @@ export const DeleteAccountModal: React.FC<Props> = ({ onClose }) => {
             onChange={e => setConfirmed(e.target.checked)}
             className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-red-500"
           />
-          <span className="text-xs leading-relaxed text-slate-600">{t('delete_account_confirm_label')}</span>
+          <span className="app-caption leading-relaxed text-slate-600">{t('delete_account_confirm_label')}</span>
         </label>
 
         {/* Error */}
         {error && (
-          <p className="mb-3 text-xs text-red-500">{error}</p>
+          <p className="app-caption mb-3 text-red-500">{error}</p>
         )}
 
         {/* Buttons */}
         <button
           onClick={handleDelete}
           disabled={!confirmed || loading}
-          className="mb-2.5 w-full rounded-[50px] py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+          className="app-body mb-2.5 w-full rounded-[50px] py-3 font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
           style={{
             ...APP_GLASS_BUTTON_BASE_STYLE,
             background: confirmed ? '#ef4444' : '#fca5a5',
@@ -110,7 +110,7 @@ export const DeleteAccountModal: React.FC<Props> = ({ onClose }) => {
         <button
           onClick={onClose}
           disabled={loading}
-          className="w-full rounded-[50px] border border-slate-200/60 bg-white/80 py-3 text-sm font-medium text-slate-600 transition hover:bg-white disabled:opacity-40"
+          className="app-body w-full rounded-[50px] border border-slate-200/60 bg-white/80 py-3 font-medium text-slate-600 transition hover:bg-white disabled:opacity-40"
           style={APP_GLASS_BUTTON_BASE_STYLE}
         >
           {t('delete_account_cancel')}

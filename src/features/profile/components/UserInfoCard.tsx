@@ -249,13 +249,13 @@ export const UserInfoCard: React.FC<Props> = ({ isPlus }) => {
                 onChange={(e) => setNameValue(e.target.value)}
                 onBlur={handleNameSave}
                 onKeyDown={handleNameKeyDown}
-                className="w-36 rounded-lg border border-[#8FAF92]/60 bg-white px-2 py-0.5 text-base font-semibold text-slate-700 outline-none"
+                className="app-form-text w-36 rounded-lg border border-[#8FAF92]/60 bg-white px-2 py-0.5 font-semibold text-slate-700 outline-none"
               />
             ) : (
               <span
                 className={isPlus
-                  ? 'cursor-pointer truncate text-base font-semibold transition-colors'
-                  : 'cursor-pointer truncate text-base font-semibold text-slate-800 transition-colors hover:text-[#5F7A63]'}
+                  ? 'app-item-title cursor-pointer truncate font-semibold transition-colors'
+                  : 'app-item-title cursor-pointer truncate font-semibold text-slate-800 transition-colors hover:text-[#5F7A63]'}
                 style={isPlus ? { color: MEMBERSHIP_TEXT } : undefined}
                 onClick={handleNameClick}
               >
@@ -264,7 +264,7 @@ export const UserInfoCard: React.FC<Props> = ({ isPlus }) => {
             )}
             {isPlus && (
               <span
-                className="flex items-center space-x-0.5 text-xs font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                className="app-badge flex flex-shrink-0 items-center space-x-0.5 rounded-full px-1.5 py-0.5 font-bold"
                 style={{
                   background: `linear-gradient(135deg, ${MEMBERSHIP_PURPLE_DEEP} 0%, ${MEMBERSHIP_PURPLE} 56%, ${MEMBERSHIP_PINK} 100%)`,
                   color: '#f4f8ff',
@@ -276,7 +276,7 @@ export const UserInfoCard: React.FC<Props> = ({ isPlus }) => {
               </span>
             )}
           </div>
-          <p className="mt-0.5 truncate text-xs" style={{ color: '#5F7A63' }}>{user?.email}</p>
+          <p className="app-caption mt-0.5 truncate" style={{ color: '#5F7A63' }}>{user?.email}</p>
         </div>
       </div>
 
@@ -350,9 +350,9 @@ export const UserInfoCard: React.FC<Props> = ({ isPlus }) => {
           { label: t('profile_completed_goals'), value: completedGoals, hint: t('profile_completed_goals_hint') },
         ].map(({ label, value, hint }) => (
           <div key={label} className="flex flex-col items-center py-1">
-            <span className="mt-0.5 text-[12px] font-medium" style={{ color: isPlus ? MEMBERSHIP_TEXT : '#5F7A63' }}>{label}</span>
-            <span className="mt-0.5 text-base font-bold" style={{ color: isPlus ? MEMBERSHIP_PURPLE_DEEP : '#5F7A63' }}>{value}</span>
-            <span className="mt-0.5 px-1 text-center text-[10px] font-light leading-tight" style={{ color: isPlus ? '#9333ea99' : '#5F7A63' }}>{hint}</span>
+            <span className="app-caption mt-0.5 font-medium" style={{ color: isPlus ? MEMBERSHIP_TEXT : '#5F7A63' }}>{label}</span>
+            <span className="app-item-title mt-0.5 font-bold" style={{ color: isPlus ? MEMBERSHIP_PURPLE_DEEP : '#5F7A63' }}>{value}</span>
+            <span className="app-badge mt-0.5 px-1 text-center font-light leading-tight" style={{ color: isPlus ? '#9333ea99' : '#5F7A63' }}>{hint}</span>
           </div>
         ))}
         </div>
@@ -386,7 +386,7 @@ export const UserInfoCard: React.FC<Props> = ({ isPlus }) => {
             {showAvatarMenu ? (
               <div className={cn(APP_MODAL_CARD_CLASS, 'absolute bottom-12 right-3 z-10 overflow-hidden rounded-xl')}>
                 <button
-                  className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-white/70"
+                  className="app-body block w-full px-4 py-2 text-left text-slate-700 hover:bg-white/70"
                   onClick={() => fileRef.current?.click()}
                 >
                   {t('auth_change_avatar')}

@@ -19,6 +19,7 @@ const itBase: TranslationKeys = {
     notification_action_still_yes: '✓ Sto ancora facendo',
     notification_action_still_no: 'Sto facendo altro',
     loading: 'Caricamento…',
+    app_loading_wait: 'Caricamento in corso, attendi un momento...',
     no_data: 'Nessun dato disponibile',
     // ── Formattazione durata ──
     duration_hours_minutes: '{{hours}}h {{mins}}m',

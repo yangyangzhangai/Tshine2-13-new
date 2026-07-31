@@ -18,6 +18,7 @@ const enCore = {
     notification_action_still_yes: '✓ Still on it',
     notification_action_still_no: 'I am busy',
     loading: 'Loading…',
+    app_loading_wait: 'Loading, just a moment...',
     no_data: 'No data available',
     // ── Duration formatting ──
     duration_hours_minutes: '{{hours}}h {{mins}}m',

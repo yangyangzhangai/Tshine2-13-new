@@ -30,7 +30,7 @@ export const TelemetryPageShell: React.FC<TelemetryPageShellProps> = ({
         <button
           type="button"
           onClick={() => navigate(backTo)}
-          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-sm active:bg-gray-50"
+          className="app-hit-target-44 inline-flex min-h-10 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-sm active:bg-gray-50"
         >
           <ArrowLeft size={16} strokeWidth={2.2} />
           <span>{t('upgrade_back')}</span>

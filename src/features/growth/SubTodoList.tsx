@@ -107,13 +107,13 @@ export const SubTodoList = ({ parentTodo, subTodos, onToggleSub, onFocusSub, onS
     <div className="pt-2 border-t border-gray-100">
       {/* Header row */}
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-gray-400">{t('todo_decompose_steps_label')}</p>
+        <p className="app-body text-gray-400">{t('todo_decompose_steps_label')}</p>
         {!hasSubTodos && (
           <button
             onClick={handleDecompose}
             disabled={loading}
             className={cn(
-              'text-xs px-2.5 py-1 rounded-lg border transition-all',
+              'app-body rounded-lg border px-2.5 py-1 transition-all',
               loading
                 ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
                 : 'border-sky-200 text-sky-600 bg-sky-50 hover:bg-sky-100 active:scale-95'
@@ -126,7 +126,7 @@ export const SubTodoList = ({ parentTodo, subTodos, onToggleSub, onFocusSub, onS
           <button
             onClick={handleDecompose}
             disabled={loading}
-            className="text-xs text-gray-400 hover:text-sky-500 transition-colors"
+            className="app-body text-gray-400 transition-colors hover:text-sky-500"
           >
             {loading ? t('todo_decompose_loading') : t('todo_decompose_regenerate_btn')}
           </button>
@@ -134,7 +134,7 @@ export const SubTodoList = ({ parentTodo, subTodos, onToggleSub, onFocusSub, onS
       </div>
 
       {errorType && (
-        <p className="text-xs text-red-400 mb-2">{t(errorType === 'empty' ? 'todo_decompose_empty' : 'todo_decompose_error')}</p>
+        <p className="app-body mb-2 text-red-400">{t(errorType === 'empty' ? 'todo_decompose_empty' : 'todo_decompose_error')}</p>
       )}
 
       {/* Sub-todo list */}
@@ -176,7 +176,7 @@ export const SubTodoList = ({ parentTodo, subTodos, onToggleSub, onFocusSub, onS
                     setExpandedSubTitle(sub.title);
                   }}
                   className={cn(
-                    'flex-1 min-w-0 text-left text-xs text-gray-700 break-words leading-5',
+                    'app-body min-w-0 flex-1 break-words text-left leading-5 text-gray-700',
                     sub.completed && 'line-through text-gray-400'
                   )}
                   style={{
@@ -189,7 +189,7 @@ export const SubTodoList = ({ parentTodo, subTodos, onToggleSub, onFocusSub, onS
                   {sub.title}
                 </button>
                 {sub.suggestedDuration && !sub.completed && (
-                  <span className="text-xs text-gray-400 flex-shrink-0">
+                  <span className="app-body flex-shrink-0 text-gray-400">
                     {sub.suggestedDuration}{t('todo_decompose_min')}
                   </span>
                 )}
@@ -213,7 +213,7 @@ export const SubTodoList = ({ parentTodo, subTodos, onToggleSub, onFocusSub, onS
           {pendingSubs.length >= 2 && (
             <button
               onClick={(e) => { e.stopPropagation(); triggerLightHaptic(); onSequentialFocus(pendingSubs); }}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95"
+              className="app-body flex w-full items-center justify-center gap-1.5 rounded-xl py-2 font-medium transition-all active:scale-95"
               style={{
                 background: 'rgba(125, 211, 252, 0.10)',
                 border: '1px solid rgba(125, 211, 252, 0.35)',
@@ -246,7 +246,7 @@ export const SubTodoList = ({ parentTodo, subTodos, onToggleSub, onFocusSub, onS
                 <X size={16} />
               </button>
             </div>
-            <p className="text-sm text-gray-700 leading-6 break-words">{expandedSubTitle}</p>
+            <p className="app-body break-words leading-6 text-gray-700">{expandedSubTitle}</p>
           </div>
         </div>
       )}

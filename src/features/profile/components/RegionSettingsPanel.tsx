@@ -109,31 +109,31 @@ export const RegionSettingsPanel: React.FC<RegionSettingsPanelProps> = ({ onClos
             if (errorText) setErrorText(null);
           }}
           placeholder={t('profile_region_placeholder')}
-          className="min-h-9 flex-1 rounded-lg border border-[#CBE7D7] bg-white/85 px-3 text-xs text-slate-700 outline-none placeholder:text-[10px]"
+          className="app-form-text min-h-9 flex-1 rounded-lg border border-[#CBE7D7] bg-white/85 px-3 text-slate-700 outline-none"
         />
         <button
           type="button"
           onClick={handleSaveByQuery}
           disabled={isSaving || !query.trim()}
-          className="min-h-9 rounded-[50px] border border-transparent px-4 text-xs font-semibold text-[#5F7A63] disabled:opacity-60"
+          className="app-caption app-hit-target-44 min-h-9 rounded-[50px] border border-transparent px-4 font-semibold text-[#5F7A63] disabled:opacity-60"
           style={APP_PROFILE_JELLY_BUTTON_STYLE}
         >
           {isSaving ? t('profile_region_saving') : t('profile_region_save')}
         </button>
       </div>
 
-      {errorText ? <p className="mt-2 text-xs text-red-500">{errorText}</p> : null}
+      {errorText ? <p className="app-caption mt-2 text-red-500">{errorText}</p> : null}
 
       {countryFallback ? (
         <div className="mt-2 rounded-lg border border-[#CBE7D7] bg-white/80 p-2.5">
-          <p className="text-xs text-slate-600">
+          <p className="app-caption text-slate-600">
             {t('profile_region_country_fallback_hint', { value: countryFallback.label })}
           </p>
           <button
             type="button"
             onClick={handleSaveCountryFallback}
             disabled={isSaving}
-            className="mt-2 min-h-8 rounded-[50px] border border-transparent px-3 text-xs font-semibold text-[#5F7A63] disabled:opacity-60"
+            className="app-caption app-hit-target-44 mt-2 min-h-8 rounded-[50px] border border-transparent px-3 font-semibold text-[#5F7A63] disabled:opacity-60"
             style={APP_PROFILE_JELLY_BUTTON_STYLE}
           >
             {isSaving ? t('profile_region_saving') : t('profile_region_save_country')}

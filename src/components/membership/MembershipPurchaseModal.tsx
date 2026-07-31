@@ -10,6 +10,9 @@ import {
   Sparkles,
   Brain,
   Scan,
+  BookOpen,
+  ListChecks,
+  Wand2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -41,38 +44,17 @@ const PLANS = [
 
 const PRO_FEATURES = [
   {
-    icon: (
-      <span
-        className="material-symbols-outlined"
-        style={{ fontSize: 18, lineHeight: 1, color: 'currentColor' }}
-      >
-        menu_book
-      </span>
-    ),
+    icon: <BookOpen size={18} />,
     labelKey: 'membership_purchase_feat_daily_title',
     descKey: 'membership_purchase_feat_daily_desc',
   },
   {
-    icon: (
-      <span
-        className="material-symbols-outlined"
-        style={{ fontSize: 18, lineHeight: 1, color: 'currentColor' }}
-      >
-        auto_fix_high
-      </span>
-    ),
+    icon: <Wand2 size={18} />,
     labelKey: 'membership_purchase_feat_weekly_title',
     descKey: 'membership_purchase_feat_weekly_desc',
   },
   {
-    icon: (
-      <span
-        className="material-symbols-outlined"
-        style={{ fontSize: 18, lineHeight: 1, color: 'currentColor' }}
-      >
-        checklist
-      </span>
-    ),
+    icon: <ListChecks size={18} />,
     labelKey: 'membership_purchase_feat_monthly_title',
     descKey: 'membership_purchase_feat_monthly_desc',
   },

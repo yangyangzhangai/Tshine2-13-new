@@ -1,7 +1,7 @@
 // DOC-DEPS: LLM.md -> docs/CURRENT_TASK.md -> src/features/chat/components/EventCard.tsx -> src/features/chat/components/MoodCard.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Camera, ArrowLeft, ArrowRightLeft, ChevronRight, Zap } from 'lucide-react';
+import { Camera, ArrowLeft, ArrowRightLeft, ChevronRight, StopCircle, Timer, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChatStore } from '../../../store/useChatStore';
 import { useMoodStore, type MoodOption } from '../../../store/useMoodStore';
@@ -101,7 +101,7 @@ const InputBlock: React.FC<{
         autoFocus={autoFocus}
         rows={3}
         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && canSend) { e.preventDefault(); onSend(); } }}
-        className="w-full p-5 bg-transparent border-none outline-none resize-none text-[#4a5d4c] font-medium placeholder:text-[#4a5d4c]/25 text-base"
+        className="app-form-text w-full p-5 bg-transparent border-none outline-none resize-none text-[#4a5d4c] font-medium placeholder:text-[#4a5d4c]/25"
         placeholder={placeholder}
       />
       <div className="px-5 pb-4">
@@ -420,12 +420,12 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
               <div className="flex items-center gap-3">
                 <div style={{ width: 28, height: 28, background: '#B2EEDA', borderRadius: '50%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 14, color: '#4a5d4c' }}>timer</span>
+                  <Timer size={14} color="#4a5d4c" />
                 </div>
                 <span className="text-sm text-[#4a5d4c]/70 font-medium">
                   {t('onboarding_j3_tip_duration_prefix', { duration: '< 1m' })}
                   <span className="inline-flex items-center rounded-full border border-[#F4C0C2]/60 bg-[#F4C0C2]/10 px-2 py-0.5 text-xs font-semibold text-[#F4C0C2] mx-1 align-middle">
-                    <span className="material-symbols-outlined" style={{ fontSize: 12, lineHeight: 1 }}>stop_circle</span>
+                    <StopCircle size={12} />
                   </span>
                   {t('onboarding_j3_tip_duration_suffix')}
                 </span>
