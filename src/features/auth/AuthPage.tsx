@@ -182,7 +182,7 @@ export const AuthPage: React.FC = () => {
                   }
                 }}
                 placeholder={t('auth_account_placeholder')}
-                className="flex-1 border-none bg-transparent text-sm font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/20"
+                  className="app-form-text flex-1 border-none bg-transparent font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/20"
               />
             </div>
 
@@ -196,7 +196,7 @@ export const AuthPage: React.FC = () => {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder={t('auth_nickname_placeholder')}
-                className="flex-1 border-none bg-transparent text-sm font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/20"
+                  className="app-form-text flex-1 border-none bg-transparent font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/20"
               />
             </div>
           ) : null}
@@ -224,7 +224,7 @@ export const AuthPage: React.FC = () => {
                   }
                 }}
                 placeholder={t('auth_otp_placeholder')}
-                className="flex-1 border-none bg-transparent text-sm font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/20"
+                  className="app-form-text flex-1 border-none bg-transparent font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/20"
               />
             </div>
           ) : (
@@ -242,7 +242,7 @@ export const AuthPage: React.FC = () => {
                   }
                 }}
                 placeholder={t('onboarding2_auth_password_placeholder')}
-                className="flex-1 border-none bg-transparent text-sm font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/20"
+                  className="app-form-text flex-1 border-none bg-transparent font-bold text-[#4a5d4c] outline-none placeholder:text-[#4a5d4c]/20"
               />
             </div>
           )}

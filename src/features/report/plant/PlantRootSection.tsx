@@ -572,7 +572,7 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
             }}
             readOnly={!isMyDiaryEditable}
             placeholder={t('report_diary_placeholder')}
-            className="w-full resize-none border-0 border-b border-slate-300/60 bg-transparent px-0 py-1 text-sm leading-6 outline-none transition focus:border-[#8FAF92]"
+            className="app-form-text w-full resize-none border-0 border-b border-slate-300/60 bg-transparent px-0 py-1 leading-6 outline-none transition focus:border-[#8FAF92]"
             style={{ minHeight: 128, color: isMyDiaryEditable ? '#334155' : '#94A3B8', overflowY: 'hidden' }}
           />
           {isDiaryEditing && isMyDiaryEditable ? (

@@ -830,7 +830,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                         void persistMyDiaryNote();
                         setIsMyDiaryEditing(false);
                       }}
-                      className="text-xs"
+                      className="app-form-text"
                       style={{
                         position: 'absolute',
                         inset: 0,

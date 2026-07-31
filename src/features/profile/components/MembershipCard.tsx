@@ -114,9 +114,9 @@ export const MembershipCard: React.FC<Props> = ({ isPlus }) => {
           >
             <Crown size={16} strokeWidth={1.5} color="#f6f9ff" />
           </div>
-          <span className="profile-fn-title">{t('profile_membership')}</span>
+          <span className="app-item-title text-black">{t('profile_membership')}</span>
           <span
-            className="rounded-full px-2 py-[2px] text-[9px] font-bold tracking-[0.06em]"
+            className="app-badge rounded-full px-2 py-[2px] font-bold"
             style={{
               background: isPlus
                 ? `linear-gradient(135deg, ${MEMBERSHIP_PURPLE_DEEP} 0%, ${MEMBERSHIP_PURPLE} 56%, ${MEMBERSHIP_PINK} 100%)`
@@ -142,7 +142,7 @@ export const MembershipCard: React.FC<Props> = ({ isPlus }) => {
                 }}
               >
                 <span
-                  className="text-xs leading-tight"
+                  className="app-caption leading-tight"
                   style={{ color: unlocked ? MEMBERSHIP_TEXT : '#545f78' }}
                 >
                   {t(labelKey)}
@@ -174,7 +174,7 @@ export const MembershipCard: React.FC<Props> = ({ isPlus }) => {
           <button
             onClick={() => { void handleDirectUpgrade(); }}
             disabled={isSubmitting}
-            className="relative w-full overflow-hidden rounded-[50px] min-h-[44px] py-[11px] text-sm font-extrabold transition-all active:scale-[0.97]"
+            className="app-body relative min-h-[44px] w-full overflow-hidden rounded-[50px] py-[11px] font-extrabold transition-all active:scale-[0.97]"
             style={{
               background: 'linear-gradient(130deg, rgba(147,51,234,0.56) 0%, rgba(168,85,247,0.5) 58%, rgba(236,72,153,0.48) 100%)',
               boxShadow: '0 4px 12px rgba(168,85,247,0.14)',
@@ -197,7 +197,7 @@ export const MembershipCard: React.FC<Props> = ({ isPlus }) => {
                 boxShadow: '0 0 7px rgba(168,85,247,0.55)',
               }}
             />
-            <span className="text-[10px] font-semibold tracking-[0.08em]" style={{ color: MEMBERSHIP_TEXT }}>ACTIVE</span>
+            <span className="app-badge font-semibold" style={{ color: MEMBERSHIP_TEXT }}>ACTIVE</span>
             <div
               className="h-px flex-1"
               style={{

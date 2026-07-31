@@ -1,5 +1,6 @@
 // DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> src/features/*/README.md
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { HashRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BottomNav } from './components/layout/BottomNav';
 import { AIAnnotationBubble } from './components/feedback/AIAnnotationBubble';
@@ -43,6 +44,7 @@ import { useOutboxStore, getOutboxRetrySummary } from './store/useOutboxStore';
 import { formatUserFacingDiagnostic, logDiagnostic } from './lib/diagnostics';
 
 const BlankScreen: React.FC<{ stage?: string }> = ({ stage = 'auth.initialize' }) => {
+  const { t } = useTranslation();
   const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
 
   React.useEffect(() => {
@@ -67,12 +69,7 @@ const BlankScreen: React.FC<{ stage?: string }> = ({ stage = 'auth.initialize' }
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-50 px-6 text-[#4a5d4c]">
       <div className="max-w-sm rounded-2xl border border-[#4a5d4c]/10 bg-white/80 p-5 text-center shadow-sm">
-        <p className="text-sm font-bold">应用启动仍在等待</p>
-        <p className="mt-2 text-xs leading-relaxed text-[#4a5d4c]/70">
-          当前环节：{stage}；已等待 {elapsedSeconds}s。请保留这次 Xcode 控制台日志，里面会有
-          <span className="font-semibold"> boot.loading_still_waiting </span>
-          和每个网络请求的耗时。
-        </p>
+        <p className="text-sm font-bold">{t('app_loading_wait')}</p>
       </div>
     </div>
   );
@@ -334,8 +331,6 @@ const MainLayout = () => {
           <CloudRetryButton
             onClick={handleOutboxRetry}
             className="pointer-events-auto"
-            label={`同步失败 ${outboxRetrySummary.count}`}
-            title={outboxRetrySummary.title}
           />
         </div>
       ) : null}

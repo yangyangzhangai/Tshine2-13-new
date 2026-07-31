@@ -29,7 +29,7 @@ export const UserProfileSection: React.FC<Props> = ({ plain = false, locked = fa
         <div className="flex items-start gap-2.5 text-left">
           <BookMarked size={18} strokeWidth={2} className="mt-0.5 text-[#000000]" />
           <div>
-            <p className="profile-fn-title">{t('profile_user_profile_title')}</p>
+            <p className="app-item-title text-black">{t('profile_user_profile_title')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

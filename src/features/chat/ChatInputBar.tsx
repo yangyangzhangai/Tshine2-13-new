@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Activity } from 'lucide-react';
+import { Activity, ArrowUp, BookOpen, Clock3, MessageCircle, User, Wand2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { triggerLightHaptic } from '../../lib/haptics';
 import {
@@ -19,10 +19,10 @@ const blueGlowBorder = '0.5px solid transparent';
 const blueGlowShadow = '0 6px 14px rgba(59,130,246,0.14)';
 
 const NAV_ITEMS = [
-  { icon: 'chat_bubble',  path: '/chat'    },
-  { icon: 'schedule',     path: '/growth'  },
-  { icon: 'menu_book',    path: '/report'  },
-  { icon: 'person',       path: '/profile' },
+  { icon: MessageCircle, path: '/chat' },
+  { icon: Clock3, path: '/growth' },
+  { icon: BookOpen, path: '/report' },
+  { icon: User, path: '/profile' },
 ];
 
 interface ChatInputBarProps {
@@ -98,6 +98,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
               disabled={disabled}
               aria-label={t(isMagicPenModeOn ? 'chat_magic_pen_mode_on' : 'chat_magic_pen_mode_off')}
               title={t(isMagicPenModeOn ? 'chat_magic_pen_mode_on' : 'chat_magic_pen_mode_off')}
+              className="app-hit-target-44"
               style={{
                 width: 34, height: 34, borderRadius: '50%',
                 background: isMagicPenModeOn ? blueGlowBg : 'rgba(219,234,254,0.32)',
@@ -108,13 +109,13 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
                 transition: 'all 0.2s', opacity: disabled ? 0.5 : 1,
               }}
             >
-              <span className="material-symbols-outlined" style={{
-                fontSize: 18,
-                color: isMagicPenModeOn ? '#1D4ED8' : '#94A3B8',
-                transition: 'color 0.2s',
-              }}>
-                auto_fix_high
-              </span>
+              <Wand2
+                size={18}
+                style={{
+                  color: isMagicPenModeOn ? '#1D4ED8' : '#94A3B8',
+                  transition: 'color 0.2s',
+                }}
+              />
             </button>
 
             <input
@@ -124,7 +125,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
               onKeyDown={onKeyDown}
               placeholder={t('chat_placeholder_neutral')}
               disabled={disabled}
-              className="text-base"
+              className="app-form-text"
               style={{
                 flex: 1, background: 'transparent', border: 'none', outline: 'none',
                 color: '#0f172a',
@@ -138,6 +139,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
                 onSend();
               }}
               disabled={!hasInput || disabled}
+              className="app-hit-target-44"
               style={{
                 ...APP_GREEN_GLASS_BUTTON_STYLE,
                 width: 34, height: 34, borderRadius: 17,
@@ -151,7 +153,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             >
               {isLoading
                 ? <Activity size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                : <span className="material-symbols-outlined" style={{ fontSize: 18, color: APP_GREEN_GLASS_TEXT }}>arrow_upward</span>
+                : <ArrowUp size={18} color={APP_GREEN_GLASS_TEXT} />
               }
             </button>
           </div>
@@ -170,6 +172,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           }}>
             {NAV_ITEMS.map((item) => {
               const active = pathname === item.path || (item.path === '/chat' && pathname === '/');
+              const Icon = item.icon;
               return (
                 <button
                   key={item.path}
@@ -190,10 +193,11 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
                     transform: active ? 'scale(1.08)' : 'scale(1)',
                   }}
                 >
-                  <span className="material-symbols-outlined"
-                    style={{ fontSize: 26, color: active ? SAGE_GREEN_DEEP : SAGE_GREEN }}>
-                    {item.icon}
-                  </span>
+                  <Icon
+                    size={26}
+                    strokeWidth={2}
+                    color={active ? SAGE_GREEN_DEEP : SAGE_GREEN}
+                  />
                 </button>
               );
             })}

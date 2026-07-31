@@ -74,18 +74,18 @@ export const AIModeSection: React.FC<Props> = ({ isPlus, plain = false }) => {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="profile-fn-title">{t('profile_ai_mode')}</span>
-            <span className="rounded-full border border-[#B2EEDA]/50 bg-[#B2EEDA]/25 px-1.5 py-0.5 text-xs font-semibold text-[#3f5f35]">
+            <span className="app-item-title text-black">{t('profile_ai_mode')}</span>
+            <span className="app-badge rounded-full border border-[#B2EEDA]/50 bg-[#B2EEDA]/25 px-1.5 py-0.5 font-semibold text-[#3f5f35]">
               {t('profile_free')}
             </span>
           </div>
-          <p className="mt-1 text-[12px] font-medium leading-relaxed text-[#6b7f70]">
+          <p className="app-description mt-1 font-medium leading-relaxed text-[#6b7f70]">
             {t('profile_ai_mode_desc')}
           </p>
         </div>
         <button
           onClick={() => { void handleToggleEnabled(); }}
-          className="relative mt-0.5 h-5 w-9 flex-shrink-0 rounded-full border border-transparent transition-colors"
+          className="app-hit-target-44 relative mt-0.5 h-5 w-9 flex-shrink-0 rounded-full border border-transparent transition-colors"
           style={enabled ? APP_PROFILE_JELLY_TOGGLE_ON_STYLE : { background: '#cbd5e1' }}
           aria-pressed={enabled}
           aria-label={t('profile_ai_mode')}
@@ -105,7 +105,7 @@ export const AIModeSection: React.FC<Props> = ({ isPlus, plain = false }) => {
           className="mt-3 space-y-4"
         >
           <div>
-            <p className="mb-2 text-[12px] font-semibold text-[#6b7f70]">
+            <p className="app-caption mb-2 font-semibold text-[#6b7f70]">
               {t('profile_ai_companion_select')}
             </p>
             <div className="grid grid-cols-4 gap-1.5">
@@ -117,7 +117,7 @@ export const AIModeSection: React.FC<Props> = ({ isPlus, plain = false }) => {
                   <button
                     key={modeKey}
                     onClick={() => { void handleModeClick(modeKey, mode.free); }}
-                    className={`relative flex flex-1 flex-col items-center rounded-lg border px-1 py-1.5 text-xs font-medium transition-all ${
+                    className={`relative flex flex-1 flex-col items-center rounded-lg border px-1 py-1.5 font-medium transition-all ${
                       selected
                         ? 'font-bold'
                         : locked
@@ -132,7 +132,7 @@ export const AIModeSection: React.FC<Props> = ({ isPlus, plain = false }) => {
                       className="mb-1 h-9 w-9 object-contain"
                     />
                     <span
-                      className="text-[14px] font-semibold leading-tight"
+                      className="app-body font-semibold leading-tight"
                       style={{ color: selected ? APP_GREEN_GLASS_TEXT : '#1e293b' }}
                     >
                       {mode.name}

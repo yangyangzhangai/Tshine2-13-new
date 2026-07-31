@@ -177,11 +177,11 @@ export const BottleList = () => {
               onClick={handleSectionTitleClick}
               className="text-left"
             >
-              <h2 className="text-sm font-extrabold text-[#1e293b]">{t('growth_bottle_section')}</h2>
+              <h2 className="app-section-title font-extrabold text-[#1e293b]">{t('growth_bottle_section')}</h2>
             </button>
             {showSectionHint ? (
               <div
-                className="absolute left-[calc(100%+12px)] top-1/2 z-10 -translate-y-1/2 px-3.5 py-2.5 text-xs text-[#6B8FB8]"
+                className="app-caption absolute left-[calc(100%+12px)] top-1/2 z-10 -translate-y-1/2 px-3.5 py-2.5 text-[#6B8FB8]"
                 style={{
                   background: 'linear-gradient(135deg, rgba(239,246,255,0.94) 0%, rgba(219,234,254,0.82) 52%, rgba(191,219,254,0.74) 100%)',
                   backdropFilter: 'blur(24px) saturate(175%) brightness(1.03)',
@@ -210,7 +210,7 @@ export const BottleList = () => {
           <button
             onClick={() => !isMaxReached && setShowAdd(true)}
             disabled={isMaxReached}
-            className="flex h-9 w-9 items-center justify-center rounded-full p-0 text-[#8FAA42] transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="app-hit-target-44 flex h-9 w-9 items-center justify-center rounded-full p-0 text-[#8FAA42] transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               ...APP_GREEN_GLASS_BUTTON_STYLE,
             }}
@@ -222,23 +222,23 @@ export const BottleList = () => {
       </div>
 
       {isMaxReached && (
-        <p className="mb-2 px-4 text-xs text-orange-500">{t('growth_bottle_max_reached')}</p>
+        <p className="app-caption mb-2 px-4 text-orange-500">{t('growth_bottle_max_reached')}</p>
       )}
 
       {isLoading && !hasHydrated ? (
-        <div className="py-6 text-center text-sm text-gray-400">{t('loading')}</div>
+        <div className="app-body py-6 text-center text-gray-400">{t('loading')}</div>
       ) : lastSyncError && activeBottles.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-6">
-          <p className="text-center text-xs text-orange-500">{lastSyncError}</p>
+          <p className="app-caption text-center text-orange-500">{lastSyncError}</p>
           <button
             onClick={handleRetrySync}
-            className="rounded-lg bg-[#A86B2B] px-3 py-1.5 text-xs font-medium text-white"
+            className="app-body rounded-lg bg-[#A86B2B] px-3 py-1.5 font-medium text-white"
           >
             {t('retry')}
           </button>
         </div>
       ) : activeBottles.length === 0 ? (
-        <div className="text-center text-gray-400 py-6 text-sm">{t('no_data')}</div>
+        <div className="app-body py-6 text-center text-gray-400">{t('no_data')}</div>
       ) : (
         <div className="relative mt-2">
           <div
@@ -285,18 +285,18 @@ export const BottleList = () => {
       {habitPromptBottle && (
         <div className={cn('fixed inset-0 z-50 flex items-center justify-center', APP_MODAL_OVERLAY_CLASS)}>
           <div className={cn(APP_MODAL_CARD_CLASS, 'mx-8 w-full max-w-sm rounded-2xl p-6')}>
-            <p className="text-slate-800 text-center mb-2 font-medium">{t('growth_habit_todo_prompt')}</p>
-            <p className="text-slate-500 text-sm text-center mb-4">
+            <p className="app-body mb-2 text-center font-medium text-slate-800">{t('growth_habit_todo_prompt')}</p>
+            <p className="app-body mb-4 text-center text-slate-500">
               {t('growth_habit_todo_confirm', { name: habitPromptBottle.name })}
             </p>
             <div className="flex gap-3">
               <button onClick={() => setHabitPromptBottle(null)}
-                className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'flex-1 py-2')}>
+                className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'app-body flex-1 py-2')}>
                 {t('growth_habit_todo_dismiss')}
               </button>
               <button
                 onClick={handleHabitConfirm}
-                className="flex-1 rounded-2xl py-2 font-medium transition-opacity"
+                className="app-body flex-1 rounded-2xl py-2 font-medium transition-opacity"
                 style={{
                   ...APP_GREEN_GLASS_BUTTON_STYLE,
                   color: '#426D56',

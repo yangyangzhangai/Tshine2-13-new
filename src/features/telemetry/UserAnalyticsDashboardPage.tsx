@@ -135,7 +135,7 @@ function UserLookupPanel() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           placeholder={t('ua_lookup_placeholder')}
-          className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+            className="app-form-text flex-1 rounded-xl border border-gray-200 px-3 py-2 outline-none focus:border-blue-400"
         />
         <button
           type="button"
@@ -219,7 +219,7 @@ export function UserAnalyticsDashboardPage() {
             <select
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
-              className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm outline-none"
+              className="app-form-text rounded-xl border border-gray-200 px-3 py-1.5 outline-none"
             >
               <option value={7}>{t('ua_days_7')}</option>
               <option value={14}>{t('ua_days_14')}</option>

@@ -30,7 +30,7 @@ body {
 }
 
 /* Global typography baseline: keep line-height consistent across pages. */
-#root :where(
+:where(#root) :where(
   h1,
   h2,
   h3,
@@ -49,8 +49,8 @@ body {
   input,
   textarea,
   select
-):not(.material-symbols-outlined) {
-  line-height: 1.5 !important;
+) {
+  line-height: 1.5;
 }
 
 img {
@@ -60,6 +60,34 @@ img {
 }
 
 :root {
+  --app-font-family-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+  --app-type-display-size: 1.875rem;
+  --app-type-display-line-height: 1.2;
+  --app-type-display-weight: 900;
+  --app-type-page-title-size: 1.5rem;
+  --app-type-page-title-line-height: 1.25;
+  --app-type-page-title-weight: 800;
+  --app-type-section-title-size: 1rem;
+  --app-type-section-title-line-height: 1.25;
+  --app-type-section-title-weight: 600;
+  --app-type-item-title-size: 1rem;
+  --app-type-item-title-line-height: 1.25;
+  --app-type-item-title-weight: 500;
+  --app-type-body-size: 0.875rem;
+  --app-type-body-line-height: 1.5;
+  --app-type-body-weight: 400;
+  --app-type-description-size: 0.75rem;
+  --app-type-description-line-height: 1.5;
+  --app-type-description-weight: 400;
+  --app-type-caption-size: 0.75rem;
+  --app-type-caption-line-height: 1.25;
+  --app-type-caption-weight: 500;
+  --app-type-form-size: 1rem;
+  --app-type-form-line-height: 1.5;
+  --app-type-form-weight: 400;
+  --app-type-badge-size: 0.625rem;
+  --app-type-badge-line-height: 1.2;
+  --app-type-badge-weight: 600;
   --app-page-gutter-x: max(12px, calc(env(safe-area-inset-left, 0px) + 10px));
   --app-page-gutter-x-right: max(12px, calc(env(safe-area-inset-right, 0px) + 10px));
   --app-page-gutter-top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
@@ -85,22 +113,6 @@ img {
     ) border-box;
   --app-glass-base-border: 0.5px solid transparent;
   --app-glass-base-shadow: 0 6px 14px rgba(165, 190, 103, 0.14);
-}
-
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  overflow: hidden;
-  white-space: nowrap;
-  line-height: 1;
-  vertical-align: middle;
-}
-
-html:not(.material-symbols-ready) .material-symbols-outlined {
-  color: transparent !important;
 }
 
 .font-mood {
@@ -146,23 +158,78 @@ html:not(.material-symbols-ready) .material-symbols-outlined {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
 }
 
-.profile-fn-title {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
-  font-size: 14px;
-  line-height: 1.25;
-  font-weight: 500;
-  color: #000000;
-}
+@layer components {
+  .app-display-title,
+  .app-page-title,
+  .app-section-title,
+  .app-item-title,
+  .app-body,
+  .app-description,
+  .app-caption,
+  .app-form-text,
+  .app-badge {
+    font-family: var(--app-font-family-sans);
+    letter-spacing: 0;
+  }
 
-.app-mobile-page-frame {
-  width: 100% !important;
-  max-width: none !important;
-  height: 100% !important;
-  margin: 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  .app-display-title {
+    font-size: var(--app-type-display-size);
+    line-height: var(--app-type-display-line-height);
+    font-weight: var(--app-type-display-weight);
+  }
+
+  .app-page-title {
+    font-size: var(--app-type-page-title-size);
+    line-height: var(--app-type-page-title-line-height);
+    font-weight: var(--app-type-page-title-weight);
+  }
+
+  .app-section-title {
+    font-size: var(--app-type-section-title-size);
+    line-height: var(--app-type-section-title-line-height);
+    font-weight: var(--app-type-section-title-weight);
+  }
+
+  .app-item-title {
+    font-size: var(--app-type-item-title-size);
+    line-height: var(--app-type-item-title-line-height);
+    font-weight: var(--app-type-item-title-weight);
+  }
+
+  .app-body {
+    font-size: var(--app-type-body-size);
+    line-height: var(--app-type-body-line-height);
+    font-weight: var(--app-type-body-weight);
+  }
+
+  .app-description {
+    font-size: var(--app-type-description-size);
+    line-height: var(--app-type-description-line-height);
+    font-weight: var(--app-type-description-weight);
+  }
+
+  .app-caption {
+    font-size: var(--app-type-caption-size);
+    line-height: var(--app-type-caption-line-height);
+    font-weight: var(--app-type-caption-weight);
+  }
+
+  .app-form-text {
+    font-size: var(--app-type-form-size);
+    line-height: var(--app-type-form-line-height);
+    font-weight: var(--app-type-form-weight);
+  }
+
+  .app-form-text::placeholder {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .app-badge {
+    font-size: var(--app-type-badge-size);
+    line-height: var(--app-type-badge-line-height);
+    font-weight: var(--app-type-badge-weight);
+  }
 }
 
 .app-scroll-container {
@@ -264,8 +331,13 @@ html.keyboard-open .chat-input-bottom-nav {
 @media (max-width: 767px) {
   .app-mobile-page-frame {
     width: 100% !important;
+    max-width: none !important;
     height: 100% !important;
     margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 
   .app-mobile-page-header {
@@ -322,40 +394,56 @@ a {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  button:not(:disabled):hover {
+  :where(button:not(:disabled):hover) {
     transform: scale(1.03);
   }
 }
 
-button:not(:disabled):active {
+:where(button:not(:disabled):active) {
   transform: scale(0.95);
 }
 
-/* Profile page typography: make all copy medium except the main title. */
-.profile-page-typography :where(
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  p,
-  span,
-  label,
-  button,
-  a,
-  li,
-  small,
-  strong,
-  em,
-  input,
-  textarea,
-  select
-):not(.material-symbols-outlined) {
-  font-weight: 500 !important;
+:where(.app-hit-target-44) {
+  position: relative;
 }
 
-.profile-page-typography > header h1 {
-  font-weight: 800 !important;
+:where(.app-hit-target-44)::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+@layer components {
+  /* Profile page typography: make all copy medium except the main title. */
+  :where(.profile-page-typography) :where(
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    span,
+    label,
+    button,
+    a,
+    li,
+    small,
+    strong,
+    em,
+    input,
+    textarea,
+    select
+  ) {
+    font-weight: 500;
+  }
+
+  :where(.profile-page-typography) > header h1 {
+    font-weight: 800;
+  }
 }
 
 /* Calendar custom styles for 时间报告 */

@@ -61,7 +61,7 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
                     <X size={16} />
                 </button>
                 <h3
-                    className="mb-3 flex items-center gap-1.5 pr-6 text-sm font-medium text-slate-700"
+                    className="app-section-title mb-3 flex items-center gap-1.5 pr-6 text-slate-700"
                     style={{ fontFamily: 'PingFang SC, -apple-system, system-ui, sans-serif' }}
                 >
                     <span>{t('chat_pick_mood_for_record')}</span>
@@ -128,7 +128,7 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
                                     }
                                 }}
                                 onBlur={() => onCustomLabelSave(customLabelInput)}
-                                className="w-16 bg-transparent text-xs focus:outline-none"
+                                className="app-form-text w-16 bg-transparent focus:outline-none"
                                 style={{ color: getMoodGlassStyle(customLabelInput)?.color ?? '#1D4ED8' }}
                                 autoFocus
                             />

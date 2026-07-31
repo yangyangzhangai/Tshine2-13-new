@@ -25,13 +25,13 @@ export const PrivacyPolicyPanel: React.FC<Props> = ({ onClose }) => {
 
   return (
     <InfoSheetPanel title={t('privacy_sheet_title')} onClose={onClose}>
-      <p className="mb-1 text-xs text-slate-400">{t('privacy_updated')}</p>
-      <p className="mb-6 text-sm leading-relaxed text-slate-500">{t('privacy_intro')}</p>
+      <p className="app-caption mb-1 text-slate-400">{t('privacy_updated')}</p>
+      <p className="app-body mb-6 leading-relaxed text-slate-500">{t('privacy_intro')}</p>
 
       <div className="space-y-5">
         {SECTIONS.map(s => (
           <div key={s.title}>
-            <h3 className="mb-1.5 text-sm font-semibold text-slate-700">{t(s.title)}</h3>
+            <h3 className="app-section-title mb-1.5 text-slate-700">{t(s.title)}</h3>
             <div className="space-y-1">
               {t(s.body)
                 .split('\n')
@@ -39,7 +39,7 @@ export const PrivacyPolicyPanel: React.FC<Props> = ({ onClose }) => {
                   line.trim() === '' ? (
                     <div key={i} className="h-1" />
                   ) : (
-                    <p key={i} className="text-sm leading-relaxed text-slate-500">
+                    <p key={i} className="app-body leading-relaxed text-slate-500">
                       {line}
                     </p>
                   )
@@ -49,8 +49,8 @@ export const PrivacyPolicyPanel: React.FC<Props> = ({ onClose }) => {
         ))}
 
         <div>
-          <h3 className="mb-1.5 text-sm font-semibold text-slate-700">{t('privacy_s9_title')}</h3>
-          <p className="text-sm leading-relaxed text-slate-500">
+          <h3 className="app-section-title mb-1.5 text-slate-700">{t('privacy_s9_title')}</h3>
+          <p className="app-body leading-relaxed text-slate-500">
             {t('privacy_s9_body')}{' '}
             <a
               href={`mailto:${SUPPORT_EMAIL}`}

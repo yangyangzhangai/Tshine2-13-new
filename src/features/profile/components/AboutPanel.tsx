@@ -25,9 +25,9 @@ export const AboutPanel: React.FC<Props> = ({ onClose }) => {
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-[22px] bg-gradient-to-br from-[#5F7A63] to-[#3d5c42] shadow-lg">
           <span className="text-3xl font-bold text-white">S</span>
         </div>
-        <h1 className="text-xl font-bold text-slate-800">Seeday</h1>
-        <p className="mt-1 text-sm text-[#5F7A63]">{t('about_tagline')}</p>
-        <p className="mt-4 max-w-xs text-center text-sm leading-relaxed text-slate-500">
+        <h1 className="app-page-title text-slate-800">Seeday</h1>
+        <p className="app-body mt-1 text-[#5F7A63]">{t('about_tagline')}</p>
+        <p className="app-body mt-4 max-w-xs text-center leading-relaxed text-slate-500">
           {t('about_desc')}
         </p>
       </div>
@@ -47,12 +47,12 @@ export const AboutPanel: React.FC<Props> = ({ onClose }) => {
           onClick={() => setShowPrivacy(true)}
           className="flex w-full items-center justify-between px-4 py-3 transition hover:bg-white/70"
         >
-          <span className="text-sm text-slate-700">{t('about_privacy_link')}</span>
-          <span className="text-sm text-[#5F7A63]">›</span>
+          <span className="app-body text-slate-700">{t('about_privacy_link')}</span>
+          <span className="app-body text-[#5F7A63]">›</span>
         </button>
       </div>
 
-      <p className="mt-6 text-center text-xs text-slate-400">{t('about_copyright')}</p>
+      <p className="app-caption mt-6 text-center text-slate-400">{t('about_copyright')}</p>
     </InfoSheetPanel>
   );
 };
@@ -67,13 +67,13 @@ interface RowProps {
 
 const Row: React.FC<RowProps> = ({ label, value, href }) => (
   <div className="flex min-h-[44px] items-center justify-between px-4 py-3">
-    <span className="text-sm text-slate-700">{label}</span>
+    <span className="app-body text-slate-700">{label}</span>
     {href ? (
-      <a href={href} className="text-sm text-[#5F7A63] active:opacity-60">
+      <a href={href} className="app-body text-[#5F7A63] active:opacity-60">
         {value}
       </a>
     ) : (
-      <span className="text-sm text-slate-500">{value}</span>
+      <span className="app-body text-slate-500">{value}</span>
     )}
   </div>
 );

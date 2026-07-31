@@ -3,7 +3,7 @@ import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, LogIn, MoreHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, LogIn, MoreHorizontal, User, X } from 'lucide-react';
 import { toLocalDateStr } from '../../../lib/dateUtils';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { blobToDataUrl } from '../../../lib/imageUtils';
@@ -238,20 +238,20 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 marginBottom: 7, padding: '0 2px' }}>
-                <button onClick={() => { triggerLightHaptic(); prevMonth(); }} style={{
+                <button className="app-hit-target-44" onClick={() => { triggerLightHaptic(); prevMonth(); }} style={{
                   background: 'rgba(255,255,255,0.45)',
                   border: '1px solid rgba(255,255,255,0.6)',
                   borderRadius: '50%',
                   width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 14, color: '#64748b' }}>chevron_left</span>
+                  <ChevronLeft size={14} color="#64748b" />
                 </button>
                 <span className="text-xs" style={{ fontWeight: 700, color: '#1e293b' }}>{viewYear}</span>
-                <button onClick={() => { triggerLightHaptic(); nextMonth(); }} style={{
+                <button className="app-hit-target-44" onClick={() => { triggerLightHaptic(); nextMonth(); }} style={{
                   background: 'rgba(255,255,255,0.45)',
                   border: '1px solid rgba(255,255,255,0.6)',
                   borderRadius: '50%',
                   width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 14, color: '#64748b' }}>chevron_right</span>
+                  <ChevronRight size={14} color="#64748b" />
                 </button>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
@@ -304,7 +304,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <span className="material-symbols-outlined" style={{ fontSize: 38, color: SAGE_GREEN_DEEP }}>person</span>
+                  <User size={38} color={SAGE_GREEN_DEEP} strokeWidth={1.5} />
                 )}
               </button>
 
@@ -475,7 +475,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
               {avatarUrl ? (
                 <img src={avatarUrl} alt="avatar large" className="h-full w-full object-cover" />
               ) : (
-                <span className="material-symbols-outlined text-6xl text-gray-300">person</span>
+                <User size={60} className="text-gray-300" strokeWidth={1.5} />
               )}
             </div>
           </div>

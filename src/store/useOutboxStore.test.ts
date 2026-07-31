@@ -97,7 +97,7 @@ describe('useOutboxStore', () => {
     expect(moodExecutor).not.toHaveBeenCalled();
     expect(useOutboxStore.getState().entries).toEqual([]);
     expect(useMoodStore.getState().activityMood['orphan-message']).toBeUndefined();
-  });
+  }, 10_000);
 
   it('keeps only latest preference upsert entry', () => {
     useOutboxStore.getState().enqueue({

@@ -2,6 +2,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format, isToday } from 'date-fns';
+import { NotebookPen } from 'lucide-react';
 import { EventCard } from './EventCard';
 import { MoodCard } from './MoodCard';
 import type { Message, MoodDescription } from '../../../store/useChatStore';
@@ -84,7 +85,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     return (
       <div className="app-scroll-container" style={{ flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', gap: 12, paddingTop: 80, opacity: 0.45 }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 52, color: PRIMARY }}>event_note</span>
+        <NotebookPen size={52} color={PRIMARY} strokeWidth={1.6} />
         <p className="text-sm" style={{ color: '#64748b', margin: 0, textAlign: 'center' }}>
           {t('new_day_start')}<br />
           <span className="text-xs" style={{ opacity: 0.7 }}>{t('record_what_you_do')}</span>

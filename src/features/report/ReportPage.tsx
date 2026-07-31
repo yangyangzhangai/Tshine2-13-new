@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { BookOpen, CalendarDays } from 'lucide-react';
 import { format, isSameDay, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { zhCN, enUS, it } from 'date-fns/locale';
 import { useReportStore } from '../../store/useReportStore';
@@ -373,7 +374,7 @@ export const ReportPage = () => {
       >
         <div className="grid grid-cols-[1fr_auto] items-start gap-x-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold leading-none" style={{ color: '#1e293b', letterSpacing: '-0.02em' }}>{t('report_title')}</h1>
+            <h1 className="app-page-title" style={{ color: '#1e293b' }}>{t('report_title')}</h1>
             <div className="mt-2">
               <p className="text-[13px] font-medium leading-none text-[#4a5d4c]">
                 {format(today, isZh ? 'yyyy年M月d日' : 'PPP', { locale: calendarLocale })}
@@ -393,12 +394,11 @@ export const ReportPage = () => {
                 ...APP_GREEN_GLASS_BUTTON_STYLE,
               }}
             >
-              <span
-                className="material-symbols-outlined group-hover:text-[#426D56] transition-colors"
-                style={{ fontSize: 24, color: APP_GREEN_GLASS_TEXT }}
-              >
-                calendar_month
-              </span>
+              <CalendarDays
+                size={24}
+                className="transition-colors group-hover:text-[#426D56]"
+                color={APP_GREEN_GLASS_TEXT}
+              />
             </button>
             <button
               onClick={handleOpenDiaryBook}
@@ -410,7 +410,7 @@ export const ReportPage = () => {
                 color: APP_GREEN_GLASS_TEXT,
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>book_5</span>
+              <BookOpen size={20} />
             </button>
           </div>
         </div>

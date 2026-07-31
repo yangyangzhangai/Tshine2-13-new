@@ -67,10 +67,10 @@ export const LanguageSwitcher: React.FC<Props> = ({ variant = 'pill' }) => {
                     triggerLightHaptic();
                     setIsOpen(!isOpen);
                 }}
-                className={isList ? 'flex items-center gap-1.5 text-xs text-slate-700 transition-all' : 'flex items-center space-x-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-all'}
+                className={isList ? 'flex items-center gap-1.5 text-slate-700 transition-all' : 'flex items-center space-x-1.5 rounded-lg border px-2.5 py-1.5 font-medium transition-all'}
                 style={isList ? undefined : triggerStyle}
             >
-                <span className={isList ? 'text-xs text-slate-600' : 'text-xs font-semibold'}>{currentLang.label}</span>
+                <span className={isList ? 'app-caption text-slate-600' : 'app-caption font-semibold'}>{currentLang.label}</span>
                 {isList ? (
                     <ChevronRight size={18} strokeWidth={2.5} className={`text-[#5F7A63] transition-transform ${isOpen ? 'rotate-90' : ''}`} />
                 ) : (
@@ -84,7 +84,7 @@ export const LanguageSwitcher: React.FC<Props> = ({ variant = 'pill' }) => {
                         <button
                             key={lang.code}
                             onClick={() => { void selectLanguage(lang.code); }}
-                            className={`w-full text-left px-3 py-2 text-sm flex items-center space-x-2 transition-colors border ${lang.code === current
+                            className={`app-body flex w-full items-center space-x-2 border px-3 py-2 text-left transition-colors ${lang.code === current
                                     ? 'font-medium'
                                     : 'text-[#355643] hover:bg-white/60'
                                 }`}

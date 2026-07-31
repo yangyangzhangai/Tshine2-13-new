@@ -11,8 +11,8 @@ describe('aiCompanion', () => {
     const prompt = buildAiCompanionModePrompt('zh', 'agnes', 'diary');
 
     expect(prompt).toContain('你是Agnes');
-    expect(prompt).toContain('正文必须 150-300 字');
-    expect(prompt).toContain('成长/状态变化信号');
+    expect(prompt).toContain('正文150-260字');
+    expect(prompt).toContain('今日成长信号');
   });
 
   it('uses dedicated english annotation prompt for momo', () => {

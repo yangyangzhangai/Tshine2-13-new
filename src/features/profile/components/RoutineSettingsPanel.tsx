@@ -177,7 +177,7 @@ const TimePicker: React.FC<{ value: string; onChange: (v: string) => void }> = (
   return (
     <div className={`relative transition-all duration-300 ${isOpen ? 'z-[60]' : 'z-0'}`}>
       <button onClick={() => { if (isOpen) setIsOpen(false); else openPicker(); }}
-        className={`w-full flex items-center justify-between p-3 rounded-[50px] transition-all duration-300 border-2 ${isOpen ? 'bg-white border-black shadow-xl shadow-black/5' : 'bg-zinc-50 border-transparent hover:border-black/10'} text-sm font-bold text-black group relative z-[2]`}>
+        className={`app-form-text group relative z-[2] flex w-full items-center justify-between rounded-[50px] border-2 p-3 font-bold text-black transition-all duration-300 ${isOpen ? 'bg-white border-black shadow-xl shadow-black/5' : 'bg-zinc-50 border-transparent hover:border-black/10'}`}>
         <span>{value}</span>
         <motion.div animate={{ rotate: isOpen ? 180 : 0 }} className="text-black/20 group-hover:text-black transition-colors">
           <ChevronDown size={14} />
@@ -196,8 +196,8 @@ const TimePicker: React.FC<{ value: string; onChange: (v: string) => void }> = (
                 <DrumColumn items={MINUTES} selected={tempMinute} onSelect={setTempMinute} />
               </div>
               <div className="p-2 flex gap-2 bg-zinc-50/20">
-                <button onClick={() => setIsOpen(false)} className="flex-1 py-2 rounded-[50px] text-[11px] font-bold text-black/40 hover:text-black transition-colors uppercase tracking-[0.16em]">{t('onboarding_timepicker_cancel')}</button>
-                <button onClick={save} className="flex-1 py-2 rounded-[50px] bg-black text-white text-[11px] font-bold shadow-sm uppercase tracking-[0.16em]">{t('onboarding_timepicker_confirm')}</button>
+                <button onClick={() => setIsOpen(false)} className="app-caption flex-1 rounded-[50px] py-2 font-bold uppercase text-black/40 transition-colors hover:text-black">{t('onboarding_timepicker_cancel')}</button>
+                <button onClick={save} className="app-caption flex-1 rounded-[50px] bg-black py-2 font-bold uppercase text-white shadow-sm">{t('onboarding_timepicker_confirm')}</button>
               </div>
             </motion.div>
           </>
@@ -433,12 +433,12 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
 
   const SectionLabel = ({ title }: { title: string }) => (
     <div className="flex items-center gap-2 mb-3 px-1">
-      <h3 className="text-[10px] font-black text-black uppercase tracking-[0.2em]">{title}</h3>
+      <h3 className="app-badge font-black uppercase text-black">{title}</h3>
     </div>
   );
   const TimeInput = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
     <div className="space-y-1">
-      <p className="text-[11px] font-bold text-black/45 px-1 uppercase tracking-[0.12em]">{label}</p>
+      <p className="app-caption px-1 font-bold uppercase text-black/45">{label}</p>
       <TimePicker value={value} onChange={onChange} />
     </div>
   );
@@ -461,13 +461,13 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
                   if (item.id === identity) return;
                   setPendingIdentity(item.id);
                 }}
-                className={`relative flex flex-col items-center justify-center rounded-[50px] border py-2 text-[12px] font-medium transition-all ${isSelected ? 'font-bold' : 'border-transparent bg-white/60 text-[#426D56] hover:border-[#CBE7D7]'}`}
+                className={`app-caption relative flex flex-col items-center justify-center rounded-[50px] border py-2 font-medium transition-all ${isSelected ? 'font-bold' : 'border-transparent bg-white/60 text-[#426D56] hover:border-[#CBE7D7]'}`}
                 style={isSelected ? {
                   ...APP_PROFILE_JELLY_BUTTON_STYLE,
                   color: APP_GREEN_GLASS_TEXT,
                 } : undefined}>
                 {isCurrent && (
-                  <span className="mb-0.5 text-[8px] font-black uppercase tracking-widest text-[#8fae91]">
+                  <span className="app-badge mb-0.5 font-black uppercase text-[#8fae91]">
                     {t('profile_schedule_identity_current')}
                   </span>
                 )}
@@ -496,8 +496,8 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
                 style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.14)' }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <p className="mb-1.5 text-sm font-black text-[#1C2E24]">{t('profile_schedule_identity_switch_title')}</p>
-                <p className="mb-5 text-[13px] leading-relaxed text-[#4A7560]">
+                <p className="app-section-title mb-1.5 font-black text-[#1C2E24]">{t('profile_schedule_identity_switch_title')}</p>
+                <p className="app-body mb-5 leading-relaxed text-[#4A7560]">
                   {t('profile_schedule_identity_switch_body', {
                     name: t(
                       pendingIdentity === 'none'
@@ -511,12 +511,12 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
                 <div className="flex gap-3">
                   <button
                     onClick={() => setPendingIdentity(null)}
-                    className="flex-1 rounded-[50px] border border-[#CBE7D7] bg-white py-2.5 text-sm font-semibold text-[#4A7560] transition active:scale-95">
+                    className="app-body flex-1 rounded-[50px] border border-[#CBE7D7] bg-white py-2.5 font-semibold text-[#4A7560] transition active:scale-95">
                     {t('cancel')}
                   </button>
                   <button
                     onClick={() => { setIdentity(pendingIdentity); setPendingIdentity(null); }}
-                    className="flex-1 rounded-[50px] py-2.5 text-sm font-semibold transition active:scale-95"
+                    className="app-body flex-1 rounded-[50px] py-2.5 font-semibold transition active:scale-95"
                     style={{ ...APP_PROFILE_JELLY_BUTTON_STYLE, color: APP_GREEN_GLASS_TEXT }}>
                     {t('confirm')}
                   </button>
@@ -579,10 +579,10 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bell size={13} className="text-[#8fae91]" />
-            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-black">{t('profile_user_profile_reminder_enable')}</span>
+            <span className="app-caption font-black uppercase text-black">{t('profile_user_profile_reminder_enable')}</span>
           </div>
           <button onClick={() => setReminderEnabled(!reminderEnabled)}
-            className="relative h-5 w-9 rounded-full border border-transparent transition-colors"
+            className="app-hit-target-44 relative h-5 w-9 rounded-full border border-transparent transition-colors"
             style={reminderEnabled ? APP_PROFILE_JELLY_TOGGLE_ON_STYLE : { background: '#cbd5e1' }}>
             <motion.div animate={{ x: reminderEnabled ? 16 : 2 }}
               className="absolute left-0 h-4 w-4 rounded-full bg-white shadow-sm"
@@ -590,7 +590,7 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
           </button>
         </div>
         {Capacitor.isNativePlatform() && notifPermission !== null && notifPermission !== 'granted' && (
-          <button type="button" className="text-[11px] text-blue-500 underline"
+          <button type="button" className="app-caption text-blue-500 underline"
             onClick={() => { void requestNotificationPermission().then((granted) => { if (granted) setNotifPermission('granted'); }).catch(() => {}); }}>
             {t('profile_user_profile_reminder_grant_permission')}
           </button>
@@ -604,9 +604,9 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
       className="shrink-0 border-t border-black/5 bg-white/95 px-5 pt-3.5 sm:px-7"
       style={{ paddingBottom: 'max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px))' }}
     >
-      {saveText && <p className="mb-2 text-center text-[11px] text-slate-500">{saveText}</p>}
+      {saveText && <p className="app-caption mb-2 text-center text-slate-500">{saveText}</p>}
       <motion.button whileTap={{ scale: 0.98 }} onClick={() => { void performSave(); }} disabled={saving}
-        className="w-full rounded-[50px] py-3 text-sm font-semibold disabled:opacity-60"
+        className="app-body w-full rounded-[50px] py-3 font-semibold disabled:opacity-60"
         style={{ ...APP_PROFILE_JELLY_BUTTON_STYLE, color: APP_GREEN_GLASS_TEXT }}>
         {saving ? t('profile_routine_saving') : t('profile_routine_save')}
       </motion.button>
@@ -623,7 +623,7 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
           <div className="flex items-start gap-2.5 text-left">
             <Clock3 size={18} strokeWidth={2} className="text-[#000000]" />
             <div>
-              <p className="profile-fn-title">{t('profile_routine_title')}</p>
+              <p className="app-item-title text-black">{t('profile_routine_title')}</p>
             </div>
           </div>
           <ChevronRight size={18} strokeWidth={2.5} className="text-[#5F7A63]" />
@@ -649,12 +649,12 @@ export const RoutineSettingsPanel: React.FC<Props> = ({ plain = false, page = fa
           <button
             type="button"
             onClick={handleBack}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#1e293b] shadow-[0_6px_18px_rgba(15,23,42,0.08)] active:scale-95"
+            className="app-hit-target-44 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#1e293b] shadow-[0_6px_18px_rgba(15,23,42,0.08)] active:scale-95"
             aria-label="Back"
           >
             <ArrowLeft size={18} strokeWidth={2} />
           </button>
-          <h1 className="text-xl font-extrabold text-[#1e293b]">{t('profile_routine_title')}</h1>
+          <h1 className="app-page-title text-[#1e293b]">{t('profile_routine_title')}</h1>
         </header>
 
         <div className="app-modal-scroll cr-scroll min-h-0 flex-1 space-y-6 px-5 py-4 pb-6 sm:px-7 sm:space-y-7">

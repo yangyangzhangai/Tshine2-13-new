@@ -1,7 +1,7 @@
 // DOC-DEPS: LLM.md -> docs/PROJECT_MAP.md -> src/features/chat/README.md
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRightLeft, Camera, StopCircle, X } from 'lucide-react';
+import { ArrowRightLeft, Camera, StopCircle, Timer, X } from 'lucide-react';
 import { getMoodGlassStyle, MOOD_GLASS_BUTTON_CLASS } from '../../../lib/moodColor';
 import { getMoodI18nKey } from '../../../lib/moodOptions';
 import { formatDuration } from '../../../lib/time';
@@ -360,7 +360,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
           <div className="text-xs" style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700,
             color: isOngoing ? '#B2EEDA' : 'rgba(71,85,105,0.65)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>timer</span>
+            <Timer size={13} />
             <span>
               {message.duration != null
                 ? formatDuration(message.duration)
@@ -376,13 +376,13 @@ export const EventCard: React.FC<EventCardProps> = ({
           {isOngoing && !readonly && (
             <button onClick={handleEndButtonClick}
               title={t('end_event_btn')}
-              className="text-xs"
+              className="app-hit-target-44 text-xs"
               style={{ fontWeight: 800, padding: '3px 9px', borderRadius: 9999,
                 border: pendingManualEnd ? '1px solid rgba(148,163,184,0.38)' : '1px solid rgba(244,192,194,0.3)',
                 background: pendingManualEnd ? 'rgba(148,163,184,0.12)' : 'rgba(244,192,194,0.10)',
                 color: pendingManualEnd ? '#94A3B8' : '#F4C0C2', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 3 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>stop_circle</span>
+              <StopCircle size={12} />
             </button>
           )}
         </div>

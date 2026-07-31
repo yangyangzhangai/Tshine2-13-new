@@ -41,7 +41,7 @@ export const ProfilePage: React.FC = () => {
             WebkitBackdropFilter: 'blur(14px) saturate(150%)',
           }}
         >
-          <h1 className="text-2xl font-extrabold text-[#1e293b]" style={{ letterSpacing: '-0.02em' }}>{t('nav_profile')}</h1>
+          <h1 className="app-page-title text-[#1e293b]">{t('nav_profile')}</h1>
         </header>
 
         <div className="space-y-3 px-3 py-3 pb-28">
@@ -75,7 +75,7 @@ export const ProfilePage: React.FC = () => {
               <div className="flex w-full items-center justify-between gap-3">
                 <div className="flex items-center space-x-2.5">
                   <Languages size={18} strokeWidth={2} className="text-[#000000]" />
-                  <span className="profile-fn-title">{t('language_switch')}</span>
+                  <span className="app-item-title text-black">{t('language_switch')}</span>
                 </div>
                 <LanguageSwitcher variant="list" />
               </div>

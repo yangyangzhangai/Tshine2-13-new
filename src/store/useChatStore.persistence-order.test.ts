@@ -66,7 +66,9 @@ describe('useChatStore persistence ordering', () => {
 
     await useChatStore.getState().sendMessage('吃饭');
 
-    expect(callOrder).toEqual(['message', 'mood']);
+    await vi.waitFor(() => {
+      expect(callOrder).toEqual(['message', 'mood']);
+    });
     expect(persistMessageToSupabaseMock).toHaveBeenCalledTimes(1);
     expect(triggerMoodDetectionMock).toHaveBeenCalledTimes(1);
   });

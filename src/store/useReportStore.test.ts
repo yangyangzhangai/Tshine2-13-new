@@ -21,7 +21,7 @@ import { useTodoStore } from './useTodoStore';
 describe('useReportStore regeneration persistence', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-03-20T22:00:00Z'));
+    vi.setSystemTime(new Date(2026, 2, 20, 22, 0, 0, 0));
     useChatStore.setState({ messages: [] });
     useTodoStore.setState({ todos: [] });
     useMoodStore.setState({
