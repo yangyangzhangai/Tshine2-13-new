@@ -210,7 +210,7 @@ function BookThumb({ month, isSelected, isEditing, bookName, onCoverClick, onSta
                 onClick={e => e.stopPropagation()}
                 onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') inputRef.current?.blur(); }}
                 maxLength={10}
-                className="bg-transparent border-b border-white/40 text-white text-sm font-bold text-center outline-none w-20"
+                  className="app-form-text bg-transparent border-b border-white/40 text-white font-bold text-center outline-none w-20"
                 style={{ letterSpacing: '0.1em' }}
               />
             ) : (
@@ -513,7 +513,7 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
           <ChevronLeft size={20} />
         </motion.button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-black text-[#4a5d4c] tracking-tight">{t('report_my_diary')}</h1>
+          <h1 className="app-page-title text-[#4a5d4c]">{t('report_my_diary')}</h1>
           <p className="mt-0.5 text-[13px] font-medium text-[#4a5d4c]">{t('diary_shelf_count', { count: months.length })}</p>
         </div>
         <motion.button
@@ -586,7 +586,7 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                       }
                     }}
                     placeholder=""
-                    className="w-full outline-none"
+                    className="app-form-text w-full outline-none"
                     inputMode="text"
                     autoComplete="off"
                     autoCorrect="off"
@@ -596,7 +596,6 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                       border: '1px solid rgba(255,255,255,0.78)',
                       background: 'rgba(255,255,255,0.82)',
                       padding: '11px 16px',
-                      fontSize: '16px',
                       fontWeight: 600,
                       letterSpacing: '0.06em',
                       color: '#2e4431',

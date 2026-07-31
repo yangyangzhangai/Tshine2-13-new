@@ -32,7 +32,7 @@ export const RootDetailBubble: React.FC<RootDetailBubbleProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="h-8 w-8 rounded-md border border-amber-300 bg-white text-amber-700"
+          className="app-hit-target-44 h-8 w-8 rounded-md border border-amber-300 bg-white text-amber-700"
           aria-label="Close detail"
         >
           ×

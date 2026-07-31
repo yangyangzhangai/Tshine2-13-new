@@ -3,7 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle, Circle, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/utils';
-import { APP_MODAL_CARD_CLASS, APP_MODAL_CLOSE_CLASS, APP_MODAL_OVERLAY_CLASS } from '../../lib/modalTheme';
+import {
+  APP_MODAL_CARD_CLASS,
+  APP_MODAL_CLOSE_CLASS,
+  APP_MODAL_OVERLAY_CLASS,
+  APP_MODAL_TITLE_CLASS,
+} from '../../lib/modalTheme';
 import type { Report } from '../../store/useReportStore';
 import type { Todo } from '../../store/useTodoStore';
 import { getReportTodosInRange } from './reportPageHelpers';
@@ -34,7 +39,7 @@ export const TaskListModal: React.FC<TaskListModalProps> = ({
     <div className={cn('fixed inset-0 z-50 flex items-center justify-center p-4', APP_MODAL_OVERLAY_CLASS)}>
       <div className={cn(APP_MODAL_CARD_CLASS, 'w-full max-w-md rounded-3xl p-6 max-h-[70vh] flex flex-col animate-in zoom-in-95 fade-in')}>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-slate-800">
+          <h2 className={APP_MODAL_TITLE_CLASS}>
             {showTaskList === 'completed' ? t('report_completed_tasks') : t('report_all_tasks')}
           </h2>
           <button onClick={onClose} className={cn(APP_MODAL_CLOSE_CLASS, 'p-1')}>

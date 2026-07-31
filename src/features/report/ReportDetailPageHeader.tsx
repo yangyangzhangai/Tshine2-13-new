@@ -1,5 +1,5 @@
 // DOC-DEPS: LLM.md -> docs/CURRENT_TASK.md -> src/features/report/README.md
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import {
   APP_GLASS_BUTTON_BASE_STYLE,
   APP_GREEN_GLASS_BUTTON_STYLE,
@@ -46,8 +46,8 @@ export function ReportDetailPageHeader({
           </button>
         ) : null}
         <h2 className={isPrimaryPage
-          ? 'pointer-events-none absolute left-1/2 -translate-x-1/2 text-2xl font-bold text-[#1A1A1A] max-[410px]:left-4 max-[410px]:translate-x-0'
-          : 'text-2xl font-bold text-[#1A1A1A]'}
+          ? 'app-page-title pointer-events-none absolute left-1/2 -translate-x-1/2 text-[#1A1A1A] max-[410px]:left-4 max-[410px]:translate-x-0'
+          : 'app-page-title text-[#1A1A1A]'}
         >
           {title}
         </h2>
@@ -60,12 +60,7 @@ export function ReportDetailPageHeader({
               aria-label={calendarLabel}
               title={calendarLabel}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 24, color: APP_GREEN_GLASS_TEXT }}
-              >
-                calendar_month
-              </span>
+              <CalendarDays size={24} color={APP_GREEN_GLASS_TEXT} />
             </button>
             <button
               className="flex h-11 w-11 items-center justify-center rounded-2xl p-0 transition-all hover:scale-105 active:scale-95"
@@ -74,12 +69,7 @@ export function ReportDetailPageHeader({
               aria-label={diaryBookLabel}
               title={diaryBookLabel}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 20 }}
-              >
-                book_5
-              </span>
+              <BookOpen size={20} />
             </button>
           </div>
         ) : (

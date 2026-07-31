@@ -66,7 +66,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
       >
         <div className="flex items-center space-x-2.5">
           <MapPin size={18} strokeWidth={2} className="text-[#000000]" />
-          <span className="profile-fn-title">{t('profile_region_settings')}</span>
+          <span className="app-item-title text-black">{t('profile_region_settings')}</span>
         </div>
         <ChevronRight
           size={18}
@@ -91,7 +91,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
       >
         <div className="flex items-center space-x-2.5">
           <Sprout size={18} strokeWidth={2} className="text-[#000000]" />
-          <span className="profile-fn-title">{t('profile_root_direction_settings')}</span>
+          <span className="app-item-title text-black">{t('profile_root_direction_settings')}</span>
         </div>
         <ChevronRight
           size={18}
@@ -112,7 +112,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
         >
           <div className="flex items-center space-x-2.5">
             <Icon size={18} strokeWidth={2} className="text-[#000000]" />
-            <span className="profile-fn-title">{t(labelKey)}</span>
+            <span className="app-item-title text-black">{t(labelKey)}</span>
           </div>
           <ChevronRight size={18} strokeWidth={2.5} className="text-[#5F7A63]" />
         </button>
@@ -125,7 +125,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
           >
             <div className="flex items-center space-x-2.5">
               <BarChart3 size={18} strokeWidth={2} className="text-[#000000]" />
-              <span className="profile-fn-title">{t('telemetry_hub_title')}</span>
+              <span className="app-item-title text-black">{t('telemetry_hub_title')}</span>
             </div>
             <ChevronRight size={18} strokeWidth={2.5} className="text-[#5F7A63]" />
           </button>
@@ -136,7 +136,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
         className={`flex w-full items-center space-x-2.5 px-4 py-3 transition hover:bg-white/70 ${plain ? '' : 'border-t border-slate-200/60'}`}
       >
         <UserX size={18} strokeWidth={2} className="text-[#000000]" />
-        <span className="profile-fn-title">{t('delete_account_label')}</span>
+        <span className="app-item-title text-black">{t('delete_account_label')}</span>
       </button>
 
       {/* Logout */}
@@ -145,7 +145,7 @@ export const SettingsList: React.FC<Props> = ({ plain = false }) => {
         className="flex w-full items-center space-x-2.5 px-4 py-3 transition hover:bg-white/70"
       >
         <LogOut size={18} strokeWidth={2} className="text-[#000000]" />
-        <span className="profile-fn-title">{t('profile_logout')}</span>
+        <span className="app-item-title text-black">{t('profile_logout')}</span>
       </button>
     </div>
     </>

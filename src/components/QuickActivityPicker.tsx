@@ -111,8 +111,7 @@ export const QuickActivityPicker: React.FC = () => {
             onChange={(e) => setCustomInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleCustomSend(); }}
             placeholder={t('quick_activity_input_placeholder')}
-            className="flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-            style={{ fontSize: 16 }}
+            className="app-form-text flex-1 bg-transparent text-slate-700 outline-none placeholder:text-slate-400"
           />
           <button
             type="button"

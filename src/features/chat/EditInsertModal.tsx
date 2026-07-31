@@ -9,6 +9,7 @@ import {
     APP_MODAL_INPUT_CLASS,
     APP_MODAL_OVERLAY_CLASS,
     APP_MODAL_PRIMARY_BUTTON_CLASS,
+    APP_MODAL_TITLE_CLASS,
 } from '../../lib/modalTheme';
 
 interface EditInsertModalProps {
@@ -60,7 +61,7 @@ export const EditInsertModal: React.FC<EditInsertModalProps> = ({
         <div className={cn('fixed inset-0 flex items-end sm:items-center justify-center z-50 sm:p-4', APP_MODAL_OVERLAY_CLASS)}>
             <div className={cn(APP_MODAL_CARD_CLASS, 'mb-[max(8px,env(safe-area-inset-bottom,0px))] rounded-3xl w-full max-w-sm p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:mb-0 sm:pb-6 space-y-4')}>
                 <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-slate-800">{editingId ? t('chat_edit_record') : t('chat_insert_record')}</h3>
+                    <h3 className={APP_MODAL_TITLE_CLASS}>{editingId ? t('chat_edit_record') : t('chat_insert_record')}</h3>
                     <button onClick={onClose} className={cn(APP_MODAL_CLOSE_CLASS, 'p-1')}>
                         <X size={20} />
                     </button>
@@ -74,7 +75,7 @@ export const EditInsertModal: React.FC<EditInsertModalProps> = ({
                             onChange={(e) => onContentChange(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onSave(); } }}
                             enterKeyHint="done"
-                            className={cn(APP_MODAL_INPUT_CLASS, 'w-full px-3 py-2 text-base')}
+                            className={cn(APP_MODAL_INPUT_CLASS, 'w-full px-3 py-2')}
                             placeholder={t('chat_placeholder_content')}
                         />
                     </div>
@@ -91,7 +92,7 @@ export const EditInsertModal: React.FC<EditInsertModalProps> = ({
                                 onFocus={(e) => openNativePicker(e.currentTarget)}
                                 onChange={(e) => onStartTimeChange(e.target.value)}
                                 onBlur={(e) => handleBoundedDateTimeBlur(e.target.value, onStartTimeChange)}
-                                className={cn(APP_MODAL_INPUT_CLASS, 'w-full px-3 py-2 text-base')}
+                                className={cn(APP_MODAL_INPUT_CLASS, 'w-full px-3 py-2')}
                             />
                         </div>
                         <div>
@@ -106,7 +107,7 @@ export const EditInsertModal: React.FC<EditInsertModalProps> = ({
                                 onFocus={(e) => openNativePicker(e.currentTarget)}
                                 onChange={(e) => onEndTimeChange(e.target.value)}
                                 onBlur={(e) => handleBoundedDateTimeBlur(e.target.value, onEndTimeChange)}
-                                className={cn(APP_MODAL_INPUT_CLASS, 'w-full px-3 py-2 text-base')}
+                                className={cn(APP_MODAL_INPUT_CLASS, 'w-full px-3 py-2')}
                             />
                         </div>
                     </div>

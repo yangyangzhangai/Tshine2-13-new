@@ -19,6 +19,7 @@ const zhBase: TranslationKeys = {
     notification_action_still_yes: '✓ 还在',
     notification_action_still_no: '我在做别的',
     loading: '加载中…',
+    app_loading_wait: '加载中，稍等一下～～',
     no_data: '暂无数据',
     // ── 时间格式 ──
     duration_hours_minutes: '{{hours}}小时{{mins}}分钟',

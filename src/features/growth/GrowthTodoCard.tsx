@@ -6,6 +6,7 @@ import { useGrowthStore } from '../../store/useGrowthStore';
 import { type GrowthTodo, type GrowthPriority, type Recurrence } from '../../store/useTodoStore';
 import { triggerLightHaptic } from '../../lib/haptics';
 import { APP_GREEN_GLASS_BUTTON_STYLE, APP_GREEN_GLASS_TEXT } from '../../lib/modalTheme';
+import { AppSelectMenu } from '../../components/AppSelectMenu';
 import { SubTodoList } from './SubTodoList';
 import {
   getGrowthPrioritySelectedStyle,
@@ -344,11 +345,11 @@ export const GrowthTodoCard = ({
               onBlur={() => { void commitTitle(); }}
               enterKeyHint="done"
               placeholder={t('growth_todo_title_placeholder')}
-              className="w-full bg-transparent text-sm text-[#334155] focus:outline-none"
+              className="app-body w-full bg-transparent text-[#334155] focus:outline-none"
             />
           ) : (
             <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-              <span className={cn("min-w-0 max-w-full truncate text-sm", todo.completed && "line-through text-gray-400")}>
+              <span className={cn("app-body min-w-0 max-w-full truncate", todo.completed && "line-through text-gray-400")}>
                 {todo.title}
               </span>
               {dueBadge ? (
@@ -368,7 +369,7 @@ export const GrowthTodoCard = ({
             </div>
           )}
           {!dueBadge && dueStr ? (
-            <span className="text-xs text-gray-400">{dueStr}</span>
+            <span className="app-caption text-gray-400">{dueStr}</span>
           ) : null}
         </div>
 
@@ -432,49 +433,27 @@ export const GrowthTodoCard = ({
       {/* Expanded edit panel */}
       {expanded && !todo.completed && (
         <div className="border-t border-gray-100 px-3 pb-3 pt-2 space-y-3">
-          {/* Priority */}
-          <div>
-            <p className="text-xs text-gray-400 mb-1.5">{t('growth_todo_priority')}</p>
-            <div className="flex gap-2">
-              {(['high', 'medium', 'low'] as GrowthPriority[]).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => handlePriority(p)}
-                  className={cn(
-                    "flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all",
-                    normalizedPriority === p
-                      ? GROWTH_PRIORITY_TEXT_CLASS[p]
-                      : "border-gray-200 bg-white text-gray-400"
-                  )}
-                  style={normalizedPriority === p ? getGrowthPrioritySelectedStyle(p) : undefined}
-                >
-                  {t(`growth_todo_priority_${p}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Due date */}
           <div>
-            <p className="text-xs text-gray-400 mb-1.5">{t('growth_todo_due_datetime')}</p>
+            <p className="app-body mb-1.5 text-gray-400">{t('growth_todo_due_datetime')}</p>
             <input
               type="datetime-local"
               defaultValue={tsToDatetimeLocal(todo.dueAt)}
               onChange={(e) => handleDueAt(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="app-body w-full border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400"
             />
           </div>
 
           {/* Recurrence */}
           <div>
-            <p className="text-xs text-gray-400 mb-1.5">{t('growth_todo_recurrence')}</p>
+            <p className="app-body mb-1.5 text-gray-400">{t('growth_todo_recurrence')}</p>
             <div className="flex gap-2">
               {recurrences.map((r) => (
                 <button
                   key={r}
                   onClick={() => handleRecurrence(r)}
                   className={cn(
-                    "flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all",
+                    "app-body flex-1 rounded-lg border py-1.5 font-medium transition-all",
                     (todo.recurrence ?? 'once') === r
                       ? "text-blue-600"
                       : "border-gray-200 bg-white text-gray-400"
@@ -492,7 +471,7 @@ export const GrowthTodoCard = ({
                     key={i}
                     onClick={() => handleToggleDay(i)}
                     className={cn(
-                      "w-8 h-8 rounded-full border text-xs font-medium transition-all",
+                      "app-body h-8 w-8 rounded-full border font-medium transition-all",
                       (todo.recurrenceDays ?? []).includes(i)
                         ? "text-blue-600"
                         : "border-gray-200 bg-gray-100 text-gray-500"
@@ -506,20 +485,43 @@ export const GrowthTodoCard = ({
             )}
           </div>
 
+          {/* Priority */}
+          <div>
+            <p className="app-body mb-1.5 text-gray-400">{t('growth_todo_priority')}</p>
+            <div className="flex gap-2">
+              {(['high', 'medium', 'low'] as GrowthPriority[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => handlePriority(p)}
+                  className={cn(
+                    "app-body flex-1 rounded-lg border py-1.5 font-medium transition-all",
+                    normalizedPriority === p
+                      ? GROWTH_PRIORITY_TEXT_CLASS[p]
+                      : "border-gray-200 bg-white text-gray-400"
+                  )}
+                  style={normalizedPriority === p ? getGrowthPrioritySelectedStyle(p) : undefined}
+                >
+                  {t(`growth_todo_priority_${p}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Bottle link */}
           {bottles.length > 0 && (
             <div>
-              <p className="text-xs text-gray-400 mb-1.5">{t('growth_todo_link_bottle')}</p>
-              <select
+              <p className="app-body mb-1.5 text-gray-400">{t('growth_todo_link_bottle')}</p>
+              <AppSelectMenu
                 value={todo.bottleId ?? ''}
-                onChange={(e) => handleBottle(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              >
-                <option value="">{t('growth_todo_none')}</option>
-                {bottles.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
+                onChange={handleBottle}
+                ariaLabel={t('growth_todo_link_bottle')}
+                placement="top"
+                size="compact"
+                options={[
+                  { value: '', label: t('growth_todo_none') },
+                  ...bottles.map(bottle => ({ value: bottle.id, label: bottle.name })),
+                ]}
+              />
             </div>
           )}
 
@@ -543,7 +545,7 @@ export const GrowthTodoCard = ({
                 onTogglePin?.(todo.id);
               }}
               className={cn(
-                "text-xs px-3 py-1.5 rounded-lg font-medium border transition-all",
+                "app-body rounded-lg border px-3 py-1.5 font-medium transition-all",
                 todo.isPinned ? "text-blue-600" : "border-gray-200 bg-white text-gray-400"
               )}
               style={todo.isPinned ? BLUE_SELECTED_STYLE : undefined}

@@ -11,10 +11,13 @@ export const APP_MODAL_CARD_CLASS =
   'app-modal-card border border-[rgba(255,255,255,0.82)] bg-white [box-shadow:0_0_12px_rgba(255,255,255,0.20),inset_0_1px_1px_rgba(255,255,255,0.72),0_24px_64px_rgba(15,23,42,0.16)]';
 
 export const APP_MODAL_CLOSE_CLASS =
-  'app-glass-button rounded-full border border-white/70 bg-white/80 text-[#2F3E33] [box-shadow:0_6px_14px_rgba(165,190,103,0.14)] transition-colors hover:text-[#243129]';
+  'app-glass-button app-hit-target-44 rounded-full border border-white/70 bg-white/80 text-[#2F3E33] [box-shadow:0_6px_14px_rgba(165,190,103,0.14)] transition-colors hover:text-[#243129]';
+
+export const APP_MODAL_TITLE_CLASS =
+  'app-section-title text-slate-800';
 
 export const APP_MODAL_INPUT_CLASS =
-  'rounded-2xl border border-white/70 bg-white/85 text-slate-700 outline-none focus:ring-2 focus:ring-[#8FAF92]/45';
+  'app-form-text rounded-2xl border border-white/70 bg-white/85 text-slate-700 outline-none focus:ring-2 focus:ring-[#8FAF92]/45';
 
 export const APP_MODAL_PRIMARY_BUTTON_CLASS =
   'app-glass-button rounded-2xl border border-transparent font-medium text-[#426D56] [background:linear-gradient(135deg,_rgba(236,248,229,0.96)_0%,_rgba(220,238,190,0.92)_100%)_padding-box,_linear-gradient(140deg,_rgba(208,230,161,0.55)_0%,_rgba(238,246,221,0.95)_55%,_rgba(255,255,255,0.98)_100%)_border-box] [box-shadow:0_6px_14px_rgba(183,207,124,0.12)] transition-opacity hover:opacity-90';

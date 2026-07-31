@@ -80,8 +80,8 @@ export const UserProfilePanel: React.FC<Props> = ({
     <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-[0_6px_20px_rgba(148,163,184,0.08)]">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="profile-fn-title">{t('profile_long_term_profile')}</p>
-          <p className="mt-1 text-[12px] font-medium leading-relaxed text-[#6b7f70]">
+          <p className="app-item-title text-black">{t('profile_long_term_profile')}</p>
+          <p className="app-description mt-1 font-medium leading-relaxed text-[#6b7f70]">
             {t('profile_long_term_profile_desc')}
           </p>
         </div>
@@ -91,7 +91,7 @@ export const UserProfilePanel: React.FC<Props> = ({
           role="switch"
           aria-checked={longTermProfileEnabled}
           aria-label={t('profile_long_term_profile')}
-          className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors ${
+          className={`app-hit-target-44 relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors ${
             longTermProfileEnabled ? 'border-transparent' : 'border-transparent bg-slate-300'
           }`}
           style={longTermProfileEnabled ? APP_PROFILE_JELLY_TOGGLE_ON_STYLE : undefined}
@@ -103,20 +103,20 @@ export const UserProfilePanel: React.FC<Props> = ({
           />
         </button>
       </div>
-      {toggleText ? <p className="mt-2 text-xs text-slate-500">{toggleText}</p> : null}
+      {toggleText ? <p className="app-caption mt-2 text-slate-500">{toggleText}</p> : null}
     </div>
   );
 
   const editorContent = (
     <div className="space-y-4">
       <label className="block">
-        <span className="mb-1 block text-xs text-slate-600">{t('profile_user_profile_tab_personalization')}</span>
+        <span className="app-section-title mb-1 block text-slate-600">{t('profile_user_profile_tab_personalization')}</span>
         <textarea
           value={freeText}
           onChange={(e) => setFreeText(e.target.value)}
           placeholder={t('profile_user_profile_personalization_placeholder')}
           rows={page ? 10 : 4}
-          className="w-full rounded-2xl border border-[#CBE7D7] bg-white/85 px-3 py-2 text-[10px] text-slate-700 outline-none placeholder:text-[10px]"
+          className="app-form-text w-full rounded-2xl border border-[#CBE7D7] bg-white/85 px-3 py-2 text-slate-700 outline-none"
         />
       </label>
     </div>
@@ -128,7 +128,7 @@ export const UserProfilePanel: React.FC<Props> = ({
         type="button"
         onClick={() => { void handleSave(); }}
         disabled={!hasUnsavedChanges}
-        className="min-h-11 w-full rounded-[50px] border border-transparent px-4 text-sm font-semibold text-[#355643] disabled:opacity-60"
+        className="app-body min-h-11 w-full rounded-[50px] border border-transparent px-4 font-semibold text-[#355643] disabled:opacity-60"
         style={{
           ...APP_PROFILE_JELLY_BUTTON_STYLE,
           color: APP_GREEN_GLASS_TEXT,
@@ -136,7 +136,7 @@ export const UserProfilePanel: React.FC<Props> = ({
       >
         {t('profile_user_profile_save')}
       </button>
-      {saveText ? <p className="mt-2 text-center text-xs text-slate-500">{saveText}</p> : null}
+      {saveText ? <p className="app-caption mt-2 text-center text-slate-500">{saveText}</p> : null}
     </>
   );
 
@@ -157,12 +157,12 @@ export const UserProfilePanel: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => navigate('/profile')}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#1e293b] shadow-[0_6px_18px_rgba(15,23,42,0.08)] active:scale-95"
+              className="app-hit-target-44 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#1e293b] shadow-[0_6px_18px_rgba(15,23,42,0.08)] active:scale-95"
               aria-label="Back"
             >
               <ArrowLeft size={18} strokeWidth={2} />
             </button>
-            <h1 className="text-xl font-extrabold text-[#1e293b]">{t('profile_user_profile_title')}</h1>
+            <h1 className="app-page-title text-[#1e293b]">{t('profile_user_profile_title')}</h1>
           </header>
 
           <div className="app-modal-scroll min-h-0 flex-1 px-5 py-4 pb-6 sm:px-7">
@@ -191,8 +191,8 @@ export const UserProfilePanel: React.FC<Props> = ({
           <div className="flex items-start gap-2.5 text-left">
             <BookMarked size={16} strokeWidth={1.5} className="mt-0.5 text-[#000000]" />
             <div>
-              <p className="profile-fn-title">{t('profile_user_profile_title')}</p>
-              <p className="mt-0.5 text-[10px] font-light leading-tight text-slate-500">{t('profile_user_profile_desc')}</p>
+              <p className="app-item-title text-black">{t('profile_user_profile_title')}</p>
+              <p className="app-description mt-0.5 font-light leading-tight text-slate-500">{t('profile_user_profile_desc')}</p>
             </div>
           </div>
           {expanded ? <ChevronUp size={16} strokeWidth={1.5} className="text-slate-400" /> : <ChevronDown size={16} strokeWidth={1.5} className="text-slate-400" />}

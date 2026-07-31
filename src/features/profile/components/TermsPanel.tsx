@@ -28,13 +28,13 @@ export const TermsPanel: React.FC<Props> = ({ onClose }) => {
 
   return (
     <InfoSheetPanel title={t('terms_sheet_title')} onClose={onClose}>
-      <p className="mb-1 text-xs text-slate-400">{t('terms_updated')}</p>
-      <p className="mb-6 text-sm leading-relaxed text-slate-500">{t('terms_intro')}</p>
+      <p className="app-caption mb-1 text-slate-400">{t('terms_updated')}</p>
+      <p className="app-body mb-6 leading-relaxed text-slate-500">{t('terms_intro')}</p>
 
       <div className="space-y-5">
         {SECTIONS.map(s => (
           <div key={s.title}>
-            <h3 className="mb-1.5 text-sm font-semibold text-slate-700">{t(s.title)}</h3>
+            <h3 className="app-section-title mb-1.5 text-slate-700">{t(s.title)}</h3>
             <div className="space-y-1">
               {t(s.body)
                 .split('\n')
@@ -42,7 +42,7 @@ export const TermsPanel: React.FC<Props> = ({ onClose }) => {
                   line.trim() === '' ? (
                     <div key={i} className="h-1" />
                   ) : (
-                    <p key={i} className="text-sm leading-relaxed text-slate-500">
+                    <p key={i} className="app-body leading-relaxed text-slate-500">
                       {line}
                     </p>
                   )
@@ -52,16 +52,16 @@ export const TermsPanel: React.FC<Props> = ({ onClose }) => {
         ))}
 
         <div>
-          <h3 className="mb-1.5 text-sm font-semibold text-slate-700">{t('terms_s12_title')}</h3>
+          <h3 className="app-section-title mb-1.5 text-slate-700">{t('terms_s12_title')}</h3>
           <div className="space-y-1">
             {t('terms_s12_body').split('\n').map((line, i) => {
               if (line.trim() === '') return <div key={i} className="h-1" />;
               if (!line.includes(SUPPORT_EMAIL)) {
-                return <p key={i} className="text-sm leading-relaxed text-slate-500">{line}</p>;
+                return <p key={i} className="app-body leading-relaxed text-slate-500">{line}</p>;
               }
               const [before, after] = line.split(SUPPORT_EMAIL);
               return (
-                <p key={i} className="text-sm leading-relaxed text-slate-500">
+                <p key={i} className="app-body leading-relaxed text-slate-500">
                   {before}
                   <a href={`mailto:${SUPPORT_EMAIL}`} className="text-[#5F7A63] underline-offset-2 hover:underline">
                     {SUPPORT_EMAIL}

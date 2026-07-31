@@ -53,7 +53,7 @@ export const AIAnnotationDropRate: React.FC<Props> = ({ isPlus, plain = false, e
     <>
       <div className={embedded ? 'mb-2 flex items-center gap-2' : 'flex flex-shrink-0 items-center space-x-2.5 whitespace-nowrap'}>
         <Bell size={embedded ? 15 : 18} strokeWidth={2} className="text-[#6e8b72]" />
-        <span className={embedded ? 'text-[12px] font-semibold text-[#6b7f70]' : 'profile-fn-title'}>
+        <span className={embedded ? 'app-caption font-semibold text-[#6b7f70]' : 'app-item-title text-black'}>
           {t('profile_annotation_drop')}
         </span>
       </div>
@@ -65,7 +65,7 @@ export const AIAnnotationDropRate: React.FC<Props> = ({ isPlus, plain = false, e
             <button
               key={key}
               onClick={() => { void handleClick(key); }}
-              className={`relative flex-1 rounded-[50px] border py-1.5 text-xs font-medium transition-all ${
+              className={`app-caption relative flex-1 rounded-[50px] border py-1.5 font-medium transition-all ${
                 selected
                   ? 'font-bold'
                   : locked

@@ -20,6 +20,7 @@ import {
   APP_MODAL_OVERLAY_CLASS,
   APP_MODAL_PRIMARY_BUTTON_CLASS,
   APP_MODAL_SECONDARY_BUTTON_CLASS,
+  APP_MODAL_TITLE_CLASS,
 } from '../../lib/modalTheme';
 
 type CommitState = 'idle' | 'submitting' | 'success' | 'error';
@@ -185,7 +186,7 @@ export function MagicPenSheet({
                 <Wand2 size={16} className="text-[#2563EB]" />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-slate-800">{t('chat_magic_pen_title')}</h2>
+                <h2 className={APP_MODAL_TITLE_CLASS}>{t('chat_magic_pen_title')}</h2>
                 <p className="text-xs text-slate-500">{t('chat_magic_pen_subtitle')}</p>
               </div>
             </div>
@@ -231,7 +232,7 @@ export function MagicPenSheet({
                           setDrafts((prev) => prev.map((item) => (item.id === next.id ? next : item)));
                           resetErroredDraftState(draft.id);
                         }}
-                        className="flex-1 text-sm font-medium text-[#4A3520] bg-transparent px-0 py-0.5 border-b border-dashed border-[#D8CEBD] focus:border-solid focus:border-[#9C8567] outline-none placeholder:text-[#C4B49A] transition-colors"
+                        className="app-form-text flex-1 font-medium text-[#4A3520] bg-transparent px-0 py-0.5 border-b border-dashed border-[#D8CEBD] focus:border-solid focus:border-[#9C8567] outline-none placeholder:text-[#C4B49A] transition-colors"
                       />
                       {editable && (
                         <>
@@ -263,7 +264,7 @@ export function MagicPenSheet({
                           };
                           revalidateAll(drafts.map((item) => (item.id === draft.id ? next : item)), draft.id);
                         }}
-                        className={`w-[90px] px-2 py-1 text-xs rounded-lg border text-center ${
+                        className={`app-form-text w-[90px] px-2 py-1 rounded-lg border text-center ${
                           isEstimated ? 'border-dashed border-amber-400 bg-amber-50/50' : 'border-[#E0D6C8] bg-[#FAFAF7]'
                         }`}
                       />
@@ -282,7 +283,7 @@ export function MagicPenSheet({
                           };
                           revalidateAll(drafts.map((item) => (item.id === draft.id ? next : item)), draft.id);
                         }}
-                        className={`w-[90px] px-2 py-1 text-xs rounded-lg border text-center ${
+                        className={`app-form-text w-[90px] px-2 py-1 rounded-lg border text-center ${
                           isEstimated ? 'border-dashed border-amber-400 bg-amber-50/50' : 'border-[#E0D6C8] bg-[#FAFAF7]'
                         }`}
                       />
@@ -335,7 +336,7 @@ export function MagicPenSheet({
                           setDrafts((prev) => prev.map((item) => (item.id === next.id ? next : item)));
                           resetErroredDraftState(draft.id);
                         }}
-                        className="flex-1 text-sm font-medium text-[#4A3520] bg-transparent px-0 py-0.5 border-b border-dashed border-[#D8CEBD] focus:border-solid focus:border-[#9C8567] outline-none placeholder:text-[#C4B49A] transition-colors"
+                        className="app-form-text flex-1 font-medium text-[#4A3520] bg-transparent px-0 py-0.5 border-b border-dashed border-[#D8CEBD] focus:border-solid focus:border-[#9C8567] outline-none placeholder:text-[#C4B49A] transition-colors"
                       />
                       {editable && (
                         <>
@@ -364,7 +365,7 @@ export function MagicPenSheet({
                             const next = { ...draft, todo: { ...draft.todo!, dueDate } };
                             setDrafts((prev) => prev.map((item) => (item.id === next.id ? next : item)));
                           }}
-                          className="text-xs text-[#7A6B55] bg-[#FAFAF7] border border-[#E0D6C8] rounded-lg px-2 py-1"
+                          className="app-form-text text-[#7A6B55] bg-[#FAFAF7] border border-[#E0D6C8] rounded-lg px-2 py-1"
                         />
                       </div>
                     )}

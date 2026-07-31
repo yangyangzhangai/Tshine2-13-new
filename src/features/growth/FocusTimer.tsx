@@ -126,10 +126,10 @@ export const FocusTimer = ({ setDuration, startedAt, onEnd, onAutoComplete }: Pr
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </span>
           {!isCountdown && (
-            <span className="mt-1 text-xs text-sky-200/55">{t('growth_focus_counting_up')}</span>
+            <span className="app-caption mt-1 text-sky-200/55">{t('growth_focus_counting_up')}</span>
           )}
           {isCountdown && (
-            <span className="mt-1 text-xs text-white/40">{t('growth_focus_set_duration')}</span>
+            <span className="app-caption mt-1 text-white/40">{t('growth_focus_set_duration')}</span>
           )}
         </div>
       </div>

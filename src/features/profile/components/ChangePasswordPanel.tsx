@@ -64,7 +64,7 @@ export const ChangePasswordPanel: React.FC<Props> = ({ hasEmailIdentity, onClose
   return (
     <InfoSheetPanel title={title} onClose={onClose}>
       {!hasEmailIdentity && (
-        <p className="mb-5 text-sm leading-relaxed text-slate-500">
+        <p className="app-body mb-5 leading-relaxed text-slate-500">
           {t('change_password_hint')}
         </p>
       )}
@@ -78,7 +78,7 @@ export const ChangePasswordPanel: React.FC<Props> = ({ hasEmailIdentity, onClose
             placeholder={t('auth_password_placeholder')}
             autoComplete="current-password"
             disabled={status === 'loading' || status === 'success'}
-            className="w-full rounded-xl border border-white/65 bg-white/80 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#8FAF92]/60 focus:ring-0 disabled:opacity-50"
+            className="app-form-text w-full rounded-xl border border-white/65 bg-white/80 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#8FAF92]/60 focus:ring-0 disabled:opacity-50"
           />
         )}
         <input
@@ -88,7 +88,7 @@ export const ChangePasswordPanel: React.FC<Props> = ({ hasEmailIdentity, onClose
           placeholder={t('change_password_new_placeholder')}
           autoComplete="new-password"
           disabled={status === 'loading' || status === 'success'}
-          className="w-full rounded-xl border border-white/65 bg-white/80 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#8FAF92]/60 focus:ring-0 disabled:opacity-50"
+          className="app-form-text w-full rounded-xl border border-white/65 bg-white/80 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#8FAF92]/60 focus:ring-0 disabled:opacity-50"
         />
         <input
           type="password"
@@ -97,22 +97,22 @@ export const ChangePasswordPanel: React.FC<Props> = ({ hasEmailIdentity, onClose
           placeholder={t('change_password_confirm_placeholder')}
           autoComplete="new-password"
           disabled={status === 'loading' || status === 'success'}
-          className="w-full rounded-xl border border-white/65 bg-white/80 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#8FAF92]/60 focus:ring-0 disabled:opacity-50"
+          className="app-form-text w-full rounded-xl border border-white/65 bg-white/80 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#8FAF92]/60 focus:ring-0 disabled:opacity-50"
         />
       </div>
 
       {errorMsg && (
-        <p className="mt-3 text-xs text-red-500">{errorMsg}</p>
+        <p className="app-caption mt-3 text-red-500">{errorMsg}</p>
       )}
       {status === 'success' && (
-        <p className="mt-3 text-xs text-[#5F7A63]">{t('change_password_success')}</p>
+        <p className="app-caption mt-3 text-[#5F7A63]">{t('change_password_success')}</p>
       )}
 
       <button
         type="button"
         onClick={() => { void handleSave(); }}
         disabled={status === 'loading' || status === 'success' || (hasEmailIdentity && !currentPassword) || !newPassword || !confirmPassword}
-        className="mt-5 w-full rounded-[50px] py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+        className="app-body mt-5 w-full rounded-[50px] py-3 font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
         style={{ background: '#5F7A63' }}
       >
         {status === 'loading' ? '…' : t('change_password_save')}

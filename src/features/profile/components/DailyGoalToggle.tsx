@@ -22,8 +22,8 @@ export const DailyGoalToggle: React.FC<Props> = ({ plain = false }) => {
           <div className="flex items-start space-x-2.5">
             <Flag size={18} strokeWidth={2} className="mt-0.5 text-[#000000]" />
             <div className="min-w-0">
-              <p className="profile-fn-title">{t('profile_daily_goal')}</p>
-              <p className="mt-0.5 text-[10px] font-light leading-tight text-slate-500">{t('profile_daily_goal_desc')}</p>
+              <p className="app-item-title text-black">{t('profile_daily_goal')}</p>
+              <p className="app-description mt-0.5 font-light leading-tight text-slate-500">{t('profile_daily_goal_desc')}</p>
             </div>
           </div>
         </div>
@@ -32,7 +32,7 @@ export const DailyGoalToggle: React.FC<Props> = ({ plain = false }) => {
             triggerLightHaptic();
             updatePreferences({ dailyGoalEnabled: !enabled });
           }}
-          className="relative w-9 h-5 rounded-full border border-transparent transition-colors"
+          className="app-hit-target-44 relative w-9 h-5 rounded-full border border-transparent transition-colors"
           style={enabled ? APP_PROFILE_JELLY_TOGGLE_ON_STYLE : { background: '#cbd5e1' }}
         >
           <motion.div

@@ -414,11 +414,11 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
   return (
     <section className="mb-4 px-4">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-extrabold text-[#1e293b]">{t('growth_todo_section')}</h2>
+        <h2 className="app-section-title font-extrabold text-[#1e293b]">{t('growth_todo_section')}</h2>
         <button
           onClick={() => setSmartSort((v) => !v)}
           className={cn(
-            'flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all',
+            'app-caption flex items-center gap-1 rounded-full px-2.5 py-1 font-medium transition-all',
             smartSort
               ? 'bg-[#D0E6A1] text-[#6E7F3F]'
               : 'bg-gray-100 text-gray-400'
@@ -445,7 +445,7 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleQuickAdd(); } }}
           enterKeyHint="done"
           placeholder={t('growth_todo_quick_add_placeholder')}
-          className="flex-1 bg-transparent text-sm text-[#334155] placeholder:text-[#94a3b8] focus:outline-none"
+          className="app-form-text flex-1 bg-transparent text-[#334155] placeholder:text-[#94a3b8] focus:outline-none"
         />
       </div>
 
@@ -498,15 +498,15 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
       )}
 
       {visible.length === 0 && (isLoading && !hasHydrated) && (
-        <div className="py-6 text-center text-sm text-gray-400">{t('loading')}</div>
+        <div className="app-body py-6 text-center text-gray-400">{t('loading')}</div>
       )}
 
       {visible.length === 0 && hasHydrated && lastSyncError && (
         <div className="flex flex-col items-center gap-2 py-6">
-          <p className="text-center text-xs text-orange-500">{lastSyncError}</p>
+          <p className="app-caption text-center text-orange-500">{lastSyncError}</p>
           <button
             onClick={handleRetrySync}
-            className="rounded-lg bg-[#A86B2B] px-3 py-1.5 text-xs font-medium text-white"
+            className="app-body rounded-lg bg-[#A86B2B] px-3 py-1.5 font-medium text-white"
           >
             {t('retry')}
           </button>
@@ -514,7 +514,7 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
       )}
 
       {visible.length === 0 && hasHydrated && !lastSyncError && !isLoading && (
-        <div className="py-6 text-center text-sm text-gray-400">{t('no_data')}</div>
+        <div className="app-body py-6 text-center text-gray-400">{t('no_data')}</div>
       )}
 
       {/* Recurring delete confirmation dialog */}
@@ -527,12 +527,12 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
             className={cn(APP_MODAL_CARD_CLASS, 'w-full max-w-md rounded-t-2xl p-5 pb-8 space-y-3')}
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-sm font-semibold text-slate-800 text-center">
+            <p className="app-section-title text-center font-semibold text-slate-800">
               {t('todo_delete_recurring_title')}
             </p>
-            <p className="text-xs text-slate-400 text-center">{t('todo_delete_recurring_desc')}</p>
+            <p className="app-caption text-center text-slate-400">{t('todo_delete_recurring_desc')}</p>
             <button
-              className="w-full py-3 rounded-xl bg-orange-50/80 text-orange-600 font-medium text-sm border border-orange-100"
+              className="app-body w-full rounded-xl border border-orange-100 bg-orange-50/80 py-3 font-medium text-orange-600"
               onClick={() => {
                 deleteTodo(pendingDelete.id);
                 setPendingDelete(null);
@@ -541,7 +541,7 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
               {t('todo_delete_today_only')}
             </button>
             <button
-              className="w-full py-3 rounded-xl bg-red-50/80 text-red-600 font-medium text-sm border border-red-100"
+              className="app-body w-full rounded-xl border border-red-100 bg-red-50/80 py-3 font-medium text-red-600"
               onClick={() => {
                 handleDeleteAllFuture(pendingDelete);
               }}
@@ -549,7 +549,7 @@ export const GrowthTodoSection = ({ onFocus, onSequentialFocus, highlightTodoId 
               {t('todo_delete_all_future')}
             </button>
             <button
-              className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'w-full py-3 text-sm')}
+              className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'app-body w-full py-3')}
               onClick={() => setPendingDelete(null)}
             >
               {t('cancel')}

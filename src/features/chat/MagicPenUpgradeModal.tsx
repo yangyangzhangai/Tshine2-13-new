@@ -10,6 +10,7 @@ import {
   APP_MODAL_OVERLAY_CLASS,
   APP_MODAL_PRIMARY_BUTTON_CLASS,
   APP_MODAL_SECONDARY_BUTTON_CLASS,
+  APP_MODAL_TITLE_CLASS,
 } from '../../lib/modalTheme';
 
 interface MagicPenUpgradeModalProps {
@@ -59,7 +60,7 @@ export const MagicPenUpgradeModal: React.FC<MagicPenUpgradeModalProps> = ({ isOp
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-[#E6EBD8] bg-[#EEF4E8]">
             <Crown size={24} strokeWidth={1.5} className="text-[#5F7A63]" />
           </div>
-          <h3 className="mb-1 text-base font-bold text-slate-800">{t('chat_magic_pen_upgrade_title')}</h3>
+          <h3 className={`${APP_MODAL_TITLE_CLASS} mb-1`}>{t('chat_magic_pen_upgrade_title')}</h3>
           <p className="text-xs leading-relaxed text-slate-500">{t('chat_magic_pen_upgrade_desc')}</p>
         </div>
 

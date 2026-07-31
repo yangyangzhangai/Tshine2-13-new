@@ -175,7 +175,7 @@ export const GrowthPage = () => {
             WebkitBackdropFilter: 'blur(14px) saturate(150%)',
           }}
         >
-          <h1 className="text-2xl font-extrabold" style={{ color: '#1e293b', letterSpacing: '-0.02em' }}>{t('growth_title')}</h1>
+          <h1 className="app-page-title" style={{ color: '#1e293b' }}>{t('growth_title')}</h1>
           {hasSyncError ? (
             <CloudRetryButton
               onClick={handleManualSync}

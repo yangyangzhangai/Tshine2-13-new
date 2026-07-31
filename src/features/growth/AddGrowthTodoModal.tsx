@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { useGrowthStore } from '../../store/useGrowthStore';
 import { type GrowthPriority, type Recurrence } from '../../store/useTodoStore';
 import { cn } from '../../lib/utils';
+import { AppSelectMenu } from '../../components/AppSelectMenu';
 import {
   APP_MODAL_CARD_CLASS,
   APP_MODAL_CLOSE_CLASS,
@@ -11,6 +12,7 @@ import {
   APP_GREEN_GLASS_TEXT,
   APP_MODAL_INPUT_CLASS,
   APP_MODAL_OVERLAY_CLASS,
+  APP_MODAL_TITLE_CLASS,
   APP_SELECTED_GLOW_BG,
   APP_SELECTED_GLOW_BORDER,
   APP_SELECTED_GLOW_SHADOW,
@@ -115,7 +117,7 @@ export const AddGrowthTodoModal = ({ isOpen, onClose, onAdd, defaultValues }: Pr
       <div className={cn(APP_MODAL_CARD_CLASS, 'animate-in zoom-in-95 fade-in w-[min(92vw,420px)] max-h-[86vh] overflow-hidden rounded-2xl')}>
         <div className="flex max-h-[86vh] flex-col">
           <div className="flex items-center justify-between px-5 pb-3 pt-5">
-            <h3 className="text-lg font-bold text-slate-800">{t('growth_todo_add')}</h3>
+            <h3 className={APP_MODAL_TITLE_CLASS}>{t('growth_todo_add')}</h3>
             <button onClick={onClose} className={cn(APP_MODAL_CLOSE_CLASS, 'p-1')}><X size={24} strokeWidth={1.5} /></button>
           </div>
 
@@ -129,52 +131,27 @@ export const AddGrowthTodoModal = ({ isOpen, onClose, onAdd, defaultValues }: Pr
               placeholder={t('growth_todo_title_placeholder')}
               className={cn(
                 APP_MODAL_INPUT_CLASS,
-                'mb-1 w-full p-3 text-sm',
+                'mb-1 w-full p-3',
                 titleError ? 'border-red-400' : 'border-gray-200'
               )}
             />
             {titleError && (
-              <p className="text-xs text-red-500 mb-3">{t('growth_todo_title_required')}</p>
+              <p className="app-caption mb-3 text-red-500">{t('growth_todo_title_required')}</p>
             )}
 
-            {/* Priority */}
-            <label className="block text-sm font-medium text-slate-600 mt-3 mb-2">
-              {t('growth_todo_priority')}
-            </label>
-            <div className="flex gap-2 mb-4">
-              {priorities.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => {
-                    triggerLightHaptic();
-                    setPriority(p);
-                  }}
-                  className={cn(
-                    'flex-1 rounded-xl border py-2 text-sm font-medium transition-all',
-                    priority === p
-                      ? GROWTH_PRIORITY_TEXT_CLASS[p]
-                      : 'border-white/80 bg-white/70 text-[#2F3E33]'
-                  )}
-                  style={priority === p ? getGrowthPrioritySelectedStyle(p) : undefined}
-                >
-                  {t(`growth_todo_priority_${p}`)}
-                </button>
-              ))}
-            </div>
-
             {/* Due date */}
-            <label className="block text-sm font-medium text-slate-600 mb-2">
+            <label className="app-body mb-2 mt-3 block font-medium text-slate-600">
               {t('growth_todo_due_datetime')}
             </label>
             <input
               type="datetime-local"
               value={dueAt}
               onChange={(e) => setDueAt(e.target.value)}
-              className={cn(APP_MODAL_INPUT_CLASS, 'mb-4 w-full p-3 text-sm')}
+              className={cn(APP_MODAL_INPUT_CLASS, 'mb-4 w-full p-3')}
             />
 
             {/* Recurrence */}
-            <label className="block text-sm font-medium text-slate-600 mb-2">
+            <label className="app-body mb-2 block font-medium text-slate-600">
               {t('growth_todo_recurrence')}
             </label>
             <div className="flex gap-2 mb-4">
@@ -186,7 +163,7 @@ export const AddGrowthTodoModal = ({ isOpen, onClose, onAdd, defaultValues }: Pr
                     setRecurrence(r);
                   }}
                   className={cn(
-                    'flex-1 rounded-xl border py-2 text-sm font-medium transition-all',
+                    'app-body flex-1 rounded-xl border py-2 font-medium transition-all',
                     recurrence === r
                       ? 'text-[#1D4ED8]'
                       : 'border-white/80 bg-white/70 text-[#2F3E33]'
@@ -201,7 +178,7 @@ export const AddGrowthTodoModal = ({ isOpen, onClose, onAdd, defaultValues }: Pr
             {/* Weekly day picker */}
             {recurrence === 'weekly' && (
               <>
-                <label className="block text-sm font-medium text-slate-600 mb-2">
+                <label className="app-body mb-2 block font-medium text-slate-600">
                   {t('growth_todo_weekly_days')}
                 </label>
                 <div className="flex gap-1 mb-4">
@@ -213,7 +190,7 @@ export const AddGrowthTodoModal = ({ isOpen, onClose, onAdd, defaultValues }: Pr
                         toggleDay(i);
                       }}
                       className={cn(
-                        'h-9 w-9 rounded-full border text-xs font-medium transition-all',
+                        'app-caption h-9 w-9 rounded-full border font-medium transition-all',
                         recurrenceDays.includes(i)
                           ? 'text-[#1D4ED8]'
                           : 'border-white/70 bg-white/80 text-[#2F3E33]'
@@ -227,22 +204,48 @@ export const AddGrowthTodoModal = ({ isOpen, onClose, onAdd, defaultValues }: Pr
               </>
             )}
 
+            {/* Priority */}
+            <label className="app-body mb-2 block font-medium text-slate-600">
+              {t('growth_todo_priority')}
+            </label>
+            <div className="flex gap-2 mb-4">
+              {priorities.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => {
+                    triggerLightHaptic();
+                    setPriority(p);
+                  }}
+                  className={cn(
+                    'app-body flex-1 rounded-xl border py-2 font-medium transition-all',
+                    priority === p
+                      ? GROWTH_PRIORITY_TEXT_CLASS[p]
+                      : 'border-white/80 bg-white/70 text-[#2F3E33]'
+                  )}
+                  style={priority === p ? getGrowthPrioritySelectedStyle(p) : undefined}
+                >
+                  {t(`growth_todo_priority_${p}`)}
+                </button>
+              ))}
+            </div>
+
             {/* Link bottle */}
             {bottles.length > 0 && (
               <>
-                <label className="block text-sm font-medium text-slate-600 mb-2">
+                <label className="app-body mb-2 block font-medium text-slate-600">
                   {t('growth_todo_link_bottle')}
                 </label>
-                <select
+                <AppSelectMenu
                   value={bottleId}
-                  onChange={(e) => setBottleId(e.target.value)}
-                  className={cn(APP_MODAL_INPUT_CLASS, 'mb-2 w-full p-3 text-sm')}
-                >
-                  <option value="">{t('growth_todo_none')}</option>
-                  {bottles.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
+                  onChange={setBottleId}
+                  ariaLabel={t('growth_todo_link_bottle')}
+                  placement="top"
+                  className="mb-2"
+                  options={[
+                    { value: '', label: t('growth_todo_none') },
+                    ...bottles.map(bottle => ({ value: bottle.id, label: bottle.name })),
+                  ]}
+                />
               </>
             )}
           </div>
@@ -257,7 +260,7 @@ export const AddGrowthTodoModal = ({ isOpen, onClose, onAdd, defaultValues }: Pr
                 triggerLightHaptic();
                 handleSubmit();
               }}
-              className="w-full rounded-2xl py-2.5 font-medium transition-opacity"
+              className="app-body w-full rounded-2xl py-2.5 font-medium transition-opacity"
               style={{
                 ...APP_GREEN_GLASS_BUTTON_STYLE,
                 color: APP_GREEN_GLASS_TEXT,

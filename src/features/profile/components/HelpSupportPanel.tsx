@@ -72,12 +72,12 @@ export const HelpSupportPanel: React.FC<Props> = ({ onClose }) => {
 
   return (
     <InfoSheetPanel title={t('help_sheet_title')} onClose={onClose}>
-      <p className="mb-5 text-sm text-slate-500">{t('help_intro')}</p>
+      <p className="app-body mb-5 text-slate-500">{t('help_intro')}</p>
 
       <div className="space-y-5">
         {SECTIONS.map(section => (
           <div key={section.titleKey}>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#5F7A63]">
+            <h3 className="app-caption mb-2 font-semibold uppercase text-[#5F7A63]">
               {t(section.titleKey)}
             </h3>
             <div className="overflow-hidden rounded-2xl border border-white/65 bg-white/70 [box-shadow:inset_0_1px_1px_rgba(255,255,255,0.75),0_4px_12px_rgba(148,163,184,0.08)]">
@@ -95,13 +95,13 @@ export const HelpSupportPanel: React.FC<Props> = ({ onClose }) => {
       <button
         type="button"
         onClick={() => setShowFeedback(true)}
-        className="mt-4 w-full rounded-[50px] py-3 text-sm font-semibold text-[#5F7A63] transition hover:opacity-90"
+        className="app-body mt-4 w-full rounded-[50px] py-3 font-semibold text-[#5F7A63] transition hover:opacity-90"
         style={APP_PROFILE_JELLY_BUTTON_STYLE}
       >
         {t('feedback_sheet_title')}
       </button>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="app-caption mt-3 text-slate-500">
         {t('help_contact_desc')}{' '}
         <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-slate-600">
           {SUPPORT_EMAIL}
@@ -127,7 +127,7 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
         onClick={() => setOpen(v => !v)}
         className="flex w-full items-center justify-between px-4 py-3 text-left transition hover:bg-white/70"
       >
-        <span className="pr-4 text-sm font-medium text-slate-700">{question}</span>
+        <span className="app-body pr-4 font-medium text-slate-700">{question}</span>
         <ChevronDown
           size={16}
           strokeWidth={2.5}
@@ -135,7 +135,7 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
         />
       </button>
       {open && (
-        <p className="px-4 pb-3 text-sm leading-relaxed text-slate-500">{answer}</p>
+        <p className="app-body px-4 pb-3 leading-relaxed text-slate-500">{answer}</p>
       )}
     </div>
   );

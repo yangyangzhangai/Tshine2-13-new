@@ -15,6 +15,11 @@
   - Session restore via `useAuthStore.initialize()`
   - Sign out / preference updates are exposed by `useAuthStore` and consumed by other pages such as `/profile`
 
+## Typography Semantics
+
+- Auth and onboarding native text controls use the shared `app-form-text` semantic so visible input text stays at the app-wide `16px` form size.
+- Page, modal, and supporting-copy typography uses the global semantic classes; authentication flow, validation, and account-state behavior remain feature-owned.
+
 ## Onboarding Gate
 
 - Onboarding route: `/onboarding`

@@ -81,7 +81,7 @@ export const DailyGoalPopup = ({ onClose }: Props) => {
         <h2 className="mb-2 text-center text-2xl font-bold text-slate-800">
           {t('growth_daily_goal_title')}
         </h2>
-        <p className="mb-5 text-center text-sm text-slate-500">
+        <p className="app-body mb-5 text-center text-slate-500">
           {t('growth_daily_goal_subtitle')}
         </p>
 
@@ -89,14 +89,14 @@ export const DailyGoalPopup = ({ onClose }: Props) => {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={t('growth_daily_goal_placeholder')}
-          className={cn(APP_MODAL_INPUT_CLASS, 'min-h-[88px] w-full resize-none p-3 text-sm')}
+          className={cn(APP_MODAL_INPUT_CLASS, 'min-h-[88px] w-full resize-none p-3')}
           rows={3}
         />
 
         <button
           onClick={() => { void handleConfirm(); }}
           disabled={isSaving}
-          className="mt-4 w-full rounded-2xl py-2.5 font-medium transition-opacity disabled:opacity-60"
+          className="app-body mt-4 w-full rounded-2xl py-2.5 font-medium transition-opacity disabled:opacity-60"
           style={{
             ...APP_GREEN_GLASS_BUTTON_STYLE,
             color: APP_GREEN_GLASS_TEXT,
@@ -109,7 +109,7 @@ export const DailyGoalPopup = ({ onClose }: Props) => {
           <div className={cn(APP_MODAL_CARD_CLASS, 'absolute bottom-full left-1/2 -translate-x-1/2 mb-2 rounded-xl py-1 min-w-[140px]')}>
             <button
               onClick={handleDisable}
-              className="w-full text-left px-4 py-2 text-sm text-[#2F3E33] hover:bg-white/70"
+              className="app-body w-full px-4 py-2 text-left text-[#2F3E33] hover:bg-white/70"
             >
               {t('growth_daily_goal_disable')}
             </button>

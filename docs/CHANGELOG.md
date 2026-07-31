@@ -8,6 +8,96 @@
 - Updated stale annotation/diary/suggestion assertions, froze reminder/report tests in local time, and excluded nested `.claude/worktrees/**` from Vitest discovery. The canonical suite now passes all 823 tests across 103 files.
 - Added a GitHub Quality workflow that runs repository checks, the full unit suite, and the production build for pull requests and pushes to `main`.
 
+## 2026-07-31 - Reorder Growth todo editor fields
+
+- Moved the Priority row below Repeat in both the expanded todo editor and Add Task modal, producing the order Due Date & Time, Repeat, Priority, then Link to Bottle after the task title.
+- Preserved priority values, selected-state styling, update/draft behavior, persistence, typography, and localized copy.
+
+## 2026-07-31 - Unify expanded Growth editor typography
+
+- Unified labels, option values, browser date text, bottle selection, Steps content/actions, Pin, and title editing in the expanded todo editor at the same `14px` body tier as the compact todo row.
+- Added a scoped compact typography option to `AppSelectMenu`, preserving the Add Task dialog's default `16px` trigger and all existing dropdown behavior.
+- Kept the global narrow-WebKit native-control safeguard, so the iPhone date input may remain `16px` to prevent focus zoom; todo data, handlers, persistence, colors, and copy are unchanged.
+
+## 2026-07-30 - Align expanded Growth form typography
+
+- Raised the expanded todo editor's priority and recurrence choices from the `12px` caption tier to the shared `16px` form tier, matching date/time and Link to Bottle values.
+- Kept field labels, Steps content, and Pin at `12px`, with all task values, handlers, persistence, colors, and localized copy unchanged.
+
+## 2026-07-30 - Replace Growth native bottle selects
+
+- Added the reusable `AppSelectMenu` custom listbox, visually derived from the existing Feedback dropdown and aligned with the app's rounded glass surfaces.
+- Replaced only the Add Task and expanded-task Link to Bottle native selects; bottle IDs, draft state, and save handlers are unchanged.
+- Added `44px` option targets, selected-state tint/checkmark, bounded internal scrolling, automatic selected-option reveal, outside-press closing, and Escape closing.
+- Browser checks confirmed both placements stay inside the viewport, avoid horizontal overflow, expose listbox/option semantics, and select/close correctly without saving test data.
+
+## 2026-07-30 - Migrate Growth surfaces to typography tokens
+
+- Migrated the Growth page and section hierarchy, bottle labels, todo rows, expanded task editors, nested steps, ordinary focus-mode copy, dialogs, and status feedback to the global typography semantics.
+- Kept compact todo text at the `14px` body level and native controls at the `16px` form level; bottle names and progress now share the `12px` supporting tier instead of the previous `11px` name / `14px` progress inversion.
+- Preserved functional display sizes for focus timers, celebrations, active-focus titles, and the Daily Goal prompt, along with all Growth colors, geometry, drag/sort/completion/recurrence behavior, focus timing, rewards, and persistence.
+- Verified the running root page, bottle detail, add-bottle/add-todo dialogs, expanded todo editor, and focus setup in English, plus root/modal fit in Chinese and Italian, with no semantic-text or horizontal overflow.
+
+## 2026-07-30 - Keep Root Direction labels on one line
+
+- Widened the shared English category selector from `140px` to `155px`, allowing `Work & Study` to remain on one line while keeping all five English selectors equal in width.
+- Preserved the existing Chinese and Italian widths, modal layout, category values, and save behavior.
+
+## 2026-07-30 - Migrate Profile secondary surfaces to typography tokens
+
+- Migrated the standalone Routine and AI Personal Memory pages plus Region, Root Direction, Change Password, Help, About, Privacy, Terms, Feedback, and Delete Account panels to the global typography semantics.
+- Preserved all business callbacks, localized copy, colors, geometry, persistence, account actions, and navigation; the separate Upgrade/payment flow was intentionally excluded.
+- Kept Routine time-wheel selected/unselected sizes and the About brand glyph as intentional local display treatments.
+- Verified the running routes and representative panels in English, Chinese, and Italian; semantic text and the page frame show no horizontal overflow.
+
+## 2026-07-30 - Migrate the Profile root page to typography tokens
+
+- Migrated Profile identity copy, statistics, AI companion labels, embedded annotation sensitivity, FREE membership copy, and the language switcher to the global typography semantics.
+- Kept the established hierarchy at `24px` for the page title, `16px` for primary names/values/settings, `12px` for supporting labels and descriptions, and `10px` for badges and compact hints.
+- Preserved membership colors, card geometry, avatar and illustration sizing, toggle behavior, navigation, payment, and account logic.
+- Verified computed typography and horizontal fit on the running Profile page; Chinese, English, and Italian semantic text all render without overflow, and the test language was restored to English.
+
+## 2026-07-30 - Add global typography Design Tokens
+
+- Created the independent `codex/ui-redesign` branch after design-spec confirmation.
+- Added app-wide font-family, size, line-height, and weight tokens for display titles, page titles, section titles, item titles, body copy, descriptions, captions, form text, and badges.
+- Added matching semantic typography classes in Tailwind's `components` layer so they override base element defaults while remaining overridable by intentional utility classes.
+- Migrated the main Profile, Growth, and Report headers plus supported Report/Profile subpage headers to the `24px` page-title token.
+- Added a shared standard modal-title class and migrated standard modal/sheet headers to the `16px` section-title token; special purchase and promotional dialog titles retain their existing display hierarchy.
+- Migrated every visible native text input, textarea, and select to the `16px` form token, either directly or through the shared modal input class. A TypeScript syntax-tree audit reports zero visible form controls outside that semantic path.
+- Replaced the Profile-only function-title class with the global `16px` item-title token and migrated setting descriptions to the `12px` description token.
+- Confirmed that Bottom Nav contains icon-only links and therefore has no visible typography to migrate or change in this pass.
+- Browser verification covered Profile, Growth, Report, personal memory, a standard information sheet, and Profile labels in Chinese, English, and Italian with no horizontal overflow or item-title truncation.
+
+## 2026-07-30 - Standardize Profile item typography
+
+- Raised the shared Profile function-title style from `14px` to `16px`, covering the main page's AI mode, membership, daily goal, routine, AI memory, language, region, root direction, account, help, deletion, and logout items.
+- Raised the Daily Goal description from `10px` to `12px`, matching the existing AI-mode subtitle while leaving badges, statistics, buttons, and standalone settings-page labels unchanged.
+
+## 2026-07-30 - Normalize native form-control typography
+
+- Raised all visible native `input`, `textarea`, and `select` declarations below `16px` to `16px` across Auth, Chat/Magic Pen, Growth, Onboarding, Profile, Report, and Telemetry while leaving surrounding labels, descriptions, and button copy unchanged.
+- Removed the Region input's independent `10px` placeholder override so its placeholder matches entered text.
+- Re-audited all 55 native form controls through the TypeScript syntax tree; no visible control or explicitly sized placeholder remains below `16px`.
+
+## 2026-07-30 - Align personal-memory editor typography
+
+- Set the personal-memory editor label to `16px`, matching the textarea and the existing iOS form-control focus-zoom safeguard so browser preview and iPhone presentation use the same explicit size.
+- Raised the standalone memory-enable title to `16px` while preserving the existing description and status-message sizes.
+
+## 2026-07-30 - Localize startup and retry feedback
+
+- Replaced the startup wait screen's developer-facing stage, timing, Xcode, and diagnostic-key copy with the confirmed localized loading message in Chinese, English, and Italian; detailed startup timing remains available through diagnostic logs.
+- Reused the existing localized `retry` action for failed outbox entries and removed the browser tooltip that exposed internal sync kind, status, attempt count, retry time, and raw error details.
+
+## 2026-07-30 - Restore component typography overrides
+
+- Changed the global `1.5` line-height and Profile default `500` font-weight selectors to zero-specificity defaults without `!important`, allowing component-level line-height and weight utilities to render as declared while preserving the existing fallback typography.
+- Scoped the forced full-bleed `.app-mobile-page-frame` reset to screens below `768px`, preserving the existing iPhone layout while allowing declared tablet/desktop max-width, radius, border, background, and shadow styles to apply.
+- Standardized the personal-memory textarea and placeholder at `16px` in the component itself so browser preview and iOS WebView no longer disagree.
+- Lowered the generic button hover/press transform specificity and added a reusable transparent `44x44` hit target to confirmed compact actions, modal close controls, and switches without enlarging their visible artwork.
+- Replaced every runtime Material Symbols glyph with Lucide SVG icons and removed the unused icon-font bootstrap/dependency, eliminating the path where a failed font readiness check could leave navigation or action icons transparent.
+
 ## 2026-07-30 - Account deletion now fails closed and clears storage
 
 - Reworked `api/delete-account.ts` to use the service-role client for explicit deletion of all currently known user-scoped tables before auth deletion, adding `telemetry_events`, `user_feedback`, `reminder_responses`, `user_profiles`, `user_account_state`, `user_login_days`, and `timing_sessions` to the hard-delete path.

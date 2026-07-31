@@ -77,7 +77,7 @@ export const ReminderPopup: React.FC<Props> = ({ type, copyText, onConfirm, onDe
           <button
             onClick={handleConfirm}
             aria-label={t('reminder_popup_confirm')}
-            className="w-10 h-10 rounded-full flex items-center justify-center transition active:scale-90"
+            className="app-hit-target-44 w-10 h-10 rounded-full flex items-center justify-center transition active:scale-90"
             style={{ background: '#5F7A63' }}
           >
             <Check size={20} color="white" strokeWidth={2.5} />
@@ -85,7 +85,7 @@ export const ReminderPopup: React.FC<Props> = ({ type, copyText, onConfirm, onDe
           <button
             onClick={handleDeny}
             aria-label={t('reminder_popup_deny')}
-            className="w-10 h-10 rounded-full flex items-center justify-center transition active:scale-90 bg-slate-200"
+            className="app-hit-target-44 w-10 h-10 rounded-full flex items-center justify-center transition active:scale-90 bg-slate-200"
           >
             <X size={20} color="#94A3B8" strokeWidth={2.5} />
           </button>
@@ -106,13 +106,12 @@ export const ReminderPopup: React.FC<Props> = ({ type, copyText, onConfirm, onDe
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('reminder_popup_input_placeholder')}
-            className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#CBE7D7]"
-            style={{ fontSize: '16px' }}
+            className="app-form-text flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-[#CBE7D7]"
           />
           <button
             onClick={handleSend}
             disabled={!inputValue.trim()}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition disabled:opacity-40"
+            className="app-hit-target-44 w-9 h-9 rounded-xl flex items-center justify-center transition disabled:opacity-40"
             style={{ background: '#5F7A63' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
