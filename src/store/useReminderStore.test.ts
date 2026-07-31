@@ -1,9 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildReminderOccurrence } from '../services/reminder/reminderResponse';
 import { useReminderStore } from './useReminderStore';
 
 describe('useReminderStore cloud occurrence merge', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 23, 12, 0, 0, 0));
     useReminderStore.setState({
       confirmedToday: new Set(),
       confirmedOccurrenceKeys: new Set(),
@@ -13,6 +15,10 @@ describe('useReminderStore cloud occurrence merge', () => {
       showQuickPicker: false,
       pickerContext: null,
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('skips the cloud-confirmed occurrence but allows a changed schedule time', () => {
