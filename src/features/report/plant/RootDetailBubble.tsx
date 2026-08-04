@@ -26,8 +26,8 @@ export const RootDetailBubble: React.FC<RootDetailBubbleProps> = ({
     <div className={className ?? 'rounded-xl border border-amber-200/80 bg-amber-50/95 p-3 shadow-md'}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-amber-900">{title}</p>
-          <p className="mt-1 text-xs leading-5 text-amber-800">{activity}</p>
+          <p className="app-body font-semibold text-amber-900">{title}</p>
+          <p className="app-description mt-1 text-amber-800">{activity}</p>
         </div>
         <button
           type="button"
@@ -38,7 +38,7 @@ export const RootDetailBubble: React.FC<RootDetailBubbleProps> = ({
           ×
         </button>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-amber-900">
+      <div className="app-caption mt-2 grid grid-cols-2 gap-2 text-amber-900">
         <div className="rounded-lg bg-white/70 p-2">{category}</div>
         <div className="rounded-lg bg-white/70 p-2">{timeRange}</div>
         <div className="rounded-lg bg-white/70 p-2">{duration}</div>

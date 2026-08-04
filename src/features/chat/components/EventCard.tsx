@@ -196,8 +196,7 @@ export const EventCard: React.FC<EventCardProps> = ({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
         marginBottom: 6, position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, flex: 1, minWidth: 0, paddingRight: 6 }}>
-          <h3 style={{ fontWeight: 700, fontSize: 14, color: '#1e293b', margin: 0, flex: 1, minWidth: 0,
-            lineHeight: 1.4 }}>
+          <h3 className="app-body" style={{ fontWeight: 700, color: '#1e293b', margin: 0, flex: 1, minWidth: 0 }}>
             {message.content}
           </h3>
           {stardustEmoji && (
@@ -326,7 +325,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             const moodStardust = stardustMemories.find(mem => mem.messageId === desc.id);
             return (
               <div key={desc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <p className="text-xs" style={{ color: '#64748b', margin: '0 0 3px', lineHeight: 1.45, fontStyle: 'italic', flex: 1 }}>
+                <p className="app-description" style={{ color: '#64748b', margin: '0 0 3px', fontStyle: 'italic', flex: 1 }}>
                   {desc.content}
                 </p>
                 {moodStardust?.emojiChar && onStardustSelect && (
@@ -358,7 +357,7 @@ export const EventCard: React.FC<EventCardProps> = ({
       {/* ── Timer row ── */}
       {(isOngoing || message.duration != null) && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-          <div className="text-xs" style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700,
+          <div className="app-caption" style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700,
             color: isOngoing ? '#B2EEDA' : 'rgba(71,85,105,0.65)' }}>
             <Timer size={13} />
             <span>
@@ -376,7 +375,7 @@ export const EventCard: React.FC<EventCardProps> = ({
           {isOngoing && !readonly && (
             <button onClick={handleEndButtonClick}
               title={t('end_event_btn')}
-              className="app-hit-target-44 text-xs"
+              className="app-caption app-hit-target-44"
               style={{ fontWeight: 800, padding: '3px 9px', borderRadius: 9999,
                 border: pendingManualEnd ? '1px solid rgba(148,163,184,0.38)' : '1px solid rgba(244,192,194,0.3)',
                 background: pendingManualEnd ? 'rgba(148,163,184,0.12)' : 'rgba(244,192,194,0.10)',

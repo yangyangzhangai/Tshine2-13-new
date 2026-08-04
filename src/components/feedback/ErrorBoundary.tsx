@@ -28,14 +28,16 @@ export class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 16, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' }}>
-          <h2 style={{ fontSize: 16, marginBottom: 8 }}>页面渲染出错</h2>
-          <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
+        <div className="app-viewport-fixed flex items-center justify-center bg-[#f4f7f4] p-4">
+          <div className="w-full max-w-md rounded-3xl border border-white/80 bg-white/85 p-5 shadow-xl">
+          <h2 className="app-section-title mb-2 text-slate-800">页面渲染出错</h2>
+          <p className="app-body text-slate-700">
             这不是普通网络慢，而是 React 页面渲染阶段抛错。请保留 Xcode 控制台里的 react.error_boundary.caught 日志。
           </p>
-          <pre style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'pre-wrap' }}>
+          <pre className="app-caption mt-3 whitespace-pre-wrap text-slate-500">
             {formatUserFacingDiagnostic('页面渲染', this.state.error, { path: 'React ErrorBoundary' })}
           </pre>
+          </div>
         </div>
       );
     }

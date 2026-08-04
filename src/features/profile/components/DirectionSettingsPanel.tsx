@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { reportTelemetryEvent } from '../../../services/input/reportTelemetryEvent';
 import { usePlantStore } from '../../../store/usePlantStore';
 import { DEFAULT_DIRECTION_ORDER } from '../../../types/plant';
@@ -11,6 +11,7 @@ import {
   APP_GREEN_GLASS_TEXT,
   APP_PROFILE_JELLY_BUTTON_STYLE,
 } from '../../../lib/modalTheme';
+import { AppSelectMenu } from '../../../components/AppSelectMenu';
 
 interface DirectionSettingsPanelProps {
   onClose: () => void;
@@ -64,7 +65,6 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
   const [draft, setDraft] = useState<PlantCategoryKey[]>(() => [...directionOrder]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [focusedSlot, setFocusedSlot] = useState<number | null>(null);
   const language = i18n.language?.toLowerCase() ?? 'en';
   const selectionWidthClass = language.startsWith('zh')
     ? 'w-[110px]'
@@ -161,9 +161,8 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
 
   const panel = (
     <div className="app-viewport-fixed z-[9999] flex items-end justify-center sm:items-center sm:p-4">
-      <button
-        type="button"
-        aria-label="close"
+      <div
+        aria-hidden="true"
         className="absolute inset-0 bg-black/45 backdrop-blur-[4px]"
         onClick={onClose}
       />
@@ -173,7 +172,12 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
       >
         <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-5">
           <h3 className="app-section-title font-bold text-[#1C2E24]">{t('profile_root_direction_settings')}</h3>
-          <button type="button" onClick={onClose} className="rounded-full p-2 transition hover:bg-black/5">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('close')}
+            className="app-hit-target-44 rounded-full p-2 transition hover:bg-black/5"
+          >
             <X size={18} className="text-[#1C2E24]" />
           </button>
         </div>
@@ -184,47 +188,30 @@ export const DirectionSettingsPanel: React.FC<DirectionSettingsPanelProps> = ({ 
           <div className="mt-4 space-y-2.5">
             {SLOTS.map(slot => {
               const isDuplicate = duplicateCategories.has(stableDraft[slot.index]);
-              const selectedCategory = stableDraft[slot.index];
-              const isFocused = focusedSlot === slot.index;
               return (
-                <label
+                <div
                   key={slot.positionKey}
-                  className={`relative flex min-h-[58px] cursor-pointer items-center justify-between gap-3 rounded-2xl px-4 py-3 transition active:scale-[0.99] ${
+                  className={`relative flex min-h-[58px] items-center justify-between gap-3 rounded-2xl px-4 py-3 transition ${
                     isDuplicate ? 'bg-red-50/80' : 'bg-[#F7F9F8] active:bg-[#EEF5F0]'
                   }`}
                 >
                   <span className={`app-item-title font-medium ${isDuplicate ? 'text-red-600' : 'text-[#1C2E24]'}`}>
                     {t(slot.positionKey)}
                   </span>
-                  <span
-                    aria-hidden="true"
-                    className={`app-body inline-flex h-9 ${selectionWidthClass} shrink-0 items-center justify-between gap-2 rounded-[50px] border bg-white px-3 font-medium ${
-                      isDuplicate
-                        ? 'border-red-300 text-red-600'
-                        : 'border-[#CBE7D7] text-[#355643]'
-                    }`}
-                  >
-                    <span>{t(toCategoryLabelKey(selectedCategory))}</span>
-                    <ChevronDown
-                      size={16}
-                      strokeWidth={2.3}
-                      className={`shrink-0 transition-transform ${isFocused ? 'rotate-180' : ''}`}
-                    />
-                  </span>
-                  <select
-                    value={selectedCategory}
-                    onChange={event => updateSlot(slot.index, event.target.value as PlantCategoryKey)}
-                    onFocus={() => setFocusedSlot(slot.index)}
-                    onBlur={() => setFocusedSlot(null)}
-                    className="app-form-text absolute inset-0 h-full w-full cursor-pointer font-medium opacity-0"
-                  >
-                    {CATEGORIES.map(category => (
-                      <option key={category} value={category}>
-                        {t(toCategoryLabelKey(category))}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <AppSelectMenu
+                    value={stableDraft[slot.index]}
+                    options={CATEGORIES.map(category => ({
+                      value: category,
+                      label: t(toCategoryLabelKey(category)),
+                    }))}
+                    onChange={value => updateSlot(slot.index, value as PlantCategoryKey)}
+                    ariaLabel={t(slot.positionKey)}
+                    className={`${selectionWidthClass} shrink-0`}
+                    placement={slot.index >= 3 ? 'top' : 'bottom'}
+                    size="compact"
+                    invalid={isDuplicate}
+                  />
+                </div>
               );
             })}
           </div>

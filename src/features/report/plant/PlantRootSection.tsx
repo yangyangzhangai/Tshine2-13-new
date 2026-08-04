@@ -452,8 +452,8 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
         {renderedSegments.length === 0 ? (
           <div className="absolute inset-x-8 top-[52%] -translate-y-1/2 z-10 pointer-events-none">
             <div className="rounded-2xl px-4 py-3 text-center" style={{ background: 'transparent', border: 'none' }}>
-              <p className="text-xs font-medium" style={{ color: '#5a4028' }}>{t('report_root_empty_title')}</p>
-              <p className="mt-1 text-xs font-medium leading-5" style={{ color: '#5a4028' }}>{t('report_root_empty')}</p>
+              <p className="app-caption" style={{ color: '#5a4028' }}>{t('report_root_empty_title')}</p>
+              <p className="app-description mt-1 font-medium" style={{ color: '#5a4028' }}>{t('report_root_empty')}</p>
             </div>
           </div>
         ) : null}
@@ -464,13 +464,13 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
         <button
           onClick={handleGeneratePlant}
           disabled={plantGenerateUi.disabled}
-          className="rounded-full px-5 py-1.5 text-[13px] font-medium transition active:opacity-70 disabled:opacity-55 disabled:cursor-not-allowed"
+          className="app-body rounded-full px-5 py-1.5 font-medium transition active:opacity-70 disabled:opacity-55 disabled:cursor-not-allowed"
           style={{ ...APP_GREEN_GLASS_BUTTON_STYLE, color: APP_GREEN_GLASS_TEXT }}
         >
           {t(plantGenerateUi.buttonKey)}
         </button>
         {plantStatusHint ? (
-          <p className="pointer-events-none text-[10px] font-medium text-center" style={{ color: '#5f6f65' }}>
+          <p className="app-badge pointer-events-none text-center" style={{ color: '#5f6f65' }}>
             {plantStatusHint}
           </p>
         ) : null}
@@ -486,17 +486,17 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
             }}
           >
             <div className="px-5 py-4 text-center">
-              <p className="text-sm font-semibold leading-snug" style={{ color: '#2d3f5a' }}>
+              <p className="app-body font-semibold" style={{ color: '#2d3f5a' }}>
                 {t('plant_generate_locked_hint')}
               </p>
               {todayActivityCount > 0 && (
-                <p className="mt-2 text-xs" style={{ color: '#7a9b80' }}>
+                <p className="app-description mt-2" style={{ color: '#7a9b80' }}>
                   {t('plant_early_activities', { count: todayActivityCount })}
                 </p>
               )}
               <button
                 onClick={() => setShowEarlyCard(false)}
-                className="mt-3 rounded-full px-5 py-1 text-xs font-semibold transition active:opacity-70"
+                className="app-caption mt-3 rounded-full px-5 py-1 font-semibold transition active:opacity-70"
                 style={{ ...APP_GREEN_GLASS_BUTTON_STYLE, color: APP_GREEN_GLASS_TEXT }}
               >
                 {t('report_early_tip_ok')}
@@ -515,18 +515,18 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
             className={`${APP_MODAL_CARD_CLASS} w-full max-w-xs rounded-3xl p-6 text-center`}
             onClick={(event) => event.stopPropagation()}
           >
-            <p className="text-sm leading-6 text-slate-700">{t('plant_generate_confirm')}</p>
+            <p className="app-body text-slate-700">{t('plant_generate_confirm')}</p>
             <div className="mt-5 flex gap-3">
               <button
                 type="button"
-                className={`${APP_MODAL_SECONDARY_BUTTON_CLASS} flex-1 py-2.5 text-sm`}
+                className={`${APP_MODAL_SECONDARY_BUTTON_CLASS} app-body flex-1 py-2.5`}
                 onClick={() => setShowGenerateConfirm(false)}
               >
                 {t('cancel')}
               </button>
               <button
                 type="button"
-                className={`${APP_MODAL_PRIMARY_BUTTON_CLASS} flex-1 py-2.5 text-sm`}
+                className={`${APP_MODAL_PRIMARY_BUTTON_CLASS} app-body flex-1 py-2.5`}
                 onClick={() => {
                   setShowGenerateConfirm(false);
                   void executeGeneratePlant();
@@ -547,7 +547,7 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
             : 'calc(env(safe-area-inset-bottom,0px) + 92px)',
         }}
       >
-        <h3 className="text-sm font-bold" style={{ color: '#334155' }}>{t('report_my_diary')}</h3>
+        <h3 className="app-body font-bold" style={{ color: '#334155' }}>{t('report_my_diary')}</h3>
         <div className="mt-2">
           <textarea
             ref={diaryTextareaRef}
@@ -583,7 +583,7 @@ export const PlantRootSection: React.FC<PlantRootSectionProps> = ({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => { void handleDiarySave(); }}
                 disabled={isDiarySaving}
-                className="rounded-full px-3 py-1 text-xs font-semibold disabled:opacity-70"
+                className="app-caption rounded-full px-3 py-1 font-semibold disabled:opacity-70"
                 style={{ ...APP_GREEN_GLASS_BUTTON_STYLE, color: APP_GREEN_GLASS_TEXT }}
               >
                 {isDiarySaving ? `${t('report_save')}...` : t('report_save')}

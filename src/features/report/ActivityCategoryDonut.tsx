@@ -79,7 +79,7 @@ export const ActivityCategoryDonut: React.FC<ActivityCategoryDonutProps> = ({ da
       </svg>
       <div className="flex flex-col gap-1 flex-1 min-w-0">
         {sorted.map((entry) => (
-          <div key={entry.category} className="flex items-center gap-2 text-xs">
+          <div key={entry.category} className="app-description flex items-center gap-2">
             <span
               className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ background: CATEGORY_COLORS[entry.category] }}

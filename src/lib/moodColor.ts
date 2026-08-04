@@ -12,7 +12,7 @@ export const MOOD_COLORS: Record<string, string> = {
 };
 
 export const MOOD_GLASS_BUTTON_CLASS =
-  'app-glass-button inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs shadow-sm transition-colors';
+  'app-caption app-glass-button inline-flex items-center justify-center rounded-full border px-3 py-1.5 shadow-sm transition-colors';
 
 function hashStringToInt(str: string): number {
   let hash = 0;

@@ -12,6 +12,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { usePlantStore } from '../../store/usePlantStore';
 import type { DailyPlantRecord } from '../../types/plant';
 import { cn } from '../../lib/utils';
+import { Header } from '../../components/layout/Header';
 import {
   APP_GLASS_BUTTON_BASE_STYLE,
   APP_GREEN_GLASS_BUTTON_STYLE,
@@ -364,22 +365,15 @@ export const ReportPage = () => {
       <div className="app-mobile-page-frame relative flex h-full w-full max-w-[430px] flex-col overflow-hidden text-slate-900 [box-shadow:0_0_0_1px_rgba(0,0,0,0.06),0_24px_64px_rgba(0,0,0,0.1)] md:h-[calc(100%-24px)] md:max-w-[980px] md:rounded-[30px] md:border md:border-white/70 md:bg-[#fcfaf7]/85 md:[box-shadow:0_0_0_1px_rgba(255,255,255,0.45),0_24px_64px_rgba(15,23,42,0.12)]">
       {!isTodayDiaryHome ? (
         <>
-      <header
-        className="app-mobile-page-header relative sticky top-0 z-10 px-4 pb-3 pt-11"
-        style={{
-          background: 'rgba(252,250,247,0.38)',
-          backdropFilter: 'blur(14px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(14px) saturate(150%)',
-        }}
-      >
+      <Header className="relative sticky top-0 z-10 px-4 pb-3 pt-11">
         <div className="grid grid-cols-[1fr_auto] items-start gap-x-3">
           <div className="min-w-0">
             <h1 className="app-page-title" style={{ color: '#1e293b' }}>{t('report_title')}</h1>
             <div className="mt-2">
-              <p className="text-[13px] font-medium leading-none text-[#4a5d4c]">
+              <p className="app-body font-medium leading-none text-[#4a5d4c]">
                 {format(today, isZh ? 'yyyy年M月d日' : 'PPP', { locale: calendarLocale })}
               </p>
-              <p className="mt-1 text-[10px] font-medium leading-none text-[#4a5d4c]">
+              <p className="app-badge mt-1 leading-none text-[#4a5d4c]">
                 {format(today, 'EEEE', { locale: calendarLocale })}
               </p>
             </div>
@@ -414,7 +408,7 @@ export const ReportPage = () => {
             </button>
           </div>
         </div>
-      </header>
+      </Header>
 
       <div className="flex-1 relative overflow-hidden">
         <PlantRootSection
@@ -427,8 +421,8 @@ export const ReportPage = () => {
       {showEarlyTip && (
         <div className={cn('fixed inset-0 z-50 flex items-center justify-center p-6', APP_MODAL_OVERLAY_CLASS)} onClick={() => setShowEarlyTip(false)}>
           <div className={cn(APP_MODAL_CARD_CLASS, 'w-full max-w-xs rounded-3xl p-6 text-center animate-in fade-in zoom-in-95')} onClick={e => e.stopPropagation()}>
-            <p className="text-sm text-slate-700 leading-relaxed">{t('report_early_tip')}</p>
-            <button onClick={() => setShowEarlyTip(false)} className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'mt-4 text-xs px-4 py-1.5 rounded-full active:opacity-70')}>
+            <p className="app-body text-slate-700">{t('report_early_tip')}</p>
+            <button onClick={() => setShowEarlyTip(false)} className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'app-body mt-4 rounded-full px-4 py-1.5 active:opacity-70')}>
               {t('report_early_tip_ok')}
             </button>
           </div>

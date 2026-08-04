@@ -22,8 +22,11 @@
 
 ## Typography Semantics
 
-- Chat inputs, Magic Pen controls, edit sheets, and supported modal titles use the global form, page-title, and section-title semantics.
-- Timeline card geometry, message hierarchy, image actions, and classification behavior remain feature-owned and are not normalized by the typography tokens.
+- The active date header, timeline empty state and time labels, event/mood card hierarchy, attached mood notes, timer/status text, input feedback, mood chips, and yesterday summary use the global page-title, body, description, and caption semantics.
+- The Chat date controls render inside the shared frosted `src/components/layout/Header.tsx` shell; their existing calendar geometry and behavior remain feature-owned.
+- Magic Pen preserves four nested tiers: `16px` section and editable draft titles, `14px` group labels and auto-written body text, `12px` supporting/status text, and `16px` time/date controls. Its edit, crop, and upgrade dialogs follow the same shared title/body/form tiers.
+- Magic Pen todo dates use a compact app-styled trigger with a localized value and local Lucide icon. It opens the shared `AppCalendarPicker`, which reuses the global `.calendar-wrapper` foundation without inheriting Report-only future-date restrictions or Report/Diary markers; the existing local-date conversion and draft update path remain unchanged.
+- Card geometry, mood serif treatment, images, calendar-circle geometry, colors, actions, classification, upload/sync, timers, draft validation/commit, and persistence remain feature-owned. The unreferenced legacy `MessageItem` is outside this active-path migration.
 
 ## Upstream Dependencies
 

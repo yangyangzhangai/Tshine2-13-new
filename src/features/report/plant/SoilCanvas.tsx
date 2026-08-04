@@ -202,7 +202,7 @@ const SoilCanvasImpl: React.FC<SoilCanvasProps> = ({
             {legendItems.map((item) => (
               <div
                 key={item.slotKey}
-                className="flex items-center gap-1.5 rounded-md bg-white/62 px-1.5 py-1 text-[10px] font-medium leading-none text-[#5a4028]"
+                className="app-badge flex items-center gap-1.5 rounded-md bg-white/62 px-1.5 py-1 leading-none text-[#5a4028]"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-[#5a4028]" />
                 <span>{t(item.positionKey)}</span>

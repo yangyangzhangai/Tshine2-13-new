@@ -48,7 +48,7 @@ export const TaskListModal: React.FC<TaskListModalProps> = ({
         </div>
         <div className="flex-1 overflow-y-auto space-y-2">
           {displayTodos.length === 0 ? (
-            <div className="text-center text-slate-400 py-8">{t('report_no_tasks')}</div>
+            <div className="app-body py-8 text-center text-slate-400">{t('report_no_tasks')}</div>
           ) : (
             displayTodos.map((todo) => (
               <div key={todo.id} className="flex items-center p-3 bg-white/85 rounded-xl border border-white/70">
@@ -56,10 +56,10 @@ export const TaskListModal: React.FC<TaskListModalProps> = ({
                   {todo.completed ? <CheckCircle size={16} strokeWidth={1.5} /> : <Circle size={16} strokeWidth={1.5} />}
                 </div>
                 <div className="flex-1">
-                  <div className={cn('text-sm font-medium', todo.completed && 'line-through text-gray-400')}>
+                  <div className={cn('app-body font-medium', todo.completed && 'line-through text-gray-400')}>
                     {todo.title}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="app-description mt-1 text-gray-400">
                     {format(todo.dueAt ?? todo.createdAt, 'MM-dd')} · {todo.category ?? ''}
                   </div>
                 </div>

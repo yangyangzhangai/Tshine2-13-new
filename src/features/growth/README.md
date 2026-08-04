@@ -33,6 +33,7 @@ GrowthPage
 ## Typography Semantics
 
 - The Growth page title uses the shared page-title semantic; Habits & Goals and Recent Tasks use the shared section-title semantic.
+- The Growth title and sync action render inside the shared frosted `src/components/layout/Header.tsx` shell without changing sync behavior.
 - Bottle names and progress, todo copy, supporting labels, status feedback, modal copy, and native form controls use the shared caption, description, body, section-title, and form semantics according to their role.
 - Compact todo rows and every visible text role inside the expanded todo editor use the shared `14px` body tier. The iOS-only native-control safeguard may still force the date/time input to `16px` on narrow WebKit viewports to prevent focus zoom.
 - Both Link to Bottle fields use the shared `src/components/AppSelectMenu.tsx` custom listbox instead of a browser-native select. The expanded todo editor opts into the component's compact `14px` trigger, while the Add Task dialog keeps the default `16px` trigger; both retain `14px` options, `44px` option targets, selected-option reveal, and the original bottle-ID value flow.

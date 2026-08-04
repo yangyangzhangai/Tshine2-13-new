@@ -3,7 +3,12 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, X } from 'lucide-react';
 import { cn } from '../../../lib/utils';
-import { APP_MODAL_CARD_CLASS, APP_MODAL_CLOSE_CLASS, APP_MODAL_OVERLAY_CLASS } from '../../../lib/modalTheme';
+import {
+  APP_MODAL_CARD_CLASS,
+  APP_MODAL_CLOSE_CLASS,
+  APP_MODAL_OVERLAY_CLASS,
+  APP_MODAL_TITLE_CLASS,
+} from '../../../lib/modalTheme';
 
 /** Return the width to use for the crop canvas: screen width minus side margins. */
 function calcDisplayW(): number {
@@ -123,7 +128,7 @@ export const ImageCropModal: React.FC<Props> = ({
           <button onClick={onCancel} className={cn(APP_MODAL_CLOSE_CLASS, 'p-2 touch-manipulation')}>
             <X size={20} />
           </button>
-          <span className="text-sm font-medium text-slate-800">{t('image_crop_title')}</span>
+          <span className={APP_MODAL_TITLE_CLASS}>{t('image_crop_title')}</span>
           <button onClick={confirm} className="p-2 text-[#2F3E33] hover:text-[#243129] font-semibold touch-manipulation">
             <Check size={20} />
           </button>
@@ -187,7 +192,7 @@ export const ImageCropModal: React.FC<Props> = ({
           </div>
         </div>
 
-        <p className="text-center text-xs text-slate-400 py-3">{t('image_crop_hint')}</p>
+        <p className="app-caption py-3 text-center text-slate-400">{t('image_crop_hint')}</p>
       </div>
     </div>
   );

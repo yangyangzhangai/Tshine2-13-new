@@ -68,7 +68,7 @@ export const ActivityPieChart: React.FC<ActivityPieChartProps> = ({ distribution
       </svg>
       <div className="space-y-1">
         {distribution.map((d) => (
-          <div key={d.type} className="flex items-center gap-2 text-xs text-gray-600">
+          <div key={d.type} className="app-description flex items-center gap-2 text-gray-600">
             <span className="inline-block w-2 h-2 rounded-full" style={{ background: ACTIVITY_COLORS[d.type] || '#9CA3AF' }} />
             <span>{t(ACTIVITY_I18N_KEYS[d.type] || d.type)}</span>
             <span className="text-gray-400">

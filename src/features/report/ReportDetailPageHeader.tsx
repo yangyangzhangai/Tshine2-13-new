@@ -85,7 +85,7 @@ export function ReportDetailPageHeader({
 
       <div className="px-4 pt-3">
         <h1
-          className="mb-2 text-center text-sm font-medium text-[#1A1A1A]"
+          className="app-body mb-2 text-center font-medium text-[#1A1A1A]"
           style={{ fontFamily: 'Abhaya Libre, serif' }}
         >
           {date}

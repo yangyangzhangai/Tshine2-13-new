@@ -9,7 +9,14 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useChatStore } from '../../store/useChatStore';
 import { usePlantStore } from '../../store/usePlantStore';
 import { DiaryBookViewer } from './DiaryBookViewer';
-import { APP_GLASS_BUTTON_BASE_STYLE } from '../../lib/modalTheme';
+import {
+  APP_GLASS_BUTTON_BASE_STYLE,
+  APP_MODAL_CARD_CLASS,
+  APP_MODAL_CLOSE_CLASS,
+  APP_MODAL_OVERLAY_CLASS,
+  APP_MODAL_TITLE_CLASS,
+} from '../../lib/modalTheme';
+import { cn } from '../../lib/utils';
 
 /* ──────────────────────────── constants ──────────────────────────── */
 const LEATHER_TEXTURE = 'https://images.unsplash.com/photo-1729823546609-2b113553cdcd?q=80&w=1080';
@@ -514,7 +521,7 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
         </motion.button>
         <div className="flex-1 min-w-0">
           <h1 className="app-page-title text-[#4a5d4c]">{t('report_my_diary')}</h1>
-          <p className="mt-0.5 text-[13px] font-medium text-[#4a5d4c]">{t('diary_shelf_count', { count: months.length })}</p>
+          <p className="app-description mt-0.5 font-medium text-[#4a5d4c]">{t('diary_shelf_count', { count: months.length })}</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.04 }}
@@ -530,33 +537,24 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
 
       {searchOpen && (
         <div
-          className="absolute inset-0 z-40 flex items-center justify-center p-6"
-          style={{ background: 'rgba(15,23,42,0.42)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
+          className={cn('absolute inset-0 z-40 flex items-center justify-center p-6', APP_MODAL_OVERLAY_CLASS)}
           onClick={() => setSearchOpen(false)}
         >
           <div
-            className="w-full max-w-xs animate-in fade-in zoom-in-95 overflow-hidden"
-            style={{
-              borderRadius: 34,
-              padding: 16,
-              background: 'rgba(255,255,255,0.72)',
-              border: '1px solid rgba(255,255,255,0.82)',
-              boxShadow: '0 24px 54px rgba(40,56,44,0.18), inset 0 1px 0 rgba(255,255,255,0.8)',
-              backdropFilter: 'blur(18px) saturate(130%)',
-              WebkitBackdropFilter: 'blur(18px) saturate(130%)',
-            }}
+            className={cn(APP_MODAL_CARD_CLASS, 'w-full max-w-xs animate-in overflow-hidden rounded-[28px] p-4 fade-in zoom-in-95')}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Input section */}
             <div className="pb-3">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-slate-700">{t('diary_shelf_open_calendar')}</span>
+                <span className={APP_MODAL_TITLE_CLASS}>{t('diary_shelf_open_calendar')}</span>
                 <div className="flex items-center gap-2">
                   {showMonthView && (
                   <button
                     type="button"
                     onClick={() => setSearchInput(String(activeYear))}
-                    style={{ fontSize: '11px', fontWeight: 600, color: '#5f7a62', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                    className="app-caption font-semibold text-[#5f7a62]"
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   >
                     {t('diary_shelf_back_year')}
                   </button>
@@ -564,7 +562,7 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                   <button
                     type="button"
                     onClick={() => setSearchOpen(false)}
-                    className="rounded-full border border-white/70 bg-white/80 p-1 text-[#2F3E33] shadow-[inset_0_1px_1px_rgba(255,255,255,0.72),0_8px_18px_rgba(148,163,184,0.2)]"
+                    className={cn(APP_MODAL_CLOSE_CLASS, 'p-1')}
                   >
                     <X size={24} strokeWidth={1.5} />
                   </button>
@@ -634,11 +632,11 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                   <Search size={18} strokeWidth={2.2} />
                 </button>
               </div>
-              <div style={{ marginTop: '8px', fontSize: '11px', color: 'rgba(74,93,76,0.52)', letterSpacing: '0.03em' }}>
+              <div className="app-caption mt-2 text-[rgba(74,93,76,0.52)]">
                 {t('diary_shelf_search_hint')}
               </div>
               {searchError ? (
-                <div style={{ marginTop: '6px', fontSize: '11px', color: '#b54b4b', fontWeight: 600 }}>
+                <div className="app-caption mt-1.5 font-semibold text-[#b54b4b]">
                   {searchError}
                 </div>
               ) : null}
@@ -650,13 +648,13 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                 /* Text search results */
                 textSearchResults.length === 0 ? (
                   searchInput.trim().length > 0 ? (
-                    <div style={{ padding: '20px 0 8px', textAlign: 'center', fontSize: 13, color: 'rgba(74,93,76,0.45)' }}>
+                    <div className="app-body py-5 pb-2 text-center text-[rgba(74,93,76,0.45)]">
                       {t('diary_shelf_text_no_results')}
                     </div>
                   ) : null
                 ) : (
                   <div>
-                    <div style={{ marginBottom: 8, fontSize: 11, color: 'rgba(74,93,76,0.42)', fontWeight: 500 }}>
+                    <div className="app-caption mb-2 text-[rgba(74,93,76,0.42)]">
                       {t('diary_shelf_text_results_count', { count: textSearchResults.length })}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 230, overflowY: 'auto', scrollbarWidth: 'none' }}>
@@ -676,10 +674,10 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                             style={{ textAlign: 'left', padding: '10px 12px', borderRadius: 16, background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(210,228,218,0.60)', cursor: 'pointer', width: '100%' }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: '#2f4232' }}>{dateLabel}</span>
-                              <span style={{ fontSize: 10, fontWeight: 600, color: '#7a9a7e', background: 'rgba(120,165,135,0.12)', padding: '2px 7px', borderRadius: 999 }}>{fieldLabel[result.field]}</span>
+                              <span className="app-body font-bold text-[#2f4232]">{dateLabel}</span>
+                              <span className="app-badge rounded-full bg-[rgba(120,165,135,0.12)] px-[7px] py-0.5 text-[#7a9a7e]">{fieldLabel[result.field]}</span>
                             </div>
-                            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: '#5a7460', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as React.CSSProperties}>{result.snippet}</p>
+                            <p className="app-description text-[#5a7460]" style={{ margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as React.CSSProperties}>{result.snippet}</p>
                           </button>
                         );
                       })}
@@ -693,14 +691,16 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                     <button
                       type="button"
                       onClick={() => setSearchInput(String(activeYear - 1))}
+                      className="app-hit-target-44"
                       style={{ width: 30, height: 30, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(248,251,249,0.92)', border: '1px solid rgba(205,225,212,0.60)', color: '#4a5d4c', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
                     >
                       <ChevronLeft size={16} strokeWidth={2} />
                     </button>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#4a5d4c' }}>{activeYear}</span>
+                    <span className="app-body font-semibold text-[#4a5d4c]">{activeYear}</span>
                     <button
                       type="button"
                       onClick={() => setSearchInput(String(activeYear + 1))}
+                      className="app-hit-target-44"
                       style={{ width: 30, height: 30, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(248,251,249,0.92)', border: '1px solid rgba(205,225,212,0.60)', color: '#4a5d4c', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
                     >
                       <ChevronRight size={16} strokeWidth={2} />
@@ -716,10 +716,10 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                           key={monthNum}
                           type="button"
                           onClick={() => setSearchInput(`${activeYear} ${monthNum}`)}
+                          className="app-body"
                           style={{
                             borderRadius: 18,
                             padding: '10px 6px',
-                            fontSize: 13,
                             fontWeight: isPicked ? 600 : 400,
                             background: isPicked ? DAY_MARK_SELECTED : 'rgba(248,251,249,0.80)',
                             border: isPicked ? '0.5px solid transparent' : '1px solid rgba(205,225,212,0.50)',
@@ -740,6 +740,7 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                   <div className="flex items-center justify-between mb-3">
                     <button
                       type="button"
+                      className="app-hit-target-44"
                       onClick={() => {
                         const prevMonth = activeMonth! - 1;
                         if (prevMonth < 1) {
@@ -752,11 +753,12 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                     >
                       <ChevronLeft size={15} strokeWidth={2} />
                     </button>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#4a5d4c' }}>
+                    <span className="app-body font-semibold text-[#4a5d4c]">
                       {format(new Date(activeYear, (activeMonth ?? 1) - 1, 1), lang === 'zh' ? 'yyyy年M月' : 'MMMM yyyy', { locale: calendarLocale })}
                     </span>
                     <button
                       type="button"
+                      className="app-hit-target-44"
                       onClick={() => {
                         const nextMonth = activeMonth! + 1;
                         if (nextMonth > 12) {
@@ -772,7 +774,7 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                   </div>
                   <div className="grid grid-cols-7 gap-1" style={{ marginBottom: 6 }}>
                     {weekdayLabels.map((label) => (
-                      <div key={label} style={{ textAlign: 'center', fontSize: 11, fontWeight: 500, color: '#a0b2a4', paddingBottom: 4 }}>
+                      <div key={label} className="app-caption pb-1 text-center text-[#a0b2a4]">
                         {label}
                       </div>
                     ))}
@@ -818,6 +820,7 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                           key={date.toISOString()}
                           type="button"
                           disabled={!inMonth}
+                          className="app-body"
                           onClick={() => {
                             if (!inMonth) return;
                             if (isSelected) {
@@ -828,7 +831,7 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                           }}
                           style={{
                             height: 36, width: '100%', borderRadius: 999,
-                            fontSize: 13, fontWeight: fw,
+                            fontWeight: fw,
                             background: bg, border: borderStyle, color: textColor,
                             boxShadow: shadow,
                             transition: 'background 0.12s',
@@ -847,10 +850,11 @@ export const DiaryBookShelf: React.FC<Props> = ({ onClose, reports, onOpenDiaryP
                         type="button"
                         onClick={() => void handleSearchSubmit()}
                         disabled={searchPending}
+                        className="app-body"
                         style={{
                           width: '100%', borderRadius: 14, padding: '11px',
                           background: 'rgba(52,96,70,0.84)', color: 'rgba(238,248,242,0.95)',
-                          fontSize: 14, fontWeight: 700, border: 'none',
+                          fontWeight: 700, border: 'none',
                           boxShadow: '0 2px 10px rgba(52,96,70,0.16)',
                           opacity: searchPending ? 0.6 : 1,
                         }}

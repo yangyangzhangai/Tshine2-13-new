@@ -1,11 +1,12 @@
 // DOC-DEPS: LLM.md -> src/features/profile/README.md
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { InfoSheetPanel } from './InfoSheetPanel';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { submitFeedback } from '../../../services/feedback/submitFeedback';
 import { APP_PROFILE_JELLY_BUTTON_STYLE } from '../../../lib/modalTheme';
+import { AppSelectMenu } from '../../../components/AppSelectMenu';
 
 const ISSUE_TYPES = [
   'feedback_type_bug',
@@ -28,7 +29,6 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
   const [subject, setSubject] = useState('');
   const [issueType, setIssueType] = useState('');
   const [desc, setDesc] = useState('');
-  const [typeOpen, setTypeOpen] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -105,42 +105,14 @@ export const FeedbackPanel: React.FC<Props> = ({ onClose }) => {
 
         {/* Issue type dropdown */}
         <Field label={t('feedback_type_label')} required>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setTypeOpen(v => !v)}
-              className={`app-body flex w-full items-center justify-between rounded-[50px] border px-3.5 py-2.5 transition ${
-                error && !issueType
-                  ? 'border-red-300 bg-red-50/60'
-                  : 'border-[#8FAF92]/40 bg-white/85'
-              }`}
-            >
-              <span className={issueType ? 'text-slate-800' : 'text-slate-400'}>
-                {issueType ? t(issueType as (typeof ISSUE_TYPES)[number]) : t('feedback_type_placeholder')}
-              </span>
-              <ChevronDown
-                size={16}
-                strokeWidth={2}
-                className={`text-slate-400 transition-transform ${typeOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
-            {typeOpen && (
-              <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-slate-200/60 bg-white shadow-lg">
-                {ISSUE_TYPES.map((key, i) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => { setIssueType(key); setTypeOpen(false); }}
-                    className={`app-body flex w-full px-4 py-3 text-left text-slate-700 transition hover:bg-[#F0F4F1] ${
-                      i < ISSUE_TYPES.length - 1 ? 'border-b border-slate-100' : ''
-                    }`}
-                  >
-                    {t(key)}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <AppSelectMenu
+            value={issueType}
+            options={ISSUE_TYPES.map(key => ({ value: key, label: t(key) }))}
+            onChange={setIssueType}
+            ariaLabel={t('feedback_type_label')}
+            placeholder={t('feedback_type_placeholder')}
+            invalid={error && !issueType}
+          />
         </Field>
 
         {/* Description */}

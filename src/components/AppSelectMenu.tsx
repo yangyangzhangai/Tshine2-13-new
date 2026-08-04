@@ -19,6 +19,9 @@ interface AppSelectMenuProps {
   disabled?: boolean;
   placement?: 'top' | 'bottom';
   size?: 'default' | 'compact';
+  placeholder?: string;
+  invalid?: boolean;
+  triggerClassName?: string;
 }
 
 export const AppSelectMenu = ({
@@ -30,13 +33,16 @@ export const AppSelectMenu = ({
   disabled = false,
   placement = 'bottom',
   size = 'default',
+  placeholder,
+  invalid = false,
+  triggerClassName,
 }: AppSelectMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
-  const selected = options.find(option => option.value === value) ?? options[0];
+  const selected = options.find(option => option.value === value) ?? (placeholder ? undefined : options[0]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -82,11 +88,15 @@ export const AppSelectMenu = ({
         aria-controls={listboxId}
         onClick={() => setIsOpen(current => !current)}
         className={cn(
-          'flex min-h-11 w-full items-center justify-between gap-3 rounded-[50px] border border-[#8FAF92]/40 bg-white/85 px-3.5 py-2.5 text-left text-slate-700 outline-none transition focus:ring-2 focus:ring-[#8FAF92]/45 disabled:cursor-not-allowed disabled:opacity-50',
+          'flex min-h-11 w-full items-center justify-between gap-3 rounded-[50px] border px-3.5 py-2.5 text-left outline-none transition focus:ring-2 focus:ring-[#8FAF92]/45 disabled:cursor-not-allowed disabled:opacity-50',
+          invalid ? 'border-red-300 bg-red-50/60 text-slate-700' : 'border-[#8FAF92]/40 bg-white/85 text-slate-700',
           size === 'compact' ? 'app-body' : 'app-form-text',
+          triggerClassName,
         )}
       >
-        <span className="min-w-0 flex-1 truncate">{selected?.label ?? ''}</span>
+        <span className={cn('min-w-0 flex-1 truncate', !selected && 'text-slate-400')}>
+          {selected?.label ?? placeholder ?? ''}
+        </span>
         <ChevronDown
           size={16}
           strokeWidth={2}

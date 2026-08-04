@@ -108,7 +108,7 @@ const InputBlock: React.FC<{
         <button
           onClick={onSend}
           disabled={!canSend}
-          className={`w-full py-4 rounded-[20px] font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+          className={`app-body w-full py-4 rounded-[20px] font-bold flex items-center justify-center gap-2 transition-all ${
             canSend ? 'bg-[#4a5d4c] text-white' : 'bg-[#4a5d4c]/10 text-[#4a5d4c]/20 cursor-not-allowed'
           }`}
         >
@@ -329,11 +329,11 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
             <motion.div key={phase}
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}>
-            <h2 className="text-2xl font-black text-[#4a5d4c] tracking-tight flex items-center gap-3">
+            <h2 className="app-page-title flex items-center gap-3 font-black text-[#4a5d4c]">
               {phase === 'activity_shown' && <span className="text-3xl leading-none">🪄</span>}
               <span>{title}</span>
             </h2>
-            <p className="text-[#4a5d4c]/55 text-sm mt-1 font-medium">{desc}</p>
+            <p className="app-body mt-1 font-medium text-[#4a5d4c]/55">{desc}</p>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -369,7 +369,7 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
                 />
               ) : (
                 <div className="rounded-2xl" style={{ background: '#F7F9F8', padding: '10px 13px 9px' }}>
-                  <h3 style={{ fontWeight: 700, fontSize: 14, color: '#1e293b', margin: 0, lineHeight: 1.4 }}>
+                  <h3 className="app-body font-bold text-[#1e293b]" style={{ margin: 0 }}>
                     {activityText}
                   </h3>
                 </div>
@@ -422,9 +422,9 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Timer size={14} color="#4a5d4c" />
                 </div>
-                <span className="text-sm text-[#4a5d4c]/70 font-medium">
+                <span className="app-body font-medium text-[#4a5d4c]/70">
                   {t('onboarding_j3_tip_duration_prefix', { duration: '< 1m' })}
-                  <span className="inline-flex items-center rounded-full border border-[#F4C0C2]/60 bg-[#F4C0C2]/10 px-2 py-0.5 text-xs font-semibold text-[#F4C0C2] mx-1 align-middle">
+                  <span className="app-description mx-1 inline-flex items-center rounded-full border border-[#F4C0C2]/60 bg-[#F4C0C2]/10 px-2 py-0.5 font-semibold text-[#F4C0C2] align-middle">
                     <StopCircle size={12} />
                   </span>
                   {t('onboarding_j3_tip_duration_suffix')}
@@ -435,18 +435,18 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Camera size={12} color="#fff" />
                 </div>
-                <span className="text-sm text-[#4a5d4c]/70 font-medium">{t('onboarding_j3_tip_camera_story')}</span>
+                <span className="app-body font-medium text-[#4a5d4c]/70">{t('onboarding_j3_tip_camera_story')}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div style={{ width: 28, height: 28, background: '#8B5CF6', borderRadius: '50%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <ArrowRightLeft size={12} color="#fff" />
                 </div>
-                <span className="text-sm text-[#4a5d4c]/70 font-medium">{t('onboarding_j3_tip_convert_intent')}</span>
+                <span className="app-body font-medium text-[#4a5d4c]/70">{t('onboarding_j3_tip_convert_intent')}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-[#4a5d4c]/70 font-medium">
+              <div className="app-body flex items-center gap-2 font-medium text-[#4a5d4c]/70">
                 <span
-                  className="inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs transition-colors"
+                  className="app-description inline-flex items-center justify-center rounded-full border px-3 py-1.5 transition-colors"
                   style={{
                     fontWeight: 400,
                     background: onboardingMoodTagBg,
@@ -477,7 +477,7 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
               className="flex flex-col gap-2 px-1 py-1">
               {convertedToMoodCard ? (
                 <>
-                  <div className="flex items-center gap-3 text-sm text-[#4a5d4c]/70 font-medium">
+                  <div className="app-body flex items-center gap-3 font-medium text-[#4a5d4c]/70">
                     <div style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(52,211,153,0.4)',
                       color: '#34D399', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Zap size={12} />
@@ -487,7 +487,7 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
                 </>
               ) : previewMoodConvertedToEvent ? (
                 <>
-                  <div className="flex items-center gap-3 text-sm text-[#4a5d4c]/70 font-medium">
+                  <div className="app-body flex items-center gap-3 font-medium text-[#4a5d4c]/70">
                     <div style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(139,92,246,0.4)',
                       color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <ArrowRightLeft size={12} />
@@ -497,14 +497,14 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
                 </>
               ) : detachedMoodInPreview ? (
                 <>
-                  <div className="flex items-center gap-3 text-sm text-[#4a5d4c]/70 font-medium">
+                  <div className="app-body flex items-center gap-3 font-medium text-[#4a5d4c]/70">
                     <div style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(56,189,248,0.4)',
                       color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <ArrowLeft size={12} />
                     </div>
                     <span>{t('onboarding_j3_tip_mood_return')}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-[#4a5d4c]/70 font-medium">
+                  <div className="app-body flex items-center gap-3 font-medium text-[#4a5d4c]/70">
                     <div style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(52,211,153,0.4)',
                       color: '#34D399', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Zap size={12} />
@@ -514,13 +514,13 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
                 </>
               ) : linkedMoodInPreview ? (
                 <>
-                  <div className="flex items-center gap-2 text-sm text-[#4a5d4c]/70 font-medium">
-                    <span className="inline-flex items-center rounded-full px-2 py-0.5 bg-[#E6F7F1] text-[#2F6F5B] text-xs font-semibold">
+                  <div className="app-body flex items-center gap-2 font-medium text-[#4a5d4c]/70">
+                    <span className="app-description inline-flex items-center rounded-full bg-[#E6F7F1] px-2 py-0.5 font-semibold text-[#2F6F5B]">
                       {t('chat_magic_pen_linked_mood_label')}
                     </span>
                     <span>{t('onboarding_j3_tip_mood_linked')}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-[#4a5d4c]/70 font-medium">
+                  <div className="app-body flex items-center gap-2 font-medium text-[#4a5d4c]/70">
                     <span>{t('onboarding_j3_tip_mood_detach_prefix')}</span>
                     <span className="inline-flex items-center justify-center text-[#38BDF8]" style={{ width: 16, height: 16 }}>
                       <ArrowRightLeft size={13} />
@@ -553,7 +553,7 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
           <motion.button
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             onClick={() => setPhase('mood')}
-            className="w-full py-5 rounded-[28px] bg-[#4a5d4c] text-white font-bold text-base flex items-center justify-center gap-2 shadow-xl shadow-[#4a5d4c]/15">
+            className="app-section-title w-full rounded-[28px] bg-[#4a5d4c] py-5 font-bold text-white flex items-center justify-center gap-2 shadow-xl shadow-[#4a5d4c]/15">
             <ChevronRight size={18} />
             {t('onboarding_j3_tip_cta')}
           </motion.button>
@@ -569,7 +569,7 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
             />
             <button
               onClick={() => setPhase('complete')}
-              className="w-full mt-3 py-3 text-xs text-[#4a5d4c]/35 font-bold uppercase tracking-widest">
+              className="app-caption mt-3 w-full py-3 font-bold uppercase text-[#4a5d4c]/35">
               {t('onboarding_j3_mood_skip')}
             </button>
           </motion.div>
@@ -578,7 +578,7 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
         {phase === 'complete' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
             {mustRestoreBeforeNext && (
-              <div className="rounded-2xl border border-[#F4C0C2]/45 bg-[#F4C0C2]/10 px-4 py-3 text-sm font-medium text-[#4a5d4c]/75">
+              <div className="app-body rounded-2xl border border-[#F4C0C2]/45 bg-[#F4C0C2]/10 px-4 py-3 font-medium text-[#4a5d4c]/75">
                 {convertedToMoodCard
                   ? t('onboarding_j3_tip_switch_back_event_continue')
                   : t('onboarding_j3_tip_switch_back_mood_continue')}
@@ -587,14 +587,14 @@ export const StepJournal: React.FC<StepJournalProps> = ({ onNext }) => {
             <div className="flex items-start gap-3 bg-[#4a5d4c]/5 rounded-[20px] px-4 py-3">
               <span className="text-lg shrink-0 mt-0.5">🪄</span>
               <div>
-                <p className="text-sm font-bold text-[#4a5d4c]">{t('onboarding_j3_magic_pen_teaser_title')}</p>
-                <p className="text-xs text-[#4a5d4c]/55 mt-0.5 leading-relaxed">{t('onboarding_j3_magic_pen_teaser_desc')}</p>
+                <p className="app-body font-bold text-[#4a5d4c]">{t('onboarding_j3_magic_pen_teaser_title')}</p>
+                <p className="app-description mt-0.5 text-[#4a5d4c]/55">{t('onboarding_j3_magic_pen_teaser_desc')}</p>
               </div>
             </div>
             <button
               onClick={() => void handleFinish()}
               disabled={isSending || mustRestoreBeforeNext}
-              className={`w-full py-5 rounded-[28px] font-bold text-lg flex items-center justify-center gap-2 shadow-xl transition-all ${
+              className={`app-section-title w-full py-5 rounded-[28px] font-bold flex items-center justify-center gap-2 shadow-xl transition-all ${
                 isSending || mustRestoreBeforeNext
                   ? 'bg-[#4a5d4c]/25 text-white/70 shadow-[#4a5d4c]/10 cursor-not-allowed'
                   : 'bg-[#4a5d4c] text-white shadow-[#4a5d4c]/20'

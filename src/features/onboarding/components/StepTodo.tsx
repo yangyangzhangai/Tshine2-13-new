@@ -59,7 +59,7 @@ export function StepTodo({ onNext }: StepTodoProps) {
   return (
     <div className="flex-1 flex flex-col px-8 pt-16 pb-12 overflow-y-auto no-scrollbar bg-[#f4f7f4]">
       <div className="mb-8">
-        <h2 className="text-2xl font-black text-[#4a5d4c]">{t('onboarding2_todo_title')}</h2>
+        <h2 className="app-page-title font-black text-[#4a5d4c]">{t('onboarding2_todo_title')}</h2>
       </div>
 
       <div className="space-y-6">
@@ -88,7 +88,7 @@ export function StepTodo({ onNext }: StepTodoProps) {
               >
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#4a5d4c]/5">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black text-[#4a5d4c]/40 uppercase tracking-widest flex items-center gap-1">
+                    <label className="app-badge flex items-center gap-1 font-black uppercase text-[#4a5d4c]/40">
                       <Clock size={10} /> {t('growth_todo_due_date')}
                     </label>
                     <input
@@ -100,12 +100,12 @@ export function StepTodo({ onNext }: StepTodoProps) {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black text-[#4a5d4c]/40 uppercase tracking-widest flex items-center gap-1">
+                    <label className="app-badge flex items-center gap-1 font-black uppercase text-[#4a5d4c]/40">
                       <Repeat size={10} /> {t('growth_todo_recurrence')}
                     </label>
                     <button
                       onClick={() => setIsRepeating(!isRepeating)}
-                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                      className={`app-description flex items-center justify-between rounded-xl px-3 py-2 font-bold transition-all ${
                         isRepeating ? 'bg-[#8fae91] text-white' : 'bg-[#4a5d4c]/5 text-[#4a5d4c]/40'
                       }`}
                     >
@@ -120,7 +120,7 @@ export function StepTodo({ onNext }: StepTodoProps) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-[#4a5d4c]/40 uppercase tracking-widest flex items-center gap-1">
+                  <label className="app-badge flex items-center gap-1 font-black uppercase text-[#4a5d4c]/40">
                     <Flag size={10} /> {t('growth_todo_priority')}
                   </label>
                   <div className="flex gap-2">
@@ -128,7 +128,7 @@ export function StepTodo({ onNext }: StepTodoProps) {
                       <button
                         key={level.id}
                         onClick={() => setUrgency(level.id)}
-                        className={`flex-1 py-2 px-1 rounded-xl text-xs font-bold border transition-all ${
+                        className={`app-description flex-1 rounded-xl border px-1 py-2 font-bold transition-all ${
                           urgency === level.id
                             ? `${level.color} shadow-sm`
                             : 'bg-[#4a5d4c]/5 text-[#4a5d4c]/40 border-transparent hover:border-[#4a5d4c]/10'
@@ -143,14 +143,14 @@ export function StepTodo({ onNext }: StepTodoProps) {
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={() => setIsExpanded(false)}
-                    className="flex-1 py-4 rounded-2xl bg-[#4a5d4c]/5 text-[#4a5d4c]/40 font-bold text-sm"
+                    className="app-body flex-1 rounded-2xl bg-[#4a5d4c]/5 py-4 font-bold text-[#4a5d4c]/40"
                   >
                     {t('onboarding_back')}
                   </button>
                   <button
                     onClick={addTodo}
                     disabled={!todo.trim()}
-                    className={`flex-[2] py-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-sm ${
+                    className={`app-body flex-[2] py-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold ${
                       todo.trim() ? 'bg-[#4a5d4c] text-white shadow-lg shadow-[#4a5d4c]/20' : 'bg-[#4a5d4c]/5 text-[#4a5d4c]/20'
                     }`}
                   >
@@ -177,18 +177,18 @@ export function StepTodo({ onNext }: StepTodoProps) {
                   <div className="flex items-center gap-4">
                     <div className="w-5 h-5 rounded-full border-2 border-[#8fae91]" />
                     <div>
-                      <span className="text-sm font-bold text-[#4a5d4c] block">{todoItem.text}</span>
+                      <span className="app-body block font-bold text-[#4a5d4c]">{todoItem.text}</span>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-[#4a5d4c]/50 flex items-center gap-1">
+                        <span className="app-badge flex items-center gap-1 text-[#4a5d4c]/50">
                           <Clock size={10} /> {todoItem.time}
                         </span>
                         {todoItem.repeat && (
-                          <span className="text-[10px] text-[#4a5d4c]/50">
+                          <span className="app-badge text-[#4a5d4c]/50">
                             <Repeat size={10} />
                           </span>
                         )}
                         <span
-                          className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold border ${
+                          className={`app-badge rounded-full border px-1.5 py-0.5 font-bold ${
                             todoItem.urgency === 'high'
                               ? 'bg-red-50 text-red-500 border-red-100'
                               : todoItem.urgency === 'medium'
@@ -205,7 +205,7 @@ export function StepTodo({ onNext }: StepTodoProps) {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => removeTodo(todoItem.id)} className="p-2 text-[#4a5d4c]/20 hover:text-red-400 transition-colors">
+                  <button onClick={() => removeTodo(todoItem.id)} className="app-hit-target-44 p-2 text-[#4a5d4c]/20 hover:text-red-400 transition-colors">
                     <X size={14} />
                   </button>
                 </motion.div>
@@ -220,12 +220,12 @@ export function StepTodo({ onNext }: StepTodoProps) {
         {todos.length > 0 ? (
           <button
             onClick={() => onNext(todos)}
-            className="w-full bg-[#4a5d4c] text-white py-5 rounded-[28px] font-bold text-lg shadow-xl shadow-[#4a5d4c]/20 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+            className="app-section-title w-full rounded-[28px] bg-[#4a5d4c] py-5 font-bold text-white shadow-xl shadow-[#4a5d4c]/20 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
           >
             {t('onboarding_next')} <ChevronRight size={20} />
           </button>
         ) : (
-          <div className="py-5 text-center text-[11px] text-[#4a5d4c]/30 font-bold uppercase tracking-[0.2em]">
+          <div className="app-caption py-5 text-center font-bold uppercase text-[#4a5d4c]/30">
             {t('onboarding2_todo_hint')}
           </div>
         )}

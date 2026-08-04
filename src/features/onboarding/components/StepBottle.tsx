@@ -38,14 +38,14 @@ export function StepBottle({ onNext }: StepBottleProps) {
   return (
     <div className="flex-1 flex flex-col px-8 pt-16 pb-12 overflow-y-auto no-scrollbar bg-[#f4f7f4]">
       <div className="mb-8">
-        <h2 className="text-2xl font-black text-[#4a5d4c]">{t('growth_bottle_section')}</h2>
-        <p className="text-[#4a5d4c]/50 text-sm mt-2">{t('growth_bottle_section_hint')}</p>
+        <h2 className="app-page-title font-black text-[#4a5d4c]">{t('growth_bottle_section')}</h2>
+        <p className="app-body mt-2 text-[#4a5d4c]/50">{t('growth_bottle_section_hint')}</p>
       </div>
 
       <div className="space-y-6">
         <div className="bg-white border border-[#4a5d4c]/5 p-6 rounded-[32px] shadow-sm space-y-4">
           <div className="space-y-2">
-            <label className="text-[11px] font-black text-[#4a5d4c]/50 uppercase tracking-widest">
+            <label className="app-caption font-black uppercase text-[#4a5d4c]/50">
               {t('growth_bottle_name')}
             </label>
             <input
@@ -60,14 +60,14 @@ export function StepBottle({ onNext }: StepBottleProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[11px] font-black text-[#4a5d4c]/50 uppercase tracking-widest">
+            <label className="app-caption font-black uppercase text-[#4a5d4c]/50">
               {t('growth_bottle_type')}
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setType('habit')}
-                className={`rounded-2xl p-3 border text-sm font-bold flex items-center justify-center gap-2 ${
+                className={`app-body rounded-2xl border p-3 font-bold flex items-center justify-center gap-2 ${
                   type === 'habit'
                     ? 'bg-[#8fae91]/15 text-[#4a5d4c] border-[#8fae91]/40'
                     : 'bg-[#4a5d4c]/5 text-[#4a5d4c]/50 border-transparent'
@@ -79,7 +79,7 @@ export function StepBottle({ onNext }: StepBottleProps) {
               <button
                 type="button"
                 onClick={() => setType('goal')}
-                className={`rounded-2xl p-3 border text-sm font-bold flex items-center justify-center gap-2 ${
+                className={`app-body rounded-2xl border p-3 font-bold flex items-center justify-center gap-2 ${
                   type === 'goal'
                     ? 'bg-[#8fae91]/15 text-[#4a5d4c] border-[#8fae91]/40'
                     : 'bg-[#4a5d4c]/5 text-[#4a5d4c]/50 border-transparent'
@@ -95,7 +95,7 @@ export function StepBottle({ onNext }: StepBottleProps) {
             type="button"
             onClick={addBottle}
             disabled={!name.trim()}
-            className={`w-full py-4 rounded-2xl font-bold text-sm transition-all ${
+            className={`app-body w-full py-4 rounded-2xl font-bold transition-all ${
               name.trim()
                 ? 'bg-[#4a5d4c] text-white shadow-lg shadow-[#4a5d4c]/20'
                 : 'bg-[#4a5d4c]/10 text-[#4a5d4c]/25'
@@ -119,13 +119,13 @@ export function StepBottle({ onNext }: StepBottleProps) {
                     <Check size={14} strokeWidth={3} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-[#4a5d4c]">{item.name}</p>
-                    <p className="text-[11px] text-[#4a5d4c]/45 font-semibold">
+                    <p className="app-body font-bold text-[#4a5d4c]">{item.name}</p>
+                    <p className="app-caption font-semibold text-[#4a5d4c]/45">
                       {item.type === 'habit' ? t('growth_bottle_type_habit') : t('growth_bottle_type_goal')}
                     </p>
                   </div>
                 </div>
-                <button type="button" onClick={() => removeBottle(item.id)} className="p-2 text-[#4a5d4c]/25 hover:text-red-400 transition-colors">
+                <button type="button" onClick={() => removeBottle(item.id)} className="app-hit-target-44 p-2 text-[#4a5d4c]/25 hover:text-red-400 transition-colors">
                   <X size={14} />
                 </button>
               </motion.div>
@@ -139,7 +139,7 @@ export function StepBottle({ onNext }: StepBottleProps) {
           type="button"
           onClick={() => onNext(bottles)}
           disabled={bottles.length === 0}
-          className={`w-full py-5 rounded-[28px] font-bold text-lg shadow-xl flex items-center justify-center gap-2 transition-transform ${
+          className={`app-section-title w-full py-5 rounded-[28px] font-bold shadow-xl flex items-center justify-center gap-2 transition-transform ${
             bottles.length > 0
               ? 'bg-[#4a5d4c] text-white shadow-[#4a5d4c]/20 active:scale-[0.98]'
               : 'bg-[#4a5d4c]/10 text-[#4a5d4c]/25 shadow-none'

@@ -8,7 +8,20 @@ import {
   hasCurrentAiConsent,
 } from '../../../lib/aiConsent';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { cn } from '../../../lib/utils';
+import {
+  APP_MODAL_CARD_CLASS,
+  APP_MODAL_OVERLAY_CLASS,
+  APP_MODAL_PRIMARY_BUTTON_CLASS,
+  APP_MODAL_SECONDARY_BUTTON_CLASS,
+} from '../../../lib/modalTheme';
 import { PrivacyPolicyPanel } from './PrivacyPolicyPanel';
+
+function isDevUiPreview(): boolean {
+  if (!import.meta.env.DEV) return false;
+  const hashQuery = window.location.hash.split('?')[1] ?? '';
+  return new URLSearchParams(hashQuery).get('preview') === 'ui';
+}
 
 export const AIConsentGate: React.FC = () => {
   const { t } = useTranslation();
@@ -50,32 +63,35 @@ export const AIConsentGate: React.FC = () => {
     setSaving(false);
   };
 
-  if (!shouldOpen) return null;
+  if (!shouldOpen || isDevUiPreview()) return null;
   if (showPrivacy) {
     return <PrivacyPolicyPanel onClose={() => setShowPrivacy(false)} />;
   }
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm md:items-center md:p-5">
+    <div className={cn('fixed inset-0 z-[120] flex items-end justify-center md:items-center', APP_MODAL_OVERLAY_CLASS)}>
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="ai-consent-title"
-        className="max-h-[92dvh] w-full max-w-[520px] overflow-y-auto rounded-t-[30px] bg-[#fcfaf7] px-5 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] pt-6 shadow-2xl md:rounded-[30px] md:p-7"
+        className={cn(
+          APP_MODAL_CARD_CLASS,
+          'app-mobile-sheet-card w-full max-w-[520px] rounded-t-[30px] px-5 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] pt-6 md:rounded-[30px] md:p-7',
+        )}
       >
         <div className="mb-4 flex items-start gap-3">
           <div className="rounded-2xl bg-[#dff3e8] p-3 text-[#416a52]"><ShieldCheck size={24} /></div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#5f7a63]">
+            <p className="app-badge font-bold uppercase text-[#5f7a63]">
               {t('ai_consent_version', { version: AI_CONSENT_VERSION })}
             </p>
-            <h2 id="ai-consent-title" className="mt-1 text-xl font-extrabold text-slate-800">
+            <h2 id="ai-consent-title" className="app-section-title mt-1 font-extrabold text-slate-800">
               {t('ai_consent_title')}
             </h2>
           </div>
         </div>
 
-        <p className="text-sm leading-6 text-slate-600">{t('ai_consent_intro')}</p>
+        <p className="app-body text-slate-600">{t('ai_consent_intro')}</p>
         <div className="mt-5 space-y-4 rounded-2xl border border-[#5f7a63]/10 bg-white/75 p-4">
           <ConsentDetail icon={<BrainCircuit size={17} />} title={t('ai_consent_data_title')} body={t('ai_consent_data_body')} />
           <ConsentDetail icon={<CheckCircle2 size={17} />} title={t('ai_consent_providers_title')} body={t('ai_consent_providers_body')} />
@@ -85,7 +101,7 @@ export const AIConsentGate: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowPrivacy(true)}
-          className="mt-4 text-sm font-semibold text-[#4a6b55] underline underline-offset-4"
+          className="app-body mt-4 font-semibold text-[#4a6b55] underline underline-offset-4"
         >
           {t('ai_consent_read_privacy')}
         </button>
@@ -97,17 +113,17 @@ export const AIConsentGate: React.FC = () => {
             onChange={(event) => setChecked(event.target.checked)}
             className="mt-0.5 h-5 w-5 accent-[#4a6b55]"
           />
-          <span className="text-sm font-semibold leading-5 text-slate-700">{t('ai_consent_checkbox')}</span>
+          <span className="app-body font-semibold text-slate-700">{t('ai_consent_checkbox')}</span>
         </label>
 
-        {error ? <p className="mt-3 text-sm font-semibold text-rose-600">{t('ai_consent_save_error')}</p> : null}
+        {error ? <p className="app-body mt-3 font-semibold text-rose-600">{t('ai_consent_save_error')}</p> : null}
 
         <div className="mt-5 space-y-2.5">
           <button
             type="button"
             disabled={!checked || saving}
             onClick={() => { void saveDecision('granted'); }}
-            className="w-full rounded-2xl bg-[#4a5d4c] px-4 py-3.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'app-body w-full px-4 py-3.5 font-bold disabled:cursor-not-allowed disabled:opacity-40')}
           >
             {saving ? t('ai_consent_saving') : t('ai_consent_agree')}
           </button>
@@ -115,7 +131,7 @@ export const AIConsentGate: React.FC = () => {
             type="button"
             disabled={saving}
             onClick={() => { void saveDecision('declined'); }}
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-600 disabled:opacity-40"
+            className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'app-body w-full px-4 py-3.5 font-bold disabled:opacity-40')}
           >
             {t('ai_consent_without_ai')}
           </button>
@@ -129,8 +145,8 @@ const ConsentDetail: React.FC<{ icon: React.ReactNode; title: string; body: stri
   <div className="flex items-start gap-3">
     <div className="mt-0.5 text-[#5f7a63]">{icon}</div>
     <div>
-      <h3 className="text-sm font-bold text-slate-700">{title}</h3>
-      <p className="mt-0.5 text-xs leading-5 text-slate-500">{body}</p>
+      <h3 className="app-body font-bold text-slate-700">{title}</h3>
+      <p className="app-description mt-0.5 text-slate-500">{body}</p>
     </div>
   </div>
 );

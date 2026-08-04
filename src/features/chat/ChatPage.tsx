@@ -21,6 +21,7 @@ import { OngoingActivityOverlapError } from '../../store/chatTimelineActions';
 import { useShallow } from 'zustand/react/shallow';
 
 import { StardustCard } from '../../components/feedback/StardustCard';
+import { Header } from '../../components/layout/Header';
 import type { StardustCardData } from '../../types/stardust';
 
 import { ChatInputBar } from './ChatInputBar';
@@ -510,19 +511,16 @@ export const ChatPage = () => {
         </button>
 
         {/* Header — frosted glass */}
-        <header
-          className="app-mobile-page-header sticky top-0 z-20 px-4 pb-3 pt-11"
+        <Header
+          className="sticky top-0 z-20 px-4 pb-3 pt-11"
           style={{
-            background: 'rgba(252,250,247,0.38)',
-            backdropFilter: 'blur(14px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(14px) saturate(150%)',
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
           }}
         >
           <DatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} />
-        </header>
+        </Header>
 
         {/* Timeline */}
         <TimelineView

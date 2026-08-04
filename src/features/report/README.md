@@ -50,8 +50,11 @@
 
 ## Typography Semantics
 
-- Report root and supported detail headers use the shared `app-page-title` semantic; standard modal titles and visible form controls use the global section-title and form semantics.
-- Plant artwork, charts, observation hierarchy, swipe controls, and generated-report behavior retain their report-specific visual and business rules.
+- The ordinary Report root, detail pages, stats, task/activity views, plant-root controls, notices, and standard actions use the shared page-title, section-title, body, description, caption, badge, and form semantics.
+- The ordinary Report title/date/action row renders inside the shared frosted `src/components/layout/Header.tsx` shell; Diary Book and detail-reader headers remain presentation-specific.
+- `ReportCalendarModal` keeps its independent frosted Diary calendar shell, while Report owns disabled today/future dates and weekly/monthly/custom markers.
+- Diary Book is a separate presentation boundary: its page header and search modal use shared app-shell semantics, but book covers, shelf composition, scaled paper pages, expanded reader content, and motion keep their Diary Book-specific typography and geometry.
+- Plant artwork, chart labels/metrics, generated plant cards, swipe controls, and generated-report behavior retain their report-specific visual and business rules.
 
 ## Upstream Dependencies
 
