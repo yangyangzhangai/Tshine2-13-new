@@ -85,7 +85,7 @@ export const PlantImage: React.FC<PlantImageProps> = ({ plantId, rootType, plant
 
   if (!candidates[index]) {
     return (
-      <div className="flex min-h-44 items-center justify-center text-sm text-stone-400">
+      <div className="app-body flex min-h-44 items-center justify-center text-stone-400">
         {t('plant_image_missing')}
       </div>
     );

@@ -61,21 +61,21 @@ export const MagicPenUpgradeModal: React.FC<MagicPenUpgradeModalProps> = ({ isOp
             <Crown size={24} strokeWidth={1.5} className="text-[#5F7A63]" />
           </div>
           <h3 className={`${APP_MODAL_TITLE_CLASS} mb-1`}>{t('chat_magic_pen_upgrade_title')}</h3>
-          <p className="text-xs leading-relaxed text-slate-500">{t('chat_magic_pen_upgrade_desc')}</p>
+          <p className="app-description leading-relaxed text-slate-500">{t('chat_magic_pen_upgrade_desc')}</p>
         </div>
 
         <div className="flex flex-col gap-2.5 px-5 py-4">
           <button
             type="button"
             onClick={handleUpgrade}
-            className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'w-full py-2.5 text-sm font-bold active:scale-95')}
+            className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'app-body w-full py-2.5 font-bold active:scale-95')}
           >
             {t('chat_magic_pen_upgrade_cta')}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'w-full py-2 text-xs active:opacity-60')}
+            className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'app-caption w-full py-2 active:opacity-60')}
           >
             {t('chat_magic_pen_upgrade_later')}
           </button>

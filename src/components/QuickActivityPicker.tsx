@@ -7,6 +7,8 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useReminderStore } from '../store/useReminderStore';
 import { triggerLightHaptic } from '../lib/haptics';
 import { submitReminderManualActivity } from '../services/reminder/reminderActivityActions';
+import { cn } from '../lib/utils';
+import { APP_MODAL_CARD_CLASS, APP_MODAL_OVERLAY_CLASS } from '../lib/modalTheme';
 
 const QUICK_OPTIONS = [
   { emoji: '🍽', key: 'quick_activity_meal' },
@@ -67,13 +69,13 @@ export const QuickActivityPicker: React.FC = () => {
     <>
       {/* 遮罩 */}
       <div
-        className="fixed inset-0 z-40 bg-black/20"
+        className={cn('fixed inset-0 z-40', APP_MODAL_OVERLAY_CLASS)}
         onClick={() => { triggerLightHaptic(); hidePicker(); }}
       />
 
       {/* Bottom sheet */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl border border-white/60 bg-white px-5 pb-10 pt-5"
+        className={cn(APP_MODAL_CARD_CLASS, 'app-mobile-sheet-card fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl px-5 pb-10 pt-5')}
         style={{
           bottom: 'var(--keyboard-height, 0px)',
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
@@ -83,7 +85,7 @@ export const QuickActivityPicker: React.FC = () => {
         {/* 拖拽把手 */}
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
 
-        <p className="mb-4 text-sm font-medium text-slate-700">
+        <p className="app-section-title mb-4 text-slate-700">
           {activityLabel}{t('quick_activity_picker_title')}
         </p>
 
@@ -94,10 +96,10 @@ export const QuickActivityPicker: React.FC = () => {
               key={key}
               type="button"
               onClick={() => handleQuickOption(emoji, key)}
-              className="flex flex-col items-center gap-1 rounded-2xl bg-[#F7F9F8] py-3 text-sm transition active:bg-[#E8F0EA]"
+              className="app-body flex min-h-11 flex-col items-center gap-1 rounded-2xl bg-[#F7F9F8] py-3 transition active:bg-[#E8F0EA]"
             >
               <span className="text-xl">{emoji}</span>
-              <span className="text-xs text-slate-600">{t(key)}</span>
+              <span className="app-caption text-slate-600">{t(key)}</span>
             </button>
           ))}
         </div>
@@ -116,7 +118,7 @@ export const QuickActivityPicker: React.FC = () => {
           <button
             type="button"
             onClick={handleCustomSend}
-            className={`rounded-full p-1.5 transition ${customInput.trim() ? 'text-[#5F7A63]' : 'text-slate-300'}`}
+            className={`app-hit-target-44 rounded-full p-1.5 transition ${customInput.trim() ? 'text-[#5F7A63]' : 'text-slate-300'}`}
           >
             <Send size={16} />
           </button>

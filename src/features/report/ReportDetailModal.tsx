@@ -164,10 +164,9 @@ function SectionRow({ left, lines }: { left: React.ReactNode; lines: string[] })
         {lines.map((line, index) => (
           <div
             key={index}
+            className={index === 0 ? 'app-description' : 'app-caption'}
             style={{
               color: index === 0 ? '#1A1A1A' : '#737373',
-              fontSize: index === 0 ? '12px' : '11px',
-              lineHeight: index === 0 ? 1.4 : 1.2,
               whiteSpace: index === 0 ? 'normal' : 'nowrap',
               overflowWrap: 'break-word',
               overflow: index === 0 ? 'visible' : 'hidden',
@@ -631,7 +630,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: '12px', paddingLeft: '16px', paddingRight: '16px', overflowY: 'auto', overscrollBehaviorY: 'contain', WebkitOverflowScrolling: 'touch', minHeight: 0 }}>
               <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
                 <div style={{ flex: '1 0 138px', minHeight: '138px', display: 'flex', flexDirection: 'column' }}>
-                  <div className="text-sm font-bold" style={{ flexShrink: 0, alignSelf: 'flex-start', padding: '1px 6px' }}>{copy.sectionActivity}</div>
+                  <div className="app-body font-bold" style={{ flexShrink: 0, alignSelf: 'flex-start', padding: '1px 6px' }}>{copy.sectionActivity}</div>
                   <SectionRow
                     left={<DonutChart
                       data={activityChartData}
@@ -650,7 +649,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                 <WaveDivider />
 
                 <div style={{ flex: '1 0 138px', minHeight: '138px', display: 'flex', flexDirection: 'column' }}>
-                  <div className="text-sm font-bold" style={{ flexShrink: 0, alignSelf: 'flex-start', padding: '1px 6px' }}>{copy.sectionMood}</div>
+                  <div className="app-body font-bold" style={{ flexShrink: 0, alignSelf: 'flex-start', padding: '1px 6px' }}>{copy.sectionMood}</div>
                   <SectionRow
                     left={<DonutChart
                       data={moodChartData}
@@ -669,7 +668,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                 <WaveDivider />
 
                 <div style={{ flex: '1 0 138px', minHeight: '138px', display: 'flex', flexDirection: 'column' }}>
-                  <div className="text-sm font-bold" style={{ flexShrink: 0, alignSelf: 'flex-start', padding: '1px 6px' }}>{copy.sectionTodo}</div>
+                  <div className="app-body font-bold" style={{ flexShrink: 0, alignSelf: 'flex-start', padding: '1px 6px' }}>{copy.sectionTodo}</div>
                   <SectionRow
                     left={(
                       <div style={{ display: 'flex', gap: '5px' }}>
@@ -685,7 +684,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                 <WaveDivider />
 
                 <div style={{ flex: '1 0 138px', minHeight: '138px', display: 'flex', flexDirection: 'column' }}>
-                  <div className="text-sm font-bold" style={{ flexShrink: 0, alignSelf: 'flex-start', padding: '1px 6px' }}>{copy.sectionHabits}</div>
+                  <div className="app-body font-bold" style={{ flexShrink: 0, alignSelf: 'flex-start', padding: '1px 6px' }}>{copy.sectionHabits}</div>
                   <SectionRow
                     left={(
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
@@ -732,7 +731,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: '12px', paddingLeft: '16px', paddingRight: '16px', overflow: 'hidden', minHeight: 0 }}>
               <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
                 <div style={{ flex: 2, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                  <div className="text-sm font-bold" style={{ flexShrink: 0, padding: '1px 0' }}>{copy.sectionObservation}</div>
+                  <div className="app-body font-bold" style={{ flexShrink: 0, padding: '1px 0' }}>{copy.sectionObservation}</div>
 
                   <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', paddingRight: 8 }}>
                     <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
@@ -769,12 +768,12 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                         )}
                       </div>
                       {!shouldShowUpgradeMask ? (
-                        <p className="text-xs leading-relaxed" style={{ margin: 0, padding: 0, color: '#1A1A1A', wordBreak: 'normal', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+                        <p className="app-description" style={{ margin: 0, padding: 0, color: '#1A1A1A', wordBreak: 'normal', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
                           {observationText}
                         </p>
                       ) : (
                         <div style={{ position: 'relative', minHeight: 180 }}>
-                          <p className="text-xs leading-relaxed" style={{ margin: 0, padding: 0, color: '#1A1A1A', wordBreak: 'normal', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+                          <p className="app-description" style={{ margin: 0, padding: 0, color: '#1A1A1A', wordBreak: 'normal', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
                             {observationText}
                           </p>
                           <div
@@ -791,7 +790,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                             <button
                               type="button"
                               onClick={onUpgradeClick}
-                              className="text-xs font-bold"
+                              className="app-caption font-bold"
                             style={{
                                 border: 'none',
                                 borderRadius: 999,
@@ -812,7 +811,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                 <WaveDivider />
 
                 <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                  <div className="text-sm font-bold" style={{ flexShrink: 0, padding: '1px 0' }}>{copy.sectionMyDiary}</div>
+                  <div className="app-body font-bold" style={{ flexShrink: 0, padding: '1px 0' }}>{copy.sectionMyDiary}</div>
                   <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
                     <textarea
                       readOnly={!isMyDiaryEditable}
@@ -855,7 +854,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                           onMouseDown={(event) => event.preventDefault()}
                           onClick={() => { void handleMyDiarySave(); }}
                           disabled={isMyDiarySaving}
-                          className="rounded-full px-3 py-1 text-[11px] font-semibold disabled:opacity-70"
+                          className="app-caption rounded-full px-3 py-1 font-semibold disabled:opacity-70"
                           style={APP_GREEN_GLASS_BUTTON_STYLE}
                         >
                           {isMyDiarySaving ? `${t('report_save')}...` : t('report_save')}
@@ -877,13 +876,13 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                         type="button"
                         onClick={() => { void handleGenerateDiaryClick(); }}
                         disabled={!diaryCanGenerate}
-                        className="rounded-full px-5 py-1.5 text-[13px] font-medium transition active:opacity-70 disabled:opacity-55 disabled:cursor-not-allowed"
+                        className="app-body rounded-full px-5 py-1.5 font-medium transition active:opacity-70 disabled:opacity-55 disabled:cursor-not-allowed"
                         style={APP_GREEN_GLASS_BUTTON_STYLE}
                       >
                         {isDiaryGenerating ? t('report_generating', { companion: getReportCompanionName(aiMode) }) : t('report_generate_button')}
                       </button>
                       {diaryActionHint ? (
-                        <p className="text-[10px] font-medium text-center" style={{ color: '#5f6f65', margin: 0 }}>
+                        <p className="app-badge text-center" style={{ color: '#5f6f65', margin: 0 }}>
                           {diaryActionHint}
                         </p>
                       ) : null}

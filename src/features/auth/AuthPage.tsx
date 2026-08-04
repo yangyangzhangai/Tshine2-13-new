@@ -157,11 +157,11 @@ export const AuthPage: React.FC = () => {
             className="absolute -top-[28px] -left-2 h-32 w-32 object-contain"
           />
 
-          <h1 className="text-3xl font-black leading-tight tracking-tight text-[#4a5d4c] text-center">
+          <h1 className="app-display-title text-center text-[#4a5d4c]">
             {isLogin ? t('auth_welcome_back') : t('auth_create_account')}
           </h1>
 
-          <p className="mt-4 text-sm leading-relaxed text-[#4a5d4c]/60 text-center">
+          <p className="app-body mt-4 text-center text-[#4a5d4c]/60">
             {isLogin ? t('auth_login_subtitle') : t('auth_register_subtitle')}
           </p>
         </div>
@@ -203,8 +203,8 @@ export const AuthPage: React.FC = () => {
 
           {pendingSignUpEmail ? (
             <div className="rounded-[24px] border border-[#8fae91]/40 bg-[#eef6ef] px-4 py-4 text-[#4a5d4c] shadow-sm">
-              <p className="text-xs font-bold leading-relaxed">{t('auth_register_success')}</p>
-              <p className="mt-2 break-all text-sm font-black tracking-[0.01em]">{pendingSignUpEmail}</p>
+              <p className="app-caption font-bold">{t('auth_register_success')}</p>
+              <p className="app-body mt-2 break-all font-black">{pendingSignUpEmail}</p>
             </div>
           ) : null}
 
@@ -253,7 +253,7 @@ export const AuthPage: React.FC = () => {
                 type="button"
                 onClick={() => { void handleResend(); }}
                 disabled={resendLoading || resendCooldown.isCoolingDown}
-                className="text-xs font-bold text-[#4a5d4c]/50 underline decoration-[#4a5d4c]/20 disabled:opacity-40"
+                className="app-caption font-bold text-[#4a5d4c]/50 underline decoration-[#4a5d4c]/20 disabled:opacity-40"
               >
                 {resendLoading ? <Loader2 size={12} className="inline animate-spin mr-1" /> : null}
                 {t('auth_resend_code')}
@@ -261,9 +261,9 @@ export const AuthPage: React.FC = () => {
               </button>
             </div>
           ) : null}
-          {error ? <p className="px-2 text-xs text-red-500">{error}</p> : null}
-          {message && !pendingSignUpEmail ? <p className="px-2 text-xs text-[#4a5d4c]">{message}</p> : null}
-          <p className="pt-1 text-center text-xs text-[#4a5d4c]/40">
+          {error ? <p className="app-caption px-2 text-red-500">{error}</p> : null}
+          {message && !pendingSignUpEmail ? <p className="app-caption px-2 text-[#4a5d4c]">{message}</p> : null}
+          <p className="app-caption pt-1 text-center text-[#4a5d4c]/40">
             <button
               type="button"
               onClick={() => {
@@ -280,7 +280,7 @@ export const AuthPage: React.FC = () => {
 
           <div className="flex items-center gap-4 py-1">
             <div className="h-[1px] flex-1 bg-[#4a5d4c]/5" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a5d4c]/20">{t('auth_or_divider')}</span>
+            <span className="app-badge font-bold uppercase text-[#4a5d4c]/20">{t('auth_or_divider')}</span>
             <div className="h-[1px] flex-1 bg-[#4a5d4c]/5" />
           </div>
 
@@ -292,7 +292,7 @@ export const AuthPage: React.FC = () => {
               className="flex flex-1 items-center justify-center gap-3 rounded-[24px] border border-white bg-white/60 p-5 font-bold text-[#4a5d4c] shadow-sm backdrop-blur-xl transition-all hover:bg-white hover:shadow-md disabled:opacity-50"
             >
               {appleLoading ? <Loader2 size={20} className="animate-spin" /> : null}
-              <span className="text-sm">{t('auth_apple_signin')}</span>
+              <span className="app-body font-bold">{t('auth_apple_signin')}</span>
             </button>
             <button
               type="button"
@@ -301,7 +301,7 @@ export const AuthPage: React.FC = () => {
               className="flex flex-1 items-center justify-center gap-3 rounded-[24px] border border-white bg-white/60 p-5 font-bold text-[#4a5d4c] shadow-sm backdrop-blur-xl transition-all hover:bg-white hover:shadow-md disabled:opacity-50"
             >
               {googleLoading ? <Loader2 size={20} className="animate-spin" /> : null}
-              <span className="text-sm">{t('auth_google_signin')}</span>
+              <span className="app-body font-bold">{t('auth_google_signin')}</span>
             </button>
           </div>
         </div>
@@ -311,7 +311,7 @@ export const AuthPage: React.FC = () => {
             whileTap={{ scale: 0.98 }}
             onClick={() => { void handleSubmit(); }}
             disabled={!canSubmit}
-            className={`flex w-full items-center justify-center gap-2 rounded-[28px] py-5 text-lg font-bold transition-all ${
+            className={`app-section-title flex w-full items-center justify-center gap-2 rounded-[28px] py-5 font-bold transition-all ${
               canSubmit
                 ? 'bg-[#4a5d4c] text-white shadow-xl shadow-[#4a5d4c]/20 hover:bg-[#3d4d3f]'
                 : 'cursor-not-allowed bg-[#4a5d4c]/10 text-[#4a5d4c]/20 shadow-none'
@@ -326,7 +326,7 @@ export const AuthPage: React.FC = () => {
             )}
           </motion.button>
 
-          <p className="mt-6 text-center text-[9px] font-normal normal-case tracking-wide text-[#4a5d4c]/30">
+          <p className="app-badge mt-6 text-center font-normal normal-case text-[#4a5d4c]/30">
             {t('auth_agreement_prefix')}{' '}
             <button type="button" onClick={() => setShowTerms(true)} className="underline underline-offset-2 active:opacity-50">
               {t('auth_agreement_terms')}

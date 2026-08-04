@@ -35,7 +35,7 @@ ProfilePage
 ├── UserProfileInsightsCard (snapshot overview)
 ├── MembershipCard (tier display)
 ├── DirectionSettingsPanel (plant root mapping)
-├── AIConsentGate / AIConsentSettingsPanel (explicit consent + withdrawal)
+├── AIConsentGate / AIConsentSettingsPanel (explicit consent + withdrawal; dev-only `preview=ui` hides the gate without granting consent)
 └── SettingsList (account actions)
 
 UpgradePage
@@ -43,6 +43,12 @@ UpgradePage
 ├── Feature list (reuses MembershipCard feature keys)
 └── Payment CTA (build-time `@payment` adapter)
 ```
+
+## Shared UI Semantics
+
+- The Profile root renders its title inside the shared frosted `src/components/layout/Header.tsx` shell.
+- Feedback issue type and Root Direction use `src/components/AppSelectMenu.tsx`; Root Direction keeps its language-specific field widths, duplicate validation, position values, telemetry, and save behavior.
+- The separate Upgrade/payment presentation remains outside the shared modal migration.
 
 ## Upstream Dependencies
 

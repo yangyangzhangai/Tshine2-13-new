@@ -203,21 +203,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
             aria-label={t('diary_shelf_open_calendar')}
             title={t('diary_shelf_open_calendar')}
           >
-            <span style={{
+            <span className="app-page-title" style={{
               color: '#1e293b',
-              fontSize: 24,
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.5,
             }}>
               {MONTHS[selectedDate.getMonth()]}
             </span>
-            <span style={{
+            <span className="app-page-title" style={{
               color: '#1e293b',
-              fontSize: 24,
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.5,
             }}>
               {selectedDate.getFullYear()}
             </span>
@@ -245,7 +237,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
                   width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   <ChevronLeft size={14} color="#64748b" />
                 </button>
-                <span className="text-xs" style={{ fontWeight: 700, color: '#1e293b' }}>{viewYear}</span>
+                <span className="app-caption" style={{ fontWeight: 700, color: '#1e293b' }}>{viewYear}</span>
                 <button className="app-hit-target-44" onClick={() => { triggerLightHaptic(); nextMonth(); }} style={{
                   background: 'rgba(255,255,255,0.45)',
                   border: '1px solid rgba(255,255,255,0.6)',
@@ -259,7 +251,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
                   const isCur = idx === viewMonth;
                   return (
                     <button key={m} onClick={() => { triggerLightHaptic(); handleMonthClick(idx); }}
-                      className="text-xs"
+                      className="app-caption"
                       style={{ padding: '5px 2px', borderRadius: '0.6rem',
                         border: isCur ? BLUE_SELECTED_BORDER : '1px solid transparent',
                         background: isCur ? BLUE_SELECTED_BG : 'transparent',
@@ -344,7 +336,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
               }}
             >
               <LogIn size={15} />
-              <span className="text-xs" style={{ fontWeight: 600 }}>{t('header_login')}</span>
+              <span className="app-caption" style={{ fontWeight: 600 }}>{t('header_login')}</span>
             </button>
           )}
         </div>
@@ -402,7 +394,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
                 scrollSnapAlign: 'center',
               }}
             >
-              <span style={{ fontSize: 12, lineHeight: 1, fontWeight: 700, letterSpacing: '0.10em',
+              <span className="app-caption" style={{ fontWeight: 700,
                  textTransform: 'uppercase', color: sel ? BLUE_SELECTED_TEXT : '#94a3b8', transition: 'color 0.18s' }}>
                 {day}
               </span>
@@ -412,7 +404,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
                 border: sel ? BLUE_SELECTED_BORDER : '1px solid rgba(0,0,0,0.05)',
                 boxShadow: sel ? BLUE_SELECTED_SHADOW : 'none',
                 transition: 'all 0.18s' }}>
-                <span style={{ fontSize: 15, lineHeight: 1, fontWeight: sel ? 700 : 500,
+                <span className="app-body" style={{ fontWeight: sel ? 700 : 500,
                   color: sel ? BLUE_SELECTED_TEXT : '#94a3b8', transition: 'all 0.18s' }}>
                   {date}
                 </span>
@@ -451,7 +443,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChan
             {showAvatarMenu ? (
               <div className={cn(APP_MODAL_CARD_CLASS, 'absolute bottom-12 right-3 z-10 overflow-hidden rounded-xl')}>
                 <button
-                  className="block w-full px-4 py-2 text-left text-sm text-[#2F3E33] hover:bg-white/70"
+                  className="app-body block w-full px-4 py-2 text-left text-[#2F3E33] hover:bg-white/70"
                   onClick={() => {
                     triggerLightHaptic();
                     fileRef.current?.click();

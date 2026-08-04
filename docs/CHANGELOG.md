@@ -1,5 +1,48 @@
 # Changelog
 
+## 2026-08-04 - Complete shared UI migration gaps
+
+- Replaced the unused legacy avatar header with a shared frosted page-header shell and reused it on Chat, Growth, Report, and Profile without changing their controls or layout.
+- Migrated Auth supporting copy, statuses, dividers, social actions, primary CTA, and agreement text to the established typography semantics while preserving authentication and verification behavior.
+- Applied shared modal, button, form, and text foundations to AI consent, reminder, evening-check, quick-activity, and fatal-error surfaces without changing their callbacks or persistence.
+- Extended `AppSelectMenu` with placeholder and invalid states, then reused it for Feedback issue type and all Root Direction positions while preserving existing values, duplicate validation, telemetry, and save flows.
+- Corrected Root Direction dialog close semantics by keeping the backdrop decorative and naming the visible close control with the existing localized label.
+- Kept Membership Purchase, Diary Book content/viewer layout, Report's dedicated calendar, and Onboarding showcase headings/artwork outside this pass as previously confirmed independent presentation boundaries.
+
+## 2026-08-04 - Migrate Onboarding while preserving display hierarchy
+
+- Kept the `30px` welcome heading, `24px` step headings, AI companion names, illustrations, progress bar, card geometry, and onboarding motion as presentation-specific visuals.
+- Migrated onboarding subtitles, feature rows, form-adjacent copy, statuses, field labels, small actions, primary CTAs, removable-item hit areas, and the active Routine time-picker shell to the shared typography, form, hit-target, and modal semantics.
+- Continued reusing Terms, Privacy, EventCard, MoodCard, and MoodPicker without onboarding-specific overrides; left the unreferenced legacy `OnboardingTimePicker.tsx` untouched.
+- Preserved authentication, OTP verification, trial activation, Journal classification, Todo/Bottle/Routine state, onboarding persistence, and navigation behavior.
+
+## 2026-08-04 - Migrate Report with separate Diary Book layout
+
+- Migrated the ordinary Report page, detail pages, stats, task/activity views, plant-root controls, and standard notices to the shared typography semantics without changing report data or behavior.
+- Restored Report's independent frosted Diary calendar shell while preserving its today/future disabled dates and weekly/monthly/custom marker actions.
+- Migrated only the Diary Book header and search-tool shell to shared page/modal/form semantics; retained the independent book-cover, shelf, scaled paper-page, expanded-reading, and motion typography.
+- Preserved report generation, frozen diary snapshots, observation selection, My Diary edit locks, date navigation, plant rendering, and persistence.
+
+## 2026-08-04 - Refine Magic Pen group hierarchy
+
+- Restored Magic Pen activity/todo draft project-title inputs to the shared `16px` form tier so web and narrow iOS WebKit remain aligned with the focus-zoom safeguard.
+- Raised only the Activity, Todo, and Auto-written group labels from `12px` captions to `14px` medium-weight body text.
+- Preserved Magic Pen behavior, other Chat typography, card geometry, copy, and persistence.
+
+## 2026-08-04 - Restyle Magic Pen todo date control
+
+- Replaced the exposed browser-native date field with a compact, full-width trigger that matches the warm Magic Pen draft card, uses a local Lucide icon, and keeps a 44px minimum touch target.
+- Added a generic `AppCalendarPicker` that reuses the existing `.calendar-wrapper` visual foundation and renders through a portal so Magic Pen's scrollable review sheet cannot clip it.
+- Removed the hidden native date interaction layer; selection now uses the shared `react-calendar` surface while preserving the localized visible date, local-date timestamp conversion, accessibility label, draft updates, and persistence.
+- Kept Report-only disabled-future rules and Report/Diary date markers out of the shared picker.
+
+## 2026-08-01 - Migrate active Chat surfaces to typography tokens
+
+- Migrated the active Chat date header, timeline empty state/time labels, event and mood card hierarchy, mood notes, timer/status text, input feedback, mood chips, and yesterday summary to the shared page-title, body, description, and caption tiers.
+- Preserved Magic Pen's nested hierarchy with shared section-title, body, description, caption, and form tiers across the main sheet and its edit, crop, and upgrade dialogs.
+- Kept card geometry, colors, mood serif treatment, images, actions, classification, upload/sync, timers, draft validation/commit, and persistence unchanged. Fixed calendar geometry and the unreferenced legacy `MessageItem` remain scoped exceptions.
+- Added a development-only `preview=ui` hash query that suppresses the consent gate for visual review without changing consent state or bypassing client/server AI-request enforcement.
+
 ## 2026-07-31 - Explicit third-party AI consent and verified privacy wording
 
 - Added a separate, unselected ZH/EN/IT AI-consent dialog that identifies DeepSeek, OpenAI, and Google Gemini, explains data categories and purposes, requires an affirmative checkbox, and lets users continue with non-AI features.

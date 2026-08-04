@@ -68,7 +68,7 @@ export const EditInsertModal: React.FC<EditInsertModalProps> = ({
                 </div>
                 <div className="space-y-3">
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">{t('chat_label_content')}</label>
+                        <label className="app-caption mb-1 block text-slate-500">{t('chat_label_content')}</label>
                         <input
                             type="text"
                             value={editContent}
@@ -81,7 +81,7 @@ export const EditInsertModal: React.FC<EditInsertModalProps> = ({
                     </div>
                     <div className="grid grid-cols-1 gap-3">
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1">{t('chat_label_start_time')}</label>
+                            <label className="app-caption mb-1 block text-slate-500">{t('chat_label_start_time')}</label>
                             <input
                                 type="datetime-local"
                                 lang={dateTimeLocale}
@@ -96,7 +96,7 @@ export const EditInsertModal: React.FC<EditInsertModalProps> = ({
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1">{t('chat_label_end_time')}</label>
+                            <label className="app-caption mb-1 block text-slate-500">{t('chat_label_end_time')}</label>
                             <input
                                 type="datetime-local"
                                 lang={dateTimeLocale}
@@ -114,7 +114,7 @@ export const EditInsertModal: React.FC<EditInsertModalProps> = ({
                 </div>
                 <button
                     onClick={onSave}
-                    className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'w-full py-2 font-medium flex items-center justify-center space-x-2')}
+                    className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'app-body flex w-full items-center justify-center space-x-2 py-2 font-medium')}
                 >
                     <Save size={16} />
                     <span>{t('save')}</span>

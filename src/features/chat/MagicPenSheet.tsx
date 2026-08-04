@@ -6,9 +6,8 @@ import {
   errorToI18nKey,
   toTimeInput,
   fromTimeInput,
-  toDateInputValue,
-  fromDateInputValue,
 } from './magicPenSheetHelpers';
+import { MagicPenDateField } from './MagicPenDateField';
 import { alignPeriodDraftsToMessageGaps, validateDrafts } from '../../services/input/magicPenDraftBuilder';
 import type { MagicPenAutoWrittenItem, MagicPenDraftItem } from '../../services/input/magicPenTypes';
 import type { Message } from '../../store/useChatStore';
@@ -44,7 +43,7 @@ export function MagicPenSheet({
   onUndoAutoWritten,
   onClose,
 }: MagicPenSheetProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [drafts, setDrafts] = useState<MagicPenDraftItem[]>([]);
   const [unparsedSegments, setUnparsedSegments] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -187,7 +186,7 @@ export function MagicPenSheet({
               </div>
               <div>
                 <h2 className={APP_MODAL_TITLE_CLASS}>{t('chat_magic_pen_title')}</h2>
-                <p className="text-xs text-slate-500">{t('chat_magic_pen_subtitle')}</p>
+                <p className="app-description text-slate-500">{t('chat_magic_pen_subtitle')}</p>
               </div>
             </div>
             <button type="button" onClick={onClose} className={cn(APP_MODAL_CLOSE_CLASS, 'p-1.5')}>
@@ -201,7 +200,7 @@ export function MagicPenSheet({
           {/* Activities */}
           {grouped.activities.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-[#9C8567]">
+              <div className="app-body flex items-center gap-1.5 font-medium text-[#9C8567]">
                 <Clock size={12} />
                 <span>{t('chat_magic_pen_group_activity')}</span>
               </div>
@@ -268,7 +267,7 @@ export function MagicPenSheet({
                           isEstimated ? 'border-dashed border-amber-400 bg-amber-50/50' : 'border-[#E0D6C8] bg-[#FAFAF7]'
                         }`}
                       />
-                      <span className="text-[#C4B49A] text-xs">—</span>
+                      <span className="app-caption text-[#C4B49A]">—</span>
                       <input
                         type="time"
                         disabled={!editable}
@@ -288,17 +287,17 @@ export function MagicPenSheet({
                         }`}
                       />
                       {isEstimated && (
-                        <span className="text-xs text-amber-600 ml-1">{t('chat_magic_pen_estimated_time')}</span>
+                        <span className="app-caption ml-1 text-amber-600">{t('chat_magic_pen_estimated_time')}</span>
                       )}
                     </div>
                     {draft.errors.map((error) => (
-                      <p key={error} className="text-xs text-red-500">{t(errorToI18nKey(error))}</p>
+                      <p key={error} className="app-caption text-red-500">{t(errorToI18nKey(error))}</p>
                     ))}
                     {commitState === 'success' && (
-                      <p className="text-xs text-sky-600">{t('chat_magic_pen_item_success')}</p>
+                      <p className="app-caption text-sky-600">{t('chat_magic_pen_item_success')}</p>
                     )}
                     {commitState === 'error' && (
-                      <p className="text-xs text-red-500">{t('chat_magic_pen_item_error')}</p>
+                      <p className="app-caption text-red-500">{t('chat_magic_pen_item_error')}</p>
                     )}
                   </div>
                 );
@@ -309,7 +308,7 @@ export function MagicPenSheet({
           {/* Todos */}
           {grouped.todos.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-[#9C8567]">
+              <div className="app-body flex items-center gap-1.5 font-medium text-[#9C8567]">
                 <CheckSquare size={12} />
                 <span>{t('chat_magic_pen_group_todo')}</span>
               </div>
@@ -354,26 +353,22 @@ export function MagicPenSheet({
                       )}
                     </div>
                     {draft.todo?.dueDate && (
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={11} className="text-[#C4B49A]" />
-                        <input
-                          type="date"
-                          disabled={!editable}
-                          value={toDateInputValue(draft.todo.dueDate)}
-                          onChange={(event) => {
-                            const dueDate = fromDateInputValue(event.target.value);
-                            const next = { ...draft, todo: { ...draft.todo!, dueDate } };
-                            setDrafts((prev) => prev.map((item) => (item.id === next.id ? next : item)));
-                          }}
-                          className="app-form-text text-[#7A6B55] bg-[#FAFAF7] border border-[#E0D6C8] rounded-lg px-2 py-1"
-                        />
-                      </div>
+                      <MagicPenDateField
+                        value={draft.todo.dueDate}
+                        disabled={!editable}
+                        locale={i18n.resolvedLanguage || i18n.language}
+                        ariaLabel={t('growth_todo_due_date')}
+                        onChange={(dueDate) => {
+                          const next = { ...draft, todo: { ...draft.todo!, dueDate } };
+                          setDrafts((prev) => prev.map((item) => (item.id === next.id ? next : item)));
+                        }}
+                      />
                     )}
                     {commitState === 'success' && (
-                      <p className="text-xs text-sky-600">{t('chat_magic_pen_item_success')}</p>
+                      <p className="app-caption text-sky-600">{t('chat_magic_pen_item_success')}</p>
                     )}
                     {commitState === 'error' && (
-                      <p className="text-xs text-red-500">{t('chat_magic_pen_item_error')}</p>
+                      <p className="app-caption text-red-500">{t('chat_magic_pen_item_error')}</p>
                     )}
                   </div>
                 );
@@ -384,7 +379,7 @@ export function MagicPenSheet({
           {/* Auto-written items */}
           {autoWrittenItems.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-[#9C8567]">
+              <div className="app-body flex items-center gap-1.5 font-medium text-[#9C8567]">
                 <span>{t('chat_magic_pen_group_auto_written')}</span>
               </div>
               {autoWrittenItems.map((item) => {
@@ -392,7 +387,7 @@ export function MagicPenSheet({
                 return (
                   <div key={item.id} className="rounded-xl bg-sky-50/80 border border-sky-200/70 p-3">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm text-sky-800 flex-1">{item.content}</p>
+                      <p className="app-body flex-1 text-sky-800">{item.content}</p>
                       {item.messageId && (
                         <button
                           type="button"
@@ -413,9 +408,9 @@ export function MagicPenSheet({
           {/* Unparsed segments */}
           {unparsedSegments.length > 0 && (
             <div className="rounded-xl bg-[#F5F0EA] p-3">
-              <p className="text-xs text-[#9C8567] mb-1">{t('chat_magic_pen_unparsed_hint')}</p>
+              <p className="app-caption mb-1 text-[#9C8567]">{t('chat_magic_pen_unparsed_hint')}</p>
               {unparsedSegments.map((segment) => (
-                <p key={segment} className="text-xs text-[#7A6B55]">· {segment}</p>
+                <p key={segment} className="app-description text-[#7A6B55]">· {segment}</p>
               ))}
             </div>
           )}
@@ -423,13 +418,13 @@ export function MagicPenSheet({
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-white px-5 pb-5 pt-3 border-t border-[rgba(255,255,255,0.82)]">
-          {statusText && <p className="text-xs text-center text-[#2563EB] mb-2">{statusText}</p>}
+          {statusText && <p className="app-caption mb-2 text-center text-[#2563EB]">{statusText}</p>}
           <div className="flex gap-3">
             {pendingDrafts.length > 0 && (
               <button
                 type="button"
                 onClick={onClose}
-                className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'flex-1 py-2.5 text-sm')}
+                className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'app-body flex-1 py-2.5')}
               >
                 {t('chat_magic_pen_cancel')}
               </button>
@@ -438,7 +433,7 @@ export function MagicPenSheet({
               type="button"
               disabled={isSubmitting}
               onClick={pendingDrafts.length === 0 ? onClose : handleConfirm}
-              className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'flex-1 py-2.5 text-sm font-medium disabled:opacity-40')}
+              className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'app-body flex-1 py-2.5 font-medium disabled:opacity-40')}
             >
               {isSubmitting
                 ? t('loading')

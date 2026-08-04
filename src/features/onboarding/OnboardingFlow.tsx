@@ -202,11 +202,11 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
           className="mb-8 h-24 w-24 object-contain"
         />
 
-        <h2 className="text-3xl font-black text-[#4a5d4c] leading-tight tracking-tight">
+        <h2 className="app-display-title text-[#4a5d4c]">
           {isLogin ? t('auth_welcome_back') : t('auth_create_account')}
         </h2>
 
-        <p className="text-[#4a5d4c]/60 mt-4 text-sm leading-relaxed">
+        <p className="app-body mt-4 text-[#4a5d4c]/60">
           {isLogin ? t('auth_login_subtitle') : t('auth_register_subtitle')}
         </p>
       </div>
@@ -250,8 +250,8 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
 
         {pendingSignUpEmail ? (
           <div className="rounded-[24px] border border-[#8fae91]/40 bg-[#eef6ef] px-4 py-4 text-[#4a5d4c] shadow-sm">
-            <p className="text-xs font-bold leading-relaxed">{t('auth_register_success')}</p>
-            <p className="mt-2 break-all text-sm font-black tracking-[0.01em]">{pendingSignUpEmail}</p>
+            <p className="app-description font-bold">{t('auth_register_success')}</p>
+            <p className="app-body mt-2 break-all font-black">{pendingSignUpEmail}</p>
           </div>
         ) : null}
 
@@ -292,7 +292,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
               type="button"
               onClick={() => { void handleResend(); }}
               disabled={resendLoading || resendCooldown.isCoolingDown}
-              className="text-xs font-bold text-[#4a5d4c]/50 underline decoration-[#4a5d4c]/20 disabled:opacity-40"
+              className="app-description font-bold text-[#4a5d4c]/50 underline decoration-[#4a5d4c]/20 disabled:opacity-40"
             >
               {resendLoading ? <Loader2 size={12} className="mr-1 inline animate-spin" /> : null}
               {t('auth_resend_code')}
@@ -302,10 +302,10 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
         ) : null}
 
         {/* 错误 / 成功提示 */}
-        {error && <p className="text-red-500 text-xs px-2">{error}</p>}
-        {message && !pendingSignUpEmail && <p className="text-[#4a5d4c] text-xs px-2">{message}</p>}
+        {error && <p className="app-description px-2 text-red-500">{error}</p>}
+        {message && !pendingSignUpEmail && <p className="app-description px-2 text-[#4a5d4c]">{message}</p>}
         {/* 切换登录/注册 */}
-        <p className="text-center text-xs text-[#4a5d4c]/40 pt-1">
+        <p className="app-description pt-1 text-center text-[#4a5d4c]/40">
           <button
             type="button"
             onClick={() => {
@@ -322,7 +322,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
 
         <div className="flex items-center gap-4 py-1">
           <div className="flex-1 h-[1px] bg-[#4a5d4c]/5" />
-          <span className="text-[10px] font-bold text-[#4a5d4c]/20 uppercase tracking-[0.2em]">{t('auth_or_divider')}</span>
+          <span className="app-badge uppercase text-[#4a5d4c]/20">{t('auth_or_divider')}</span>
           <div className="flex-1 h-[1px] bg-[#4a5d4c]/5" />
         </div>
 
@@ -349,7 +349,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
           whileTap={{ scale: 0.98 }}
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className={`w-full py-5 rounded-[28px] font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-2 ${
+          className={`app-section-title w-full rounded-[28px] py-5 font-bold shadow-xl transition-all flex items-center justify-center gap-2 ${
             canSubmit
               ? 'bg-[#4a5d4c] text-white shadow-[#4a5d4c]/20 hover:bg-[#3d4d3f]'
               : 'bg-[#4a5d4c]/10 text-[#4a5d4c]/20 shadow-none cursor-not-allowed'
@@ -360,7 +360,7 @@ const StepAuth: React.FC<{ onNext: () => void }> = ({ onNext }) => {
           }
         </motion.button>
 
-        <p className="mt-6 text-center text-[9px] font-normal normal-case tracking-wide text-[#4a5d4c]/30">
+        <p className="app-badge mt-6 text-center font-normal normal-case text-[#4a5d4c]/30">
           {t('auth_agreement_prefix')}{' '}
           <button type="button" onClick={() => setShowTerms(true)} className="underline underline-offset-2 active:opacity-50">
             {t('auth_agreement_terms')}
@@ -390,7 +390,7 @@ function AuthButton({ icon, text, className = '', onClick, disabled = false }: {
       disabled={disabled}
       className={`bg-white/60 backdrop-blur-xl border border-white p-5 rounded-[24px] flex items-center justify-center gap-3 text-[#4a5d4c] font-bold shadow-sm transition-all hover:bg-white hover:shadow-md disabled:opacity-50 ${className}`}
     >
-      {icon} <span className="text-sm">{text}</span>
+      {icon} <span className="app-body">{text}</span>
     </motion.button>
   );
 }
@@ -426,8 +426,8 @@ const StepTrialIntro: React.FC<{ onNext: () => void; preview?: boolean }> = ({ o
   return (
     <div className="flex-1 flex flex-col pb-8 overflow-hidden">
       <div className="px-8 pt-10 pb-4 shrink-0">
-        <h2 className="text-2xl font-black text-[#4a5d4c] leading-tight">{t('onboarding_trial_title')}</h2>
-        <p className="text-sm text-[#4a5d4c]/60 mt-2 leading-relaxed">{t('onboarding_trial_subtitle')}</p>
+        <h2 className="app-page-title font-black text-[#4a5d4c]">{t('onboarding_trial_title')}</h2>
+        <p className="app-body mt-2 text-[#4a5d4c]/60">{t('onboarding_trial_subtitle')}</p>
       </div>
       <div className="flex-1 overflow-y-auto px-8 space-y-3 pb-2">
         {TRIAL_FEATURES.map((feat) => (
@@ -443,8 +443,8 @@ const StepTrialIntro: React.FC<{ onNext: () => void; preview?: boolean }> = ({ o
               }`}
             />
             <div className="min-w-0">
-              <p className="text-sm font-bold text-[#4a5d4c]">{t(feat.titleKey)}</p>
-              <p className="text-xs text-[#4a5d4c]/55 mt-0.5 leading-relaxed">{t(feat.descKey)}</p>
+              <p className="app-body font-bold text-[#4a5d4c]">{t(feat.titleKey)}</p>
+              <p className="app-description mt-0.5 text-[#4a5d4c]/55">{t(feat.descKey)}</p>
             </div>
           </div>
         ))}
@@ -453,11 +453,11 @@ const StepTrialIntro: React.FC<{ onNext: () => void; preview?: boolean }> = ({ o
         <button
           onClick={() => { void handleStartExperience(); }}
           disabled={activating}
-          className="w-full bg-[#4a5d4c] text-white py-5 rounded-[28px] font-bold text-lg shadow-xl shadow-[#4a5d4c]/20"
+          className="app-section-title w-full rounded-[28px] bg-[#4a5d4c] py-5 font-bold text-white shadow-xl shadow-[#4a5d4c]/20"
         >
           {t('onboarding_trial_cta')}
         </button>
-        <p className="text-center text-[10px] text-[#4a5d4c]/30 mt-3 px-4 leading-relaxed">
+        <p className="app-badge mt-3 px-4 text-center text-[#4a5d4c]/30">
           {t('onboarding_trial_footer')}
         </p>
       </div>
@@ -493,7 +493,7 @@ const StepAI: React.FC<{ onNext: () => void }> = ({ onNext }) => {
   return (
     <div className="flex-1 flex flex-col px-8 pt-10 pb-12">
       <div className="mb-8 text-center">
-        <h2 className="text-2xl font-black text-[#4a5d4c]">{t('onboarding2_ai_title')}</h2>
+        <h2 className="app-page-title font-black text-[#4a5d4c]">{t('onboarding2_ai_title')}</h2>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -522,7 +522,7 @@ const StepAI: React.FC<{ onNext: () => void }> = ({ onNext }) => {
                 <h4 className={`text-lg font-black ${selected ? 'text-white' : 'text-[#4a5d4c]'}`}>
                   {mode.name}
                 </h4>
-                <p className={`text-xs mt-1 leading-relaxed ${selected ? 'text-white/70' : 'text-[#4a5d4c]/55'}`}>
+                <p className={`app-description mt-1 ${selected ? 'text-white/70' : 'text-[#4a5d4c]/55'}`}>
                   {t(subtitleKeyMap[modeKey])}
                 </p>
               </div>
@@ -531,7 +531,7 @@ const StepAI: React.FC<{ onNext: () => void }> = ({ onNext }) => {
         })}
       </div>
 
-      <button onClick={handleSelect} className="mt-auto pt-6 w-full bg-[#4a5d4c] text-white py-5 rounded-[28px] font-bold text-lg shadow-xl shadow-[#4a5d4c]/20">
+      <button onClick={handleSelect} className="app-section-title mt-auto w-full rounded-[28px] bg-[#4a5d4c] py-5 pt-6 font-bold text-white shadow-xl shadow-[#4a5d4c]/20">
         {t('onboarding2_ai_cta')}
       </button>
     </div>

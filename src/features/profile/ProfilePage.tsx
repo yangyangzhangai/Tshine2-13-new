@@ -11,6 +11,7 @@ import { RoutineSettingsPanel } from './components/RoutineSettingsPanel';
 import { MembershipCard } from './components/MembershipCard';
 import { SettingsList } from './components/SettingsList';
 import { LanguageSwitcher } from '../../components/layout/LanguageSwitcher';
+import { Header } from '../../components/layout/Header';
 
 export const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
@@ -33,16 +34,9 @@ export const ProfilePage: React.FC = () => {
       <div className="pointer-events-none fixed bottom-[120px] left-0 h-[200px] w-[200px] rounded-full bg-rose-200/20 blur-[70px]" />
 
       <div className="app-mobile-page-frame app-scroll-container profile-page-typography relative h-full w-full max-w-[430px] text-slate-900 [box-shadow:0_0_0_1px_rgba(0,0,0,0.06),0_24px_64px_rgba(0,0,0,0.1)] md:h-[calc(100%-24px)] md:max-w-[980px] md:rounded-[30px] md:border md:border-white/70 md:bg-[#fcfaf7]/85 md:[box-shadow:0_0_0_1px_rgba(255,255,255,0.45),0_24px_64px_rgba(15,23,42,0.12)]">
-        <header
-          className="app-mobile-page-header sticky top-0 z-10 px-4 pb-3 pt-11"
-          style={{
-            background: 'rgba(252,250,247,0.38)',
-            backdropFilter: 'blur(14px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(14px) saturate(150%)',
-          }}
-        >
+        <Header className="sticky top-0 z-10 px-4 pb-3 pt-11">
           <h1 className="app-page-title text-[#1e293b]">{t('nav_profile')}</h1>
-        </header>
+        </Header>
 
         <div className="space-y-3 px-3 py-3 pb-28">
           <UserInfoCard isPlus={isPlus} />

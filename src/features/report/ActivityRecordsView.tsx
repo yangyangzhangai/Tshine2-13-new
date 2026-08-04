@@ -33,8 +33,8 @@ export const ActivityRecordsView: React.FC<ActivityRecordsViewProps> = ({ report
 
   return (
     <div>
-      <div className="text-[11px]">
-        <h3 className="font-semibold mb-1 text-[11px] flex items-center gap-1">
+      <div className="app-caption">
+        <h3 className="app-caption mb-1 flex items-center gap-1 font-semibold">
           <Clock size={16} strokeWidth={1.5} /> {t('report_activity')}
         </h3>
         <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
@@ -46,14 +46,14 @@ export const ActivityRecordsView: React.FC<ActivityRecordsViewProps> = ({ report
                 index !== activityMessages.length - 1 && 'border-b border-gray-50'
               )}
             >
-              <span className="text-gray-400 font-mono text-[10px] w-20 flex-shrink-0">
+              <span className="app-badge w-20 flex-shrink-0 font-mono text-gray-400">
                 {format(msg.timestamp, 'MM-dd HH:mm')}
               </span>
-              <span className="flex-1 text-[11px] text-gray-700 truncate mx-2" title={msg.content}>
+              <span className="app-caption mx-2 flex-1 truncate text-gray-700" title={msg.content}>
                 {msg.content}
               </span>
               {msg.duration ? (
-                <span className="text-[9px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full flex-shrink-0 text-center whitespace-nowrap">
+                <span className="app-badge flex-shrink-0 whitespace-nowrap rounded-full bg-blue-50 px-1.5 py-0.5 text-center text-blue-600">
                   {formatDuration(msg.duration, t)}
                 </span>
               ) : (

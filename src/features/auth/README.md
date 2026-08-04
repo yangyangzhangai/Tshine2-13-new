@@ -20,6 +20,9 @@
 
 - Auth and onboarding native text controls use the shared `app-form-text` semantic so visible input text stays at the app-wide `16px` form size.
 - Page, modal, and supporting-copy typography uses the global semantic classes; authentication flow, validation, and account-state behavior remain feature-owned.
+- Auth's display heading remains at the shared `30px` display tier; subtitles, statuses, secondary actions, social actions, CTA, divider, and agreement copy use the shared body/section/caption/badge tiers.
+- Onboarding intentionally preserves its presentation hierarchy: the welcome heading stays at the `30px` display tier, step headings stay at the `24px` page-title tier with black weight, and AI companion names remain independent showcase labels.
+- Onboarding subtitles, feature rows, field labels, statuses, secondary actions, primary CTAs, and the active Routine time-picker shell use the shared body/description/caption/badge/section-title/modal semantics without changing illustrations, card geometry, motion, or step behavior.
 
 ## Onboarding Gate
 

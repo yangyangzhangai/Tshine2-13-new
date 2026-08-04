@@ -89,7 +89,7 @@ export const MoodPieChart: React.FC<MoodPieChartProps> = ({ distribution }) => {
       </svg>
       <div className="space-y-1">
         {distribution.map((d) => (
-          <div key={d.mood} className="flex items-center gap-2 text-xs text-gray-600">
+          <div key={d.mood} className="app-description flex items-center gap-2 text-gray-600">
             <span
               className="inline-block w-2 h-2 rounded-full"
               style={{

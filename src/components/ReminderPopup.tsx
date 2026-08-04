@@ -1,14 +1,20 @@
 // DOC-DEPS: LLM.md -> docs/PROACTIVE_REMINDER_SPEC.md -> src/store/useReminderStore.ts
 import React, { useRef } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, Send, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { APP_MODAL_OVERLAY_CLASS } from '../lib/modalTheme';
+import {
+  APP_MODAL_CARD_CLASS,
+  APP_MODAL_OVERLAY_CLASS,
+  APP_MODAL_PRIMARY_BUTTON_CLASS,
+  APP_MODAL_SECONDARY_BUTTON_CLASS,
+} from '../lib/modalTheme';
 import { AI_COMPANION_VISUALS } from '../constants/aiCompanionVisuals';
 import { useAuthStore } from '../store/useAuthStore';
 import { useReminderStore } from '../store/useReminderStore';
 import { triggerLightHaptic } from '../lib/haptics';
 import type { ReminderType } from '../services/reminder/reminderTypes';
 import { submitReminderManualActivity } from '../services/reminder/reminderActivityActions';
+import { cn } from '../lib/utils';
 
 interface Props {
   type: ReminderType;
@@ -58,8 +64,7 @@ export const ReminderPopup: React.FC<Props> = ({ type, copyText, onConfirm, onDe
       onClick={handleDeny}
     >
       <div
-        className="w-full max-w-xs mx-4 rounded-3xl bg-white p-5 shadow-xl"
-        style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.14)' }}
+        className={cn(APP_MODAL_CARD_CLASS, 'mx-4 w-full max-w-xs rounded-3xl p-5')}
         onClick={(e) => e.stopPropagation()}
       >
         {/* AI 头像 + 文案 */}
@@ -69,7 +74,7 @@ export const ReminderPopup: React.FC<Props> = ({ type, copyText, onConfirm, onDe
             alt={visual.name}
             className="w-12 h-12 object-contain flex-shrink-0"
           />
-          <p className="text-sm leading-relaxed text-slate-700 pt-1">{copyText}</p>
+          <p className="app-body pt-1 text-slate-700">{copyText}</p>
         </div>
 
         {/* ✓ / ✗ 按钮 */}
@@ -94,7 +99,7 @@ export const ReminderPopup: React.FC<Props> = ({ type, copyText, onConfirm, onDe
         {/* 分割线 */}
         <div className="flex items-center gap-2 mb-3">
           <div className="flex-1 h-px bg-slate-100" />
-          <span className="text-[10px] text-slate-400">{t('reminder_popup_or_tell_me')}</span>
+          <span className="app-badge text-slate-400">{t('reminder_popup_or_tell_me')}</span>
           <div className="flex-1 h-px bg-slate-100" />
         </div>
 
@@ -114,10 +119,7 @@ export const ReminderPopup: React.FC<Props> = ({ type, copyText, onConfirm, onDe
             className="app-hit-target-44 w-9 h-9 rounded-xl flex items-center justify-center transition disabled:opacity-40"
             style={{ background: '#5F7A63' }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="19" x2="12" y2="5" />
-              <polyline points="5 12 12 5 19 12" />
-            </svg>
+            <Send size={16} color="white" strokeWidth={2.5} />
           </button>
         </div>
       </div>
@@ -153,8 +155,7 @@ export const EveningCheckPopup: React.FC<EveningCheckPopupProps> = ({
   return (
     <div className={`fixed inset-0 z-[120] flex items-center justify-center ${APP_MODAL_OVERLAY_CLASS}`} onClick={onClose}>
       <div
-        className="w-full max-w-xs mx-4 rounded-3xl bg-white p-5 shadow-xl"
-        style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.14)' }}
+        className={cn(APP_MODAL_CARD_CLASS, 'mx-4 w-full max-w-xs rounded-3xl p-5')}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3 mb-4">
@@ -164,9 +165,9 @@ export const EveningCheckPopup: React.FC<EveningCheckPopupProps> = ({
             className="w-12 h-12 object-contain flex-shrink-0"
           />
           <div>
-            <p className="text-sm leading-relaxed text-slate-700">{copyText}</p>
+            <p className="app-body text-slate-700">{copyText}</p>
             {todayEventCount > 0 && (
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="app-description mt-1 text-slate-400">
                 {t('evening_check_event_count', { count: todayEventCount })}
               </p>
             )}
@@ -176,20 +177,19 @@ export const EveningCheckPopup: React.FC<EveningCheckPopupProps> = ({
         <div className="flex flex-col gap-2">
           <button
             onClick={onGrowPlant}
-            className="w-full rounded-xl py-2.5 text-sm font-medium text-white transition active:scale-95"
-            style={{ background: '#5F7A63' }}
+            className={cn(APP_MODAL_PRIMARY_BUTTON_CLASS, 'app-body w-full py-2.5 font-medium')}
           >
             {t('evening_check_grow_plant')}
           </button>
           <button
             onClick={onViewReport}
-            className="w-full rounded-xl py-2.5 text-sm font-medium text-[#355643] border border-[#CBE7D7] bg-white transition active:scale-95"
+            className={cn(APP_MODAL_SECONDARY_BUTTON_CLASS, 'app-body w-full py-2.5 font-medium')}
           >
             {t('evening_check_view_report')}
           </button>
           <button
             onClick={onSnooze}
-            className="w-full rounded-xl py-2 text-xs text-slate-400 transition"
+            className="app-caption w-full rounded-xl py-2 text-slate-400 transition"
           >
             {t('evening_check_snooze')}
           </button>
